@@ -1,14 +1,16 @@
 using System.Collections.Generic;
 using ResolverMaster.Core.Puzzle;
+using ResolverMaster.Core.UI.Themes;
 using UnityEngine;
 
 namespace ResolverMaster.Games.Plumber
 {
     /// <summary>
-    /// The single parameter file of the Plumber: water colors and sink halos, pipe art and fountain sizes, animation times, generator
-    /// limits, the Story chapters (name and theme) and the Story difficulty table.
+    /// The single parameter file of the Plumber: water colors and sink halos, pipe art and fountain sizes, water speed and animation
+    /// times, generator limits, the Story chapters (name, icon, color, theme) and the Story difficulty table.
     /// Asset: Assets/Resources/Games/Plumber/PlumberConfig.asset (created by Resolver Master > Setup > Ensure Config Assets).
-    /// Sizes of the pipe art are fractions of a cell, so the look is the same on 3x3 and 6x6 boards.
+    /// Sizes of the pipe art are fractions (or percentages) of a cell, so the look is the same on every grid.
+    /// The terrain of the cells comes from the chapter theme (Core ThemeConfig).
     /// </summary>
     [CreateAssetMenu(menuName = "Resolver Master/Plumber Config", fileName = "PlumberConfig")]
     public sealed class PlumberConfig : ScriptableObject
@@ -16,11 +18,9 @@ namespace ResolverMaster.Games.Plumber
         public const string ResourcesPath = "Games/Plumber/PlumberConfig";
 
         [Header("Colors")]
-        /// <summary>Board frame (cream panel with the black outline of the UI kit).</summary>
-        public Color boardColor = new Color32(0xFF, 0xF6, 0xE3, 0xFF);
-        public Color tileColor = new Color32(0xF1, 0xE4, 0xC8, 0xFF);
-        public Color lockedTileColor = new Color32(0xD9, 0xCB, 0xAE, 0xFF);
-        /// <summary>Every pipe is this grey until the water is opened (the black outline is drawn in the sprite).</summary>
+        /// <summary>Multiplies the theme slab of a locked cell (future chapters).</summary>
+        public Color lockedTileColor = new Color32(0xC8, 0xC2, 0xB8, 0xFF);
+        /// <summary>Every pipe is this grey (the black outline is drawn in the sprite); the water runs inside it.</summary>
         public Color pipeEmpty = new Color32(0xC2, 0xC6, 0xCF, 0xFF);
         /// <summary>Water color of each source/sink pair (index = Piece.Color): blue, orange.</summary>
         public List<Color> waterColors = new List<Color> { new Color32(0x2F, 0x8B, 0xEF, 0xFF), new Color32(0xFF, 0x8A, 0x1F, 0xFF) };
@@ -30,15 +30,27 @@ namespace ResolverMaster.Games.Plumber
         public Color errorColor = new Color32(0xE5, 0x48, 0x4D, 0xFF);
 
         [Header("Pipe art (fractions of a cell)")]
-        [Range(0.1f, 0.5f)] public float pipeWidth = 0.34f;
-        /// <summary>Black outline of the pipes (cartoon style).</summary>
-        [Range(0f, 0.2f)] public float pipeOutline = 0.045f;
-        /// <summary>Light reflection along the pipes (untinted white overlay).</summary>
-        [Range(0f, 1f)] public float pipeShine = 0.55f;
+        /// <summary>Pipe thickness, in percent of the cell side.</summary>
+        [Range(10f, 50f)] public float pipeWidthPercent = 34f;
+        /// <summary>Black outline of the pipes (ErNa-005: half of the ErNa-004 one).</summary>
+        [Range(0f, 0.2f)] public float pipeOutline = 0.022f;
+        /// <summary>
+        /// Symmetric shading across the pipe (lighter in the middle, darker on both edges: correct in every position, also while
+        /// rotating). 0 = off (flat color, the ErNa-005 choice); e.g. 0.25 = edges 25% darker.
+        /// </summary>
+        [Range(0f, 0.6f)] public float pipeShading = 0f;
+        /// <summary>The water inside a pipe: fraction of the inner width of the pipe.</summary>
+        [Range(0.3f, 1f)] public float waterWidth = 0.78f;
         [Range(0f, 0.2f)] public float tileMargin = 0.035f;
-        [Range(0f, 0.5f)] public float tileRadius = 0.14f;
         /// <summary>Side of a source or fountain drawing (it never rotates; the pipe stub under it shows the opening).</summary>
-        [Range(0.3f, 1f)] public float endpointSize = 0.80f;
+        [Range(0.3f, 1f)] public float endpointSize = 0.78f;
+        /// <summary>The drawing is moved up by this: its base sits on the pipe, so the stub enters from under the object.</summary>
+        [Range(0f, 0.3f)] public float endpointLift = 0.08f;
+        /// <summary>Soft shadow under every source and fountain: width and height (fractions of the cell), how dark, and how far below the centre.</summary>
+        [Range(0f, 1f)] public float shadowWidth = 0.72f;
+        [Range(0f, 0.6f)] public float shadowHeight = 0.24f;
+        [Range(0f, 1f)] public float shadowAlpha = 0.42f;
+        [Range(-0.5f, 0.5f)] public float shadowOffset = -0.27f;
         /// <summary>Diameter of the colored halo under a sink.</summary>
         [Range(0.3f, 1f)] public float sinkHaloSize = 0.92f;
         /// <summary>Side of one splash drop of a leak.</summary>
@@ -49,27 +61,30 @@ namespace ResolverMaster.Games.Plumber
         public int winDrops = 7;
         [Range(0.1f, 1.5f)] public float winSplashHeight = 0.6f;
         [Range(0.05f, 0.4f)] public float winDropSize = 0.22f;
-        /// <summary>Texture side of every generated piece sprite (px).</summary>
-        public int spriteSize = 256;
+        /// <summary>Texture side of every generated piece sprite (px): at least the biggest cell (about 330 px on a 3x4 grid), never scaled up.</summary>
+        public int spriteSize = 384;
 
         [Header("Fountain drawings (Assets/Art/Plumber, made by Tools/Art/make_plumber_art.py)")]
         /// <summary>Drawings per kind: fonte_1..N (+ fonte_N_mask), arrivo_1..N. The level seed picks one for each piece.</summary>
         public int artVariants = 4;
 
         [Header("Board")]
-        /// <summary>Space between the board card edge and the cells (canvas units).</summary>
-        public float boardInset = 16;
+        /// <summary>Space between the edge of the cream board window and the cells (canvas units): inside its inner frame line.</summary>
+        public float boardInset = 30;
+
+        [Header("Water (continuous, ErNa-005)")]
+        /// <summary>Speed of the water front along the pipes, in cells per second (the same everywhere).</summary>
+        public float waterSpeed = 4f;
+        /// <summary>A gentle acceleration when the water is opened: seconds to full speed, and the starting speed (fraction).</summary>
+        public float waterAccelTime = 0.35f;
+        [Range(0.05f, 1f)] public float waterStartSpeed = 0.35f;
 
         [Header("Animation (seconds)")]
         public float rotateDuration = 0.12f;
-        /// <summary>Delay between one cell filling and the next.</summary>
-        public float waterStep = 0.07f;
+        /// <summary>A fountain fills up gradually once the water reaches it.</summary>
+        public float fountainFill = 0.45f;
         /// <summary>Water splashing out of the fountains at the end of a successful opening.</summary>
-        public float sinkFill = 0.8f;
-        /// <summary>Running water shimmers: strength (mix towards white), speed (rad/s) and phase step between cells.</summary>
-        [Range(0f, 0.5f)] public float waterShimmer = 0.14f;
-        public float waterShimmerSpeed = 7f;
-        public float waterShimmerPhase = 0.9f;
+        public float winSpray = 0.8f;
         public float winPause = 0.25f;
         /// <summary>Failure effect (splash, highlight, blinking fountain); the message appears when it starts.</summary>
         public float failEffect = 1.0f;
@@ -86,14 +101,18 @@ namespace ResolverMaster.Games.Plumber
         [Header("Story chapters (9 levels each, in order)")]
         public List<ChapterTheme> chapters = new List<ChapterTheme>
         {
-            // not blue or orange: those are the water colors
-            new ChapterTheme(PlumberKeys.Chapter1, "water_drop", new Color32(0xFF, 0xCD, 0x3C, 0xFF)),
-            new ChapterTheme(PlumberKeys.Chapter2, "fork", new Color32(0x2E, 0xB8, 0x8A, 0xFF)),
-            new ChapterTheme(PlumberKeys.Chapter3, "palette", new Color32(0xB0, 0x7C, 0xF0, 0xFF)),
+            // not blue or orange: those are the water colors. Themes: Core ThemeConfig ids.
+            new ChapterTheme(PlumberKeys.Chapter1, "water_drop", new Color32(0xFF, 0xCD, 0x3C, 0xFF), ThemeConfig.Garden),
+            new ChapterTheme(PlumberKeys.Chapter2, "fork", new Color32(0x2E, 0xB8, 0x8A, 0xFF), ThemeConfig.Farm),
+            new ChapterTheme(PlumberKeys.Chapter3, "palette", new Color32(0xB0, 0x7C, 0xF0, 0xFF), ThemeConfig.City),
         };
 
         [Header("Story difficulty (one tier per level, numbered across chapters)")]
         public DifficultyTable storyDifficulty = PlumberDifficulty.Story();
+
+        public float PipeWidth => pipeWidthPercent / 100f;
+
+        public WaterMotion Motion => new WaterMotion(waterSpeed, waterAccelTime, waterStartSpeed);
 
         public Color WaterColor(int color) =>
             waterColors.Count == 0 ? Color.blue : waterColors[Mathf.Clamp(color, 0, waterColors.Count - 1)];

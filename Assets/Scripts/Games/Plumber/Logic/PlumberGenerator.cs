@@ -28,7 +28,8 @@ namespace ResolverMaster.Games.Plumber
 
         public sealed class Settings
         {
-            public int Size;
+            /// <summary>Grid columns and rows (they can differ).</summary>
+            public int Width, Height;
             public DifficultyRange MinMoves, Path, Tees, Crosses;
             public Layout Layout;
             public int MaxAttempts = 20000;
@@ -41,7 +42,8 @@ namespace ResolverMaster.Games.Plumber
                 int colors = tier.GetOr(PlumberDifficulty.Colors, 1).min;
                 return new Settings
                 {
-                    Size = tier.Get(PlumberDifficulty.Size).min,
+                    Width = tier.Get(PlumberDifficulty.Cols).min,
+                    Height = tier.Get(PlumberDifficulty.Rows).min,
                     MinMoves = tier.Get(PlumberDifficulty.MinMoves),
                     Path = tier.Get(PlumberDifficulty.Path),
                     Tees = tier.GetOr(PlumberDifficulty.Tees, 0),
@@ -62,10 +64,9 @@ namespace ResolverMaster.Games.Plumber
         /// <exception cref="InvalidOperationException">No valid level within <see cref="Settings.MaxAttempts"/>.</exception>
         public static Result Generate(Settings settings, int seed, string tierId = "", int number = 0)
         {
-            int size = settings.Size;
-            if (size < 2) throw new ArgumentException("grid size must be at least 2");
+            if (settings.Width < 2 || settings.Height < 2) throw new ArgumentException("grid columns and rows must be at least 2");
             int minPath = settings.Layout == Layout.Single ? 1 : 2;
-            if (settings.Path.min < minPath || settings.Path.max + 4 > size * size) throw new ArgumentException("route length does not fit the grid");
+            if (settings.Path.min < minPath || settings.Path.max + 4 > settings.Width * settings.Height) throw new ArgumentException("route length does not fit the grid");
             var rng = new SeededRandom(seed);
             var options = new PlumberSolver.Options { MaxExpansions = settings.SolverLimit };
             for (int attempt = 1; attempt <= settings.MaxAttempts; attempt++)
@@ -86,8 +87,8 @@ namespace ResolverMaster.Games.Plumber
                         number = number,
                         tier = tierId,
                         seed = seed,
-                        width = size,
-                        height = size,
+                        width = settings.Width,
+                        height = settings.Height,
                         minMoves = sol.MinMoves,
                         path = sol.PathLength,
                         cells = PlumberLevelCodec.Format(grid),
@@ -99,8 +100,7 @@ namespace ResolverMaster.Games.Plumber
 
         static PipeGrid TryBuild(Settings s, SeededRandom rng)
         {
-            int size = s.Size;
-            var grid = new PipeGrid(size, size);
+            var grid = new PipeGrid(s.Width, s.Height);
             var topo = grid.Topology;
             int n = grid.CellCount;
             var open = new int[n];       // route openings per cell

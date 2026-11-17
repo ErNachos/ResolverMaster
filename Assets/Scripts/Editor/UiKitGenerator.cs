@@ -6,17 +6,14 @@ using UnityEngine;
 namespace ResolverMaster.Editor
 {
     /// <summary>
-    /// Generates the sprites of the UI kit from the radii, outline thickness and depths of the <see cref="UiKitStyle"/>:
-    /// a white face (tinted by the UI), a thick black outline (stays black whatever the tint), and for buttons, cards and panels a
-    /// darker band at the bottom (the "press me" depth; tinted it becomes a darker shade of the fill). Pressed variants have a
-    /// smaller band and a transparent strip on top, so in the same rect the face goes down.
-    /// Output: Assets/Art/UI/*.png. Rectangles are 9-slice (border = radius, + the bands); 1 texture pixel = 1 canvas unit.
-    /// The round button is not sliced: it is drawn for a square rect at 256 px.
+    /// Generates the only two UI sprites still drawn by code (ErNa-005: everything else is Gemini art in Assets/Art/UI):
+    /// the frame of the Home cards (white face, thick black outline, darker band at the bottom; tinted with the game color) and the
+    /// pill / circle with a thin outline (dots, badges, the off mark of a toggle).
+    /// Output: Assets/Art/UI/Generated/*.png, 9-slice (border = radius, + the band); 1 texture pixel = 1 canvas unit.
     /// </summary>
     public static class UiKitGenerator
     {
-        public const string OutDir = "Assets/Art/UI";
-        const int RoundTexture = 256;
+        public const string OutDir = "Assets/Art/UI/Generated";
         const float Ink = 0.09f;   // outline grey level (near black)
 
         [MenuItem("Resolver Master/UI Kit/Regenerate Sprites")]
@@ -24,51 +21,23 @@ namespace ResolverMaster.Editor
         {
             var s = UiKitAssets.LoadOrCreateStyle();
             Directory.CreateDirectory(OutDir);
-            int t = s.outlineThickness, drop = Mathf.RoundToInt(s.PressDrop);
-
             var borders = new System.Collections.Generic.Dictionary<string, Vector4>();
-            void Sliced(string name, int radius, int outline, int depth, int top)
+            void Sliced(string name, int radius, int outline, int depth)
             {
-                WriteShape(name, radius * 2 + 4, radius * 2 + 4 + depth + top, radius, outline, depth, top, s.depthShade);
-                borders[name] = new Vector4(radius, radius + depth, radius, radius + top);   // left, bottom, right, top
+                WriteShape(name, radius * 2 + 4, radius * 2 + 4 + depth, radius, outline, depth, s.depthShade);
+                borders[name] = new Vector4(radius, radius + depth, radius, radius);   // left, bottom, right, top
             }
-            Sliced("button", s.buttonRadius, t, s.buttonDepth, 0);
-            Sliced("button_pressed", s.buttonRadius, t, s.pressedDepth, drop);
-            Sliced("card", s.cardRadius, t, s.cardDepth, 0);
-            Sliced("card_pressed", s.cardRadius, t, Mathf.Min(s.pressedDepth, s.cardDepth), Mathf.Max(0, s.cardDepth - s.pressedDepth));
-            Sliced("panel", s.panelRadius, t, s.cardDepth, 0);
-            Sliced("circle", s.circleRadius, s.thinOutline, 0, 0);
-            Sliced("soft", s.cardRadius, 0, 0, 0);
-            WriteRing("outline", s.cardRadius, t);
-            borders["outline"] = new Vector4(s.cardRadius, s.cardRadius, s.cardRadius, s.cardRadius);
-
-            // round button: the face is a circle, the band below it; drawn at 256 px for a square of iconButtonSize units
-            float k = RoundTexture / Mathf.Max(1f, s.iconButtonSize);
-            int rd = Mathf.RoundToInt(s.buttonDepth * k), rp = Mathf.RoundToInt(s.pressedDepth * k), rt = Mathf.RoundToInt(t * k);
-            int face = RoundTexture - rd;
-            WriteShape("round", RoundTexture, RoundTexture, face / 2f, rt, rd, 0, s.depthShade, faceWidth: face);
-            WriteShape("round_pressed", RoundTexture, RoundTexture, face / 2f, rt, rp, rd - rp, s.depthShade, faceWidth: face);
-            borders["round"] = borders["round_pressed"] = Vector4.zero;
+            Sliced("card", s.cardRadius, s.outlineThickness, s.cardDepth);
+            Sliced("circle", s.circleRadius, s.thinOutline, 0);
 
             AssetDatabase.Refresh();
             foreach (var kv in borders) ConfigureImporter($"{OutDir}/{kv.Key}.png", kv.Value);
-            s.buttonSprite = Load("button");
-            s.buttonPressedSprite = Load("button_pressed");
-            s.cardSprite = Load("card");
-            s.cardPressedSprite = Load("card_pressed");
-            s.panelSprite = Load("panel");
-            s.outlineSprite = Load("outline");
-            s.circleSprite = Load("circle");
-            s.roundSprite = Load("round");
-            s.roundPressedSprite = Load("round_pressed");
-            s.softSprite = Load("soft");
+            s.cardSprite = AssetDatabase.LoadAssetAtPath<Sprite>($"{OutDir}/card.png");
+            s.circleSprite = AssetDatabase.LoadAssetAtPath<Sprite>($"{OutDir}/circle.png");
             EditorUtility.SetDirty(s);
             AssetDatabase.SaveAssets();
-            Debug.Log($"UiKitGenerator: sprites regenerated in {OutDir} (radii button {s.buttonRadius}, card {s.cardRadius}, panel {s.panelRadius}, " +
-                      $"circle {s.circleRadius}; outline {t}, depth {s.buttonDepth}/{s.pressedDepth}, card depth {s.cardDepth}).");
+            Debug.Log($"UiKitGenerator: card and circle regenerated in {OutDir} (radii {s.cardRadius}/{s.circleRadius}, outline {s.outlineThickness}, card depth {s.cardDepth}).");
         }
-
-        static Sprite Load(string name) => AssetDatabase.LoadAssetAtPath<Sprite>($"{OutDir}/{name}.png");
 
         /// <summary>Signed distance to a rounded box (negative inside).</summary>
         static float Box(Vector2 p, float x0, float y0, float x1, float y1, float r)
@@ -81,24 +50,17 @@ namespace ResolverMaster.Editor
         }
 
         /// <summary>
-        /// Outer shape = rounded box from y = 0 to h - top; face = the same box from y = depth. Inside the face: white; between face
-        /// and outer edge (the bottom band): <paramref name="shade"/>; outline (and a thinner seam between face and band): near black.
+        /// Outer shape = rounded box; face = the same box from y = depth. Inside the face: white; between face and outer edge (the bottom
+        /// band): <paramref name="shade"/>; outline (and a thinner seam between face and band): near black.
         /// </summary>
-        static void WriteShape(string name, int w, int h, float radius, int outline, int depth, int top, float shade, float faceWidth = -1)
+        static void WriteShape(string name, int w, int h, float radius, int outline, int depth, float shade)
         {
-            float fx0 = 0, fx1 = w;
-            if (faceWidth > 0)
-            {
-                fx0 = (w - faceWidth) / 2f;
-                fx1 = fx0 + faceWidth;
-            }
-            float yTop = h - top;
             var px = new Color32[w * h];
             for (int y = 0; y < h; y++)
             for (int x = 0; x < w; x++)
             {
                 var p = new Vector2(x + 0.5f, y + 0.5f);
-                float dO = Box(p, fx0, 0, fx1, yTop, radius);
+                float dO = Box(p, 0, 0, w, h, radius);
                 float a = Mathf.Clamp01(0.5f - dO);
                 if (a <= 0f)
                 {
@@ -108,10 +70,9 @@ namespace ResolverMaster.Editor
                 float v;
                 if (depth > 0)
                 {
-                    float dF = Box(p, fx0, depth, fx1, yTop, radius);
+                    float dF = Box(p, 0, depth, w, h, radius);
                     v = Mathf.Lerp(shade, 1f, Mathf.Clamp01(0.5f - dF));
-                    // seam between the face and the band, only on the lower half of the face
-                    if (outline > 0 && p.y < depth + (yTop - depth) / 2f)
+                    if (outline > 0 && p.y < depth + (h - depth) / 2f)
                     {
                         float seam = Mathf.Clamp01(0.5f - (Mathf.Abs(dF) - outline * 0.32f));
                         v = Mathf.Lerp(v, Ink, seam);
@@ -122,26 +83,6 @@ namespace ResolverMaster.Editor
                 byte g = (byte)Mathf.RoundToInt(v * 255);
                 px[y * w + x] = new Color32(g, g, g, (byte)Mathf.RoundToInt(a * 255));
             }
-            Save(name, w, h, px);
-        }
-
-        /// <summary>Outline ring only (white, tinted by the UI).</summary>
-        static void WriteRing(string name, int radius, int thickness)
-        {
-            int size = radius * 2 + 4;
-            var px = new Color32[size * size];
-            for (int y = 0; y < size; y++)
-            for (int x = 0; x < size; x++)
-            {
-                float d = Box(new Vector2(x + 0.5f, y + 0.5f), 0, 0, size, size, radius);
-                float a = Mathf.Clamp01(0.5f - d) * Mathf.Clamp01(0.5f + d + thickness);
-                px[y * size + x] = new Color32(255, 255, 255, (byte)Mathf.RoundToInt(a * 255));
-            }
-            Save(name, size, size, px);
-        }
-
-        static void Save(string name, int w, int h, Color32[] px)
-        {
             var tex = new Texture2D(w, h, TextureFormat.RGBA32, false);
             tex.SetPixels32(px);
             File.WriteAllBytes($"{OutDir}/{name}.png", tex.EncodeToPNG());

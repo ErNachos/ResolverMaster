@@ -1,5 +1,6 @@
 using System;
 using ResolverMaster.Core.Puzzle;
+using ResolverMaster.Core.UI.Themes;
 using UnityEngine;
 
 namespace ResolverMaster.Core.UI
@@ -15,6 +16,8 @@ namespace ResolverMaster.Core.UI
         ActionSuccess,
         /// <summary>Main action run on an unsolved board, at the moment of its failure effect (message visible).</summary>
         ActionFailure,
+        /// <summary>Main action run on the solved board, halfway through the flow (the water front is visible).</summary>
+        ActionFlowing,
     }
 
     /// <summary>Optional big action button of the game screen (e.g. "Open the water"): text and icon chosen by the game.</summary>
@@ -46,6 +49,12 @@ namespace ResolverMaster.Core.UI
         public abstract RectTransform GridRect { get; }
 
         public abstract int GridColumns { get; }
+
+        /// <summary>Rows of the grid (columns and rows can differ, ErNa-005).</summary>
+        public abstract int GridRows { get; }
+
+        /// <summary>Theme of the chapter being played (terrain of the cells), set by the game screen before <see cref="Load"/>. May be null.</summary>
+        public VisualTheme Theme { get; set; }
 
         /// <summary>Null = no main action button (default). Read once when the board is shown.</summary>
         public virtual MainActionInfo MainAction => null;

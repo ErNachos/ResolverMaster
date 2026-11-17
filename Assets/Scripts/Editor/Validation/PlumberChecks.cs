@@ -79,7 +79,7 @@ namespace ResolverMaster.Editor.Validation
     }
 
     /// <summary>
-    /// Plumber parameters and Story levels (ErNa-003 rules): water colors with a sink halo each, chapter icons and names and texts in every language;
+    /// Plumber parameters and Story levels (ErNa-003 rules): water colors with a sink halo each, chapter icons, names, valid themes and texts in every language;
     /// each chapter has exactly 9 levels in order; each level parses, is solvable with no leaks and colors apart, its saved minimum
     /// moves match the solver, opening the water at the start does not solve it, it respects its difficulty tier, in chapter 1 the
     /// solution never uses a T (and the level stays solvable with the same minimum when T pieces are forbidden), and (warning) the
@@ -142,7 +142,16 @@ namespace ResolverMaster.Editor.Validation
             {
                 foreach (var chapter in cfg.chapters)
                     if (!icons.Has(chapter.icon)) report.Error($"chapter icon '{chapter.icon}' missing in the IconLibrary");
-                if (!icons.Has("faucet")) report.Error("icon 'faucet' (Open the water button) missing in the IconLibrary");
+                if (!icons.Has("icon_faucet")) report.Error("icon 'icon_faucet' (Open the water button) missing in the IconLibrary");
+            }
+
+            // every chapter names a valid theme of the Core ThemeConfig
+            var themes = AssetDatabase.LoadAssetAtPath<ResolverMaster.Core.UI.Themes.ThemeConfig>(ConfigAssets.ThemeConfigPath);
+            for (int i = 0; i < cfg.chapters.Count; i++)
+            {
+                var id = cfg.chapters[i].theme;
+                if (string.IsNullOrEmpty(id)) report.Error($"chapter {i + 1}: no theme (PlumberConfig.chapters[{i}].theme)");
+                else if (themes != null && !themes.Catalog.Has(id)) report.Error($"chapter {i + 1}: theme '{id}' does not exist in ThemeConfig");
             }
 
             var loc = LocalizationLoader.Load(Language.English);

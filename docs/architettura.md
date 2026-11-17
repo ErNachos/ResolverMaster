@@ -14,31 +14,37 @@ Assets/
                                ArtVariants (disegno scelto dal seed del livello)
       Localization/            Language, LanguagePicker, LocalizationTable, Localizer, LocKeys, LocalizationLoader, LocalizedText
       Save/                    SaveData (+SettingsBlock, ProgressBlock, HomeBlock), SaveSerializer, SaveStore
-      UI/                      UiKitStyle, IconLibrary (libreria di sprite: icone, schede, disegni dei giochi), UiFactory,
-                               PressableButton (pulsante che scende), CardCarousel (logica delle schede della Home),
-                               SafeArea, UiScreen, ScreenManager, PuzzleBoard (board di un gioco + MainActionInfo),
-                               ComponentPool, ModalOverlay, Decoration
+      UI/                      UiKitStyle, IconLibrary (libreria di sprite: icone, schede, disegni dei giochi), UiFactory (TextMeshPro),
+                               PressableButton (scende e si scurisce; disattivato = desaturato), VertexOffset, SlicedFit (pillole a 9 fette),
+                               CardCarousel (logica delle schede della Home), SafeArea, UiScreen, ScreenManager,
+                               PuzzleBoard (board di un gioco + MainActionInfo, GridRows, Theme), ComponentPool, ModalOverlay, Decoration
+        Themes/                VisualTheme + ThemeCatalog (tema di un capitolo, C# puro), ThemeConfig (asset dei temi), ThemeArt (terreni e sfondi generati)
         Screens/               Home (schede a scorrimento), ModeSelect, Settings, ChapterSelect (capitoli), LevelSelect (griglia 3x3 di un capitolo),
                                Game (+ pulsante d'azione, messaggio breve, pannello di vittoria), ScreenLayout, ScreenIds
     Games/                     ResolverMaster.Games (un sotto-cartella per gioco)
       Plumber/                 PlumberModule, PlumberConfig, PlumberKeys (Idraulico)
-        Logic/                 PipePiece, PipeGrid, WaterFlow, PlumberPuzzle, PlumberSolver, PlumberGenerator,
-                               PlumberDifficulty, PlumberLevel(+Set), PlumberLevelCodec
-        View/                  PlumberBoardView (: PuzzleBoard), PipeCellView, PipeSprites (tubi generati), PlumberArt (fonti e arrivi)
+        Logic/                 PipePiece, PipeGrid, WaterFlow, WaterTiming + WaterMotion (tempi dell'acqua continua), PlumberPuzzle,
+                               PlumberSolver, PlumberGenerator, PlumberDifficulty, PlumberLevel(+Set), PlumberLevelCodec
+        View/                  PlumberBoardView (: PuzzleBoard), PipeCellView, PipeSprites (tubi generati), WaterGraphic (acqua nei tubi),
+                               PlumberArt (fonti e arrivi)
       TrafficJam/              TrafficJamModule (Traffic jam)
-    Editor/                    ResolverMaster.Editor: ProjectSetup, MainSceneBuilder, UiKitGenerator, UiKitAssets,
+    Editor/                    ResolverMaster.Editor: ProjectSetup, MainSceneBuilder, UiKitGenerator, UiKitAssets, UiArtSetup (TMP, sprite di Gemini),
                                ArtImportRules, ReleaseBuild, VersionTools, PreviewMaker, ConfigAssets, Validation/,
                                Plumber/PlumberLevelTools (menu Idraulico > Genera livelli Storia)
   Tests/EditMode/              ResolverMaster.Tests.EditMode
-  Resources/ResolverMaster/    UiKitStyle.asset, IconLibrary.asset, CardLibrary.asset, PuzzleConfig.asset
+  Resources/ResolverMaster/    UiKitStyle.asset, IconLibrary.asset, CardLibrary.asset, PuzzleConfig.asset, ThemeConfig.asset
   Resources/Games/Plumber/     PlumberConfig.asset, PlumberArt.asset (libreria dei disegni), plumber_story.json (livelli della Storia)
   Resources/Localization/      it/*.txt, en/*.txt (core.txt + un file per gioco)
-  Art/Icons, Art/UI, Art/Fonts icone Material Symbols, sprite 9 fette generati, font Fredoka
+  Art/UI/                      interfaccia di Gemini (Tools/Art/make_ui_art.py) + Generated/ (cornice delle schede, pillole)
+  Art/Icons/                   icone Material segnaposto ancora usate
+  Art/Fonts/                   Fredoka TTF + font asset SDF di TextMesh Pro e materiale con contorno
+  Art/Shaders/                 UiDesaturate (pulsanti disattivati)
   Art/Plumber/                 fonti e arrivi preparati da Tools/Art/make_plumber_art.py
-  Art/Cards/                   illustrazioni delle schede della Home (in arrivo da Gemini)
+  Art/Cards/                   illustrazioni delle schede della Home (Gemini, Tools/Art/make_ui_art.py)
+  TextMesh Pro/                TMP Essential Resources
   Scenes/Main.unity            l'unica scena
 ArtSource/                     originali di Gemini (mai modificati dal codice)
-Tools/Art/                     script di grafica (make_icons.py, make_plumber_art.py); vedi docs/grafica.md
+Tools/Art/                     script di grafica (make_ui_art.py, make_icons.py, make_plumber_art.py); vedi docs/grafica.md
 Previews/                      anteprime e report delle misure (ignorata da git)
 Builds/Release/                AAB e APK (ignorata da git)
 Release/Site, Release/PlayStore  materiale di pubblicazione
@@ -48,15 +54,17 @@ Release/Site, Release/PlayStore  materiale di pubblicazione
 - **Core**: servizi comuni e UI dell'app.
   - Lingue, salvataggio (impostazioni + stelle per livello con id stabile + ultima scheda della Home), registro dei minigiochi, UI kit (stile cartoon, pulsanti che scendono, librerie di sprite).
   - Schermate: Home, Modalità, Impostazioni, Capitoli, Livelli del capitolo, Gioco (con pulsante d'azione, messaggio breve e pannello di vittoria).
-  - Basi dei rompicapi: griglia astratta, casualità con seed, contratto del puzzle, annulla, stelle, tabella di difficoltà, capitoli e sblocco, coda di ricerca, pool.
+  - Basi dei rompicapi: griglia astratta (colonne e righe diverse), casualità con seed, contratto del puzzle, annulla, stelle, tabella di difficoltà, capitoli e sblocco, coda di ricerca, pool.
+  - Temi dei capitoli (ErNa-005): `ThemeConfig` (Giardino, Fattoria, Città), terreno e sfondo generati da `ThemeArt`; la `GameScreen` e la griglia dei livelli mostrano lo sfondo del tema, la board riceve il tema in `PuzzleBoard.Theme`.
   - Prossimi: Challenge, aiuto, audio, pubblicità.
 - **Cosa resta nell'Idraulico**:
   - i pezzi e le loro aperture;
   - il calcolo dell'acqua con i suoi errori (`WaterFlow`);
   - le regole della mossa e dell'apertura (`PlumberPuzzle : PuzzleBase`);
   - il risolutore e il generatore;
-  - i valori del suo gradino (`size`, `minMoves`, `path`, `tees`, `crosses`, `sinks`, `colors`);
-  - nomi e temi dei suoi capitoli (in `PlumberConfig`);
+  - i valori del suo gradino (`cols`, `rows`, `minMoves`, `path`, `tees`, `crosses`, `sinks`, `colors`);
+  - nomi, icone e id del tema dei suoi capitoli (in `PlumberConfig`);
+  - i tempi dell'acqua continua (`WaterTiming`: distanza lungo i tubi di ogni punto, dove avviene ogni problema);
   - la grafica dei tubi, i suoi disegni di fonti e arrivi e la sua board (`PlumberBoardView : PuzzleBoard`).
   - Regole complete: `docs/idraulico-regole.md`.
 - **Contratto gioco ↔ Core**:
@@ -109,7 +117,7 @@ Indietro (pulsante o tasto Android): chiude la schermata in cima; sulla Home chi
 
 ## Idraulico
 - Regole complete: `docs/idraulico-regole.md`. In breve: prima si collegano i tubi, poi si apre l'acqua. Il tentativo riesce solo se non ci sono perdite, i colori restano separati e ogni fontana riceve il suo colore.
-- **Livelli della Storia**: 27 in 3 capitoli.
+- **Livelli della Storia**: 27 in 3 capitoli, su griglie rettangolari 3x4, 4x5, 5x7, 6x8 (colonne x righe).
   - Sono generati una volta nell'Editor (*Idraulico > Genera livelli Storia*, seed fissi) e salvati in `plumber_story.json`, con `chapter` e `index`. Il telefono non li rigenera.
   - Tabella in `docs/idraulico-livelli.md`.
 - **Risolutore esatto**: cerca la rete chiusa di costo minimo. Gestisce più fonti, più arrivi, i colori e le simmetrie dei pezzi. Usa IDA\* sulle estremità aperte, con un limite inferiore ammissibile.
@@ -117,7 +125,9 @@ Indietro (pulsante o tasto Android): chiude la schermata in cima; sulla Home chi
   - Riempie il resto con pezzi casuali e ruota tutto a caso.
   - Scarta i livelli già risolti, quelli fuori gradino e, nel capitolo 1, quelli che usano una T.
 - **Tocco**: la mossa vale subito nel modello; la rotazione visiva si accoda (0,12 s per quarto di giro).
-- **"Apri l'acqua"**: le rotazioni in corso finiscono subito, poi l'acqua avanza cella dopo cella da tutte le fonti.
-  - Riuscita: l'acqua scorre con un leggero movimento, schizza fuori dalle fontane e compare il pannello.
-  - Errore: l'acqua si ferma al primo problema, parte l'effetto con il messaggio, poi il livello ricomincia.
-- **Fonti e arrivi** (ErNa-004) sono disegni (4 per tipo) scelti dal seed del livello; non ruotano mai e un moncone di tubo sotto mostra l'apertura. La fonte ha le parti colorate nel colore della sua acqua (maschera), l'arrivo ha sotto un alone del suo colore (`PlumberConfig`). Dettagli in `docs/grafica.md`.
+- **"Apri l'acqua"**: le rotazioni in corso finiscono subito, poi l'acqua **scorre in modo continuo** da tutte le fonti insieme, alla stessa velocità, seguendo la forma di ogni tubo (ErNa-005).
+  - Logica (`WaterTiming`, C# puro): i tubi diventano un grafo (centri delle celle e metà dei lati aperti); la distanza dalla fonte più vicina lungo i tubi (bracci 0,5, curve pi/4) è il momento di arrivo. Dopo una T i due rami partono insieme. `WaterMotion` converte distanza e tempo (velocità costante, leggera accelerazione iniziale).
+  - Le regole restano quelle di `WaterFlow`: `WaterTiming` dice solo dove, lungo i tubi, avviene ogni problema; si mostra quello che arriva per primo.
+  - Riuscita: ogni fontana si riempie quando l'acqua arriva, poi gli spruzzi e il pannello.
+  - Errore: l'acqua avanza fluida fino al punto sbagliato, parte l'effetto con il messaggio, poi il livello ricomincia.
+- **Fonti e arrivi** (ErNa-004) sono disegni (4 per tipo) scelti dal seed del livello; non ruotano mai, hanno un'ombra morbida sotto e il moncone di tubo verso l'apertura entra sotto l'oggetto. La fonte ha le parti colorate nel colore della sua acqua (maschera), l'arrivo ha sotto un alone del suo colore (`PlumberConfig`). Dettagli in `docs/grafica.md`.

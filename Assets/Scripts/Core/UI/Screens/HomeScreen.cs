@@ -55,15 +55,15 @@ namespace ResolverMaster.Core.UI.Screens
             var title = ui.Title("Title", layout.TopBar, LocKeys.AppTitle, s.titleSize);
             UiFactory.Stretch(title.rectTransform, s.screenPadding, 0, s.screenPadding, 0);
 
-            // ---- bottom strip: Settings (round, bottom left) and PLAY (centre) ----
-            float strip = s.screenPadding + s.playButtonSize.y;
-            var settings = ui.IconButton("SettingsButton", layout.Body, "settings");
-            UiFactory.Place((RectTransform)settings.transform, 0, 0, new Vector2(s.iconButtonSize, s.iconButtonSize),
-                new Vector2(s.screenPadding, s.screenPadding + (s.playButtonSize.y - s.iconButtonSize) / 2f));
+            // ---- bottom strip: Settings (round yellow, gear, bottom left) and PLAY (centre) ----
+            float strip = s.screenPadding + Mathf.Max(s.playButtonSize.y, s.homeSettingsSize);
+            var settings = ui.IconButton("SettingsButton", layout.Body, "icon_settings", s.homeSettingsSize, 0, yellow: true);
+            UiFactory.Place((RectTransform)settings.transform, 0, 0, new Vector2(s.homeSettingsSize, s.homeSettingsSize),
+                new Vector2(s.screenPadding, s.screenPadding + (s.playButtonSize.y - s.homeSettingsSize) / 2f));
             settings.onClick.AddListener(() => ctx.Screens.Push(ScreenIds.Settings));
 
             screen._play = ui.PrimaryButton("PlayButton", layout.Body, LocKeys.HomePlay, out var playLabel);
-            playLabel.fontSize = s.playTextSize;
+            playLabel.fontSize = playLabel.fontSizeMax = s.playTextSize;
             UiFactory.Place((RectTransform)screen._play.transform, 0.5f, 0, s.playButtonSize, new Vector2(0, s.screenPadding));
             screen._play.onClick.AddListener(screen.Play);
 
@@ -110,21 +110,23 @@ namespace ResolverMaster.Core.UI.Screens
             c.Peek.mayLeaveScreen = true;
             c.Button.onClick.AddListener(() => OnCardTapped(index));
 
-            // illustration area: the image of the game, or a placeholder (the game icon on a lighter shade of the frame)
+            // illustration area: a cream Gemini window with the image of the game, or a placeholder (the game icon)
             float inset = s.homeCardInset;
-            var art = ui.Panel("Art", c.Rect, Color.Lerp(frameColor, Color.white, 0.55f));
+            var art = ui.Panel("Art", c.Rect);
+            if (soon) art.color = s.disabledTint;
             UiFactory.Stretch(art.rectTransform, inset, s.homeCardNameHeight + s.cardDepth, inset, inset);
             var sprite = _ctx.Cards != null && !string.IsNullOrEmpty(game.CardImage) ? _ctx.Cards.Get(game.CardImage) : null;
             if (sprite != null)
             {
                 var img = ui.Image("Illustration", art.transform, sprite, soon ? s.disabledTint : Color.white);
                 img.preserveAspect = true;
-                UiFactory.Stretch(img.rectTransform, 24, 24 + s.cardDepth, 24, 24);
+                // inside the inner frame line of the window (a "coming soon" card keeps the bottom free for its badge)
+                UiFactory.Stretch(img.rectTransform, 40, soon ? 210 : 44, 40, 40);
             }
             else
             {
                 // placeholder: the game icon (in the upper half when the lock and the badge take the lower one)
-                var icon = ui.Icon("Placeholder", art.transform, game.IconName, 300, s.icon);
+                var icon = ui.MaskIcon("Placeholder", art.transform, game.IconName, 300, s.icon);
                 icon.color = new Color(s.icon.r, s.icon.g, s.icon.b, soon ? 0.35f : 0.8f);
                 UiFactory.Place(icon.rectTransform, 0.5f, 0.5f, new Vector2(300, 300), new Vector2(0, soon ? 190 : s.cardDepth / 2f));
             }
@@ -136,15 +138,14 @@ namespace ResolverMaster.Core.UI.Screens
 
             if (soon)
             {
-                // lock in a cream circle and the "Coming soon" badge on the illustration
-                var lockBg = ui.Image("LockCircle", art.transform, s.circleSprite, s.surface);
-                UiFactory.Place(lockBg.rectTransform, 0.5f, 0.5f, new Vector2(180, 180), new Vector2(0, -60));
-                var lockIcon = ui.Icon("Lock", lockBg.transform, "lock", 100, s.icon);
-                UiFactory.Place(lockIcon.rectTransform, 0.5f, 0.5f, new Vector2(100, 100), Vector2.zero);
+                // the "Coming soon" badge with the Gemini lock, under the illustration
                 var badge = ui.Image("Badge", art.transform, s.circleSprite, s.surface);
-                UiFactory.Place(badge.rectTransform, 0.5f, 0.5f, new Vector2(460, 96), new Vector2(0, -230));
+                UiFactory.Place(badge.rectTransform, 0.5f, 0, new Vector2(540, 116), new Vector2(0, 66));
+                var lockIcon = ui.Icon("Lock", badge.transform, "icon_lock", 84);
+                UiFactory.Place(lockIcon.rectTransform, 0, 0.5f, new Vector2(84, 84), new Vector2(30, 0));
                 var text = ui.Label("Status", badge.transform, LocKeys.GameComingSoon, s.bodySize, s.text, TextAnchor.MiddleCenter, bold: true);
-                UiFactory.Stretch(text.rectTransform, 20, 4, 20, 4);
+                UiFactory.Stretch(text.rectTransform, 30 + 84 + 12, 4, 30, 4);
+                UiFactory.AutoSize(text, s.smallSize);
             }
             return c;
         }

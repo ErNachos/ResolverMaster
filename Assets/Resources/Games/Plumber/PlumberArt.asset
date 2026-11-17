@@ -13,6 +13,14 @@ MonoBehaviour:
   m_Name: PlumberArt
   m_EditorClassIdentifier: 
   entries:
+  - name: arrivo_1
+    sprite: {fileID: 21300000, guid: 80108a21988c02d47a96bb847e689496, type: 3}
+  - name: arrivo_2
+    sprite: {fileID: 21300000, guid: 475fbaab00e06e94089014e9c5e6a5f3, type: 3}
+  - name: arrivo_3
+    sprite: {fileID: 21300000, guid: 084d02e30bd610c4cbfa36df830b9009, type: 3}
+  - name: arrivo_4
+    sprite: {fileID: 21300000, guid: 66802edf40c275e4f8486190aafd5d18, type: 3}
   - name: fonte_1
     sprite: {fileID: 21300000, guid: 7b20387896d2575429cc18573474a620, type: 3}
   - name: fonte_1_mask
@@ -29,11 +37,3 @@ MonoBehaviour:
     sprite: {fileID: 21300000, guid: 77181d48213d6d240b530616913c14d8, type: 3}
   - name: fonte_4_mask
     sprite: {fileID: 21300000, guid: 9b262a8332063cb43934785a63281fdb, type: 3}
-  - name: arrivo_1
-    sprite: {fileID: 21300000, guid: 80108a21988c02d47a96bb847e689496, type: 3}
-  - name: arrivo_2
-    sprite: {fileID: 21300000, guid: 475fbaab00e06e94089014e9c5e6a5f3, type: 3}
-  - name: arrivo_3
-    sprite: {fileID: 21300000, guid: 084d02e30bd610c4cbfa36df830b9009, type: 3}
-  - name: arrivo_4
-    sprite: {fileID: 21300000, guid: 66802edf40c275e4f8486190aafd5d18, type: 3}

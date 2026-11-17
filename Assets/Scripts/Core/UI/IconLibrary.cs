@@ -6,7 +6,7 @@ namespace ResolverMaster.Core.UI
 {
     /// <summary>
     /// Name -> sprite for every PNG of one art folder. The same class serves every sprite library (no copies, GUIDELINES 1):
-    /// icons (Assets/Art/Icons, white masks tinted by the UI) in Resources/ResolverMaster/IconLibrary.asset, Home card illustrations
+    /// icons (Gemini drawings icon_* in Assets/Art/UI, placeholder white masks in Assets/Art/Icons) in Resources/ResolverMaster/IconLibrary.asset, Home card illustrations
     /// (Assets/Art/Cards) in Resources/ResolverMaster/CardLibrary.asset, and the art of a minigame (e.g. Plumber fountains).
     /// Rebuilt by Resolver Master > UI Kit > Rebuild Sprite Libraries.
     /// </summary>
@@ -15,10 +15,14 @@ namespace ResolverMaster.Core.UI
         public const string ResourcesPath = "ResolverMaster/IconLibrary";
         public const string CardsResourcesPath = "ResolverMaster/CardLibrary";
 
-        /// <summary>Icons the Core UI uses; the validator checks they all exist.</summary>
+        /// <summary>
+        /// Icons the Core UI uses; the validator checks they all exist. icon_* are the Gemini drawings (Assets/Art/UI, full color);
+        /// "story" is a placeholder mask (Assets/Art/Icons) until its drawing arrives.
+        /// </summary>
         public static readonly string[] CoreIcons =
         {
-            "back", "settings", "undo", "restart", "help", "star", "lock", "sound", "vibration", "language", "story", "challenge",
+            "icon_back", "icon_settings", "icon_undo", "icon_restart", "icon_help", "icon_lock", "icon_sound_on", "icon_sound_off",
+            "icon_vibration", "icon_language", "icon_bolt", "story",
         };
 
         [Serializable]

@@ -17,39 +17,35 @@ MonoBehaviour:
   surface: {r: 1, g: 0.9647059, b: 0.8901961, a: 1}
   primary: {r: 0.36078432, g: 0.7882353, b: 0.23137255, a: 1}
   onPrimary: {r: 1, g: 1, b: 1, a: 1}
-  accent: {r: 0.9490196, g: 0.36078432, b: 0.5411765, a: 1}
   text: {r: 0.16862746, g: 0.13333334, b: 0.21960784, a: 1}
   textMuted: {r: 0.43137255, g: 0.39215687, b: 0.5019608, a: 1}
-  icon: {r: 0.16862746, g: 0.13333334, b: 0.21960784, a: 1}
-  badge: {r: 0.92941177, g: 0.8862745, b: 0.78431374, a: 1}
+  icon: {r: 0.23529412, g: 0.25882354, b: 0.3137255, a: 1}
   badgeText: {r: 0.36862746, g: 0.32941177, b: 0.4392157, a: 1}
-  toggleOff: {r: 0.8627451, g: 0.827451, b: 0.7607843, a: 1}
   outline: {r: 0.10980392, g: 0.09019608, b: 0.14901961, a: 1}
-  disabledTint: {r: 0.92, g: 0.91, b: 0.9, a: 1}
-  disabledContentAlpha: 0.45
-  disabledDesaturate: 0.7
   title: {r: 1, g: 1, b: 1, a: 1}
-  buttonRadius: 48
+  disabledTint: {r: 0.92, g: 0.91, b: 0.9, a: 1}
+  disabledContentAlpha: 0.55
+  offMark: {r: 0.8509804, g: 0.2509804, b: 0.2901961, a: 1}
+  pressDrop: 8
+  pressDarken: 0.86
   cardRadius: 44
-  panelRadius: 56
   circleRadius: 112
   outlineThickness: 6
   thinOutline: 5
-  buttonDepth: 14
-  pressedDepth: 4
   cardDepth: 12
   depthShade: 0.72
-  textOutline: 4
+  textOutline: 0.28
+  textOutlineDilate: 0.18
   screenPadding: 48
   spacing: 32
   topBarHeight: 176
   iconButtonSize: 136
-  iconInButton: 68
+  iconInButton: 76
   cardIconSize: 176
-  modeCardHeight: 280
+  modeCardHeight: 300
   buttonHeight: 136
-  rowHeight: 136
-  rowIconSize: 64
+  rowHeight: 140
+  rowIconSize: 92
   badgeHeight: 64
   minTouchSize: 130
   homeTitleHeight: 200
@@ -65,55 +61,61 @@ MonoBehaviour:
   homeDotSize: 30
   homeDotGap: 22
   homeDotsHeight: 64
-  playButtonSize: {x: 560, y: 176}
-  playTextSize: 84
+  playButtonSize: {x: 560, y: 156}
+  playTextSize: 80
+  homeSettingsSize: 156
   comingSoonDim: 0.55
   bottomBarHeight: 208
   gameButtonSize: 144
-  gameIconSize: 76
+  gameIconSize: 80
   gameButtonGap: 72
   levelColumns: 3
-  levelButtonSize: {x: 280, y: 300}
-  levelGridSpacing: 40
-  levelStarSize: 56
+  levelButtonSize: {x: 255, y: 255}
+  levelGridSpacing: 48
+  levelStarSize: 60
   levelNumberSize: 84
-  chapterCardHeight: 264
-  chapterIconSize: 168
-  chapterStarSize: 48
+  levelLockSize: 110
+  chapterCardHeight: 250
+  chapterThumbSize: 176
+  chapterIconSize: 104
+  chapterStarSize: 60
   mainActionWidth: 760
   mainActionHeight: 152
-  mainActionGap: 48
-  mainActionGapAbove: 24
-  mainActionIconSize: 76
-  toastColor: {r: 0.9137255, g: 0.32941177, b: 0.36862746, a: 1}
+  mainActionGap: 24
+  puzzleMargin: 28
+  mainActionIconSize: 104
+  toastColor: {r: 0.9411765, g: 0.47843137, b: 0.5019608, a: 1}
   toastText: {r: 1, g: 1, b: 1, a: 1}
   winPanelWidth: 900
-  winStarSize: 150
-  starOn: {r: 1, g: 0.8039216, b: 0.23529412, a: 1}
-  starOff: {r: 0.8901961, g: 0.8509804, b: 0.7764706, a: 1}
+  winStarSize: 170
   dim: {r: 0.1, g: 0.07, b: 0.16, a: 0.6}
   titleSize: 96
   headerSize: 60
   bodySize: 44
-  buttonTextSize: 48
+  buttonTextSize: 50
   smallSize: 36
   screenFade: 0.18
-  buttonPress: 0.06
   messageFade: 0.25
   winPanelFade: 0.2
   starPop: 0.28
   starStagger: 0.16
   toastFade: 0.15
   toastHold: 1.2
-  fontRegular: {fileID: 12800000, guid: e43585fa2b77f9142a4bae652f1657b9, type: 3}
-  fontBold: {fileID: 12800000, guid: 6b5f320a802330544904b8885e99004a, type: 3}
-  buttonSprite: {fileID: 21300000, guid: 4484fb1b3c91c4344b197d8a44147be2, type: 3}
-  buttonPressedSprite: {fileID: 21300000, guid: f22e75499b9ffaa44b0d18bca6331d40, type: 3}
-  cardSprite: {fileID: 21300000, guid: 91cb1ebfb21f5ec428f086ea3be5d00b, type: 3}
-  cardPressedSprite: {fileID: 21300000, guid: 1cabbf3a614612a4e912d959f0de74b5, type: 3}
-  panelSprite: {fileID: 21300000, guid: 3bb8258a0baeec342909808620777cfb, type: 3}
-  outlineSprite: {fileID: 21300000, guid: 75227b517117087488a570c6f8e1bab3, type: 3}
-  circleSprite: {fileID: 21300000, guid: 5efc3b90fd453774889884ccafd688e5, type: 3}
-  roundSprite: {fileID: 21300000, guid: 1b32c367a4e818542a86ff4a80e9be55, type: 3}
-  roundPressedSprite: {fileID: 21300000, guid: 03ff21b8c6e0a0942a855a811d9576ed, type: 3}
-  softSprite: {fileID: 21300000, guid: 7675db95d3bcd85448f70d995e94f23e, type: 3}
+  fontRegular: {fileID: 11400000, guid: 1cae6e4dfb1b4224c82b02cc597b88ac, type: 2}
+  fontBold: {fileID: 11400000, guid: bb912c979abf8484b8f291eb6a7d55a5, type: 2}
+  fontBoldOutlined: {fileID: 2100000, guid: 29886c8ad646a5a4c84b3b85225f703f, type: 2}
+  disabledMaterial: {fileID: 2100000, guid: 16b84f8ed0c94354a93b67c1dad6f8b1, type: 2}
+  buttonGreen: {fileID: 21300000, guid: c94155afa07f11e449c3c7fefe1315e0, type: 3}
+  buttonCream: {fileID: 21300000, guid: ae8047f66f78f454cb34b773bbf21bdd, type: 3}
+  roundCream: {fileID: 21300000, guid: 08ed2633063094348aca62e2b5c5bfb0, type: 3}
+  roundYellow: {fileID: 21300000, guid: 413f2c24a682432468d0ef2ee0297c34, type: 3}
+  panel: {fileID: 21300000, guid: 3bb8258a0baeec342909808620777cfb, type: 3}
+  ribbon: {fileID: 21300000, guid: 0954177c0bbe12c4287499d2c7261cee, type: 3}
+  chapterBanner: {fileID: 21300000, guid: 7d6ff346aaf655f41903c8bc010fc179, type: 3}
+  tileLevel: {fileID: 21300000, guid: 8a729104e4f9f244d9e1f84f877e2a84, type: 3}
+  tileDone: {fileID: 21300000, guid: 51401e2d4436af34bb998cde9ad35d45, type: 3}
+  tileLocked: {fileID: 21300000, guid: d20b984e1b1e2c649bc02f01ed0ab197, type: 3}
+  starFull: {fileID: 21300000, guid: 66c6161bc307f8840b9c4c05a89f4601, type: 3}
+  starEmpty: {fileID: 21300000, guid: 6bf3ba712cc768848b55ccd7dcf3dd97, type: 3}
+  cardSprite: {fileID: 21300000, guid: 10de9e9d4b2605c47b7888afc0ef8e00, type: 3}
+  circleSprite: {fileID: 21300000, guid: 061ae5c4afffb3a45ae214d831db9253, type: 3}

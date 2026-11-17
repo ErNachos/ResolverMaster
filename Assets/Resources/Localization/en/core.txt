@@ -26,8 +26,13 @@ chapters.subtitle = Story  ·  Chapters
 chapters.stars = {0}/{1}
 game.level = Level {0}
 game.moves = Moves {0} · min {1}
-win.title = Level complete!
+win.title = Well done!
 win.moves = Moves: {0}   Minimum: {1}
 win.retry = Retry
 win.next = Next
 win.levels = Levels
+
+# chapter themes (ErNa-005)
+theme.garden.name = Garden
+theme.farm.name = Farm
+theme.city.name = City

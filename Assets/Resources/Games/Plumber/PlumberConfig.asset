@@ -12,9 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0efb6d57188baa44b950707cad2143da, type: 3}
   m_Name: PlumberConfig
   m_EditorClassIdentifier: 
-  boardColor: {r: 1, g: 0.9647059, b: 0.8901961, a: 1}
-  tileColor: {r: 0.94509804, g: 0.89411765, b: 0.78431374, a: 1}
-  lockedTileColor: {r: 0.8509804, g: 0.79607844, b: 0.68235296, a: 1}
+  lockedTileColor: {r: 0.78431374, g: 0.7607843, b: 0.72156864, a: 1}
   pipeEmpty: {r: 0.7607843, g: 0.7764706, b: 0.8117647, a: 1}
   waterColors:
   - {r: 0.18431373, g: 0.54509807, b: 0.9372549, a: 1}
@@ -23,27 +21,32 @@ MonoBehaviour:
   - {r: 0.6117647, g: 0.78431374, b: 0.96862745, a: 1}
   - {r: 1, g: 0.7882353, b: 0.5882353, a: 1}
   errorColor: {r: 0.8980392, g: 0.28235295, b: 0.3019608, a: 1}
-  pipeWidth: 0.34
-  pipeOutline: 0.045
-  pipeShine: 0.55
+  pipeWidthPercent: 34
+  pipeOutline: 0.022
+  pipeShading: 0
+  waterWidth: 0.78
   tileMargin: 0.035
-  tileRadius: 0.14
-  endpointSize: 0.8
+  endpointSize: 0.78
+  endpointLift: 0.08
+  shadowWidth: 0.72
+  shadowHeight: 0.24
+  shadowAlpha: 0.42
+  shadowOffset: -0.27
   sinkHaloSize: 0.92
   splashDropSize: 0.16
   splashDistance: 0.55
   winDrops: 7
   winSplashHeight: 0.6
   winDropSize: 0.22
-  spriteSize: 256
+  spriteSize: 384
   artVariants: 4
-  boardInset: 16
+  boardInset: 30
+  waterSpeed: 4
+  waterAccelTime: 0.35
+  waterStartSpeed: 0.35
   rotateDuration: 0.12
-  waterStep: 0.07
-  sinkFill: 0.8
-  waterShimmer: 0.14
-  waterShimmerSpeed: 7
-  waterShimmerPhase: 0.9
+  fountainFill: 0.45
+  winSpray: 0.8
   winPause: 0.25
   failEffect: 1
   failPause: 0.45
@@ -54,21 +57,27 @@ MonoBehaviour:
   - nameKey: plumber.chapter1.name
     icon: water_drop
     color: {r: 1, g: 0.8039216, b: 0.23529412, a: 1}
+    theme: garden
   - nameKey: plumber.chapter2.name
     icon: fork
     color: {r: 0.18039216, g: 0.72156864, b: 0.5411765, a: 1}
+    theme: farm
   - nameKey: plumber.chapter3.name
     icon: palette
     color: {r: 0.6901961, g: 0.4862745, b: 0.9411765, a: 1}
+    theme: city
   storyDifficulty:
     tiers:
     - id: c1-1
       firstLevel: 1
       lastLevel: 1
       values:
-      - key: size
+      - key: cols
         min: 3
         max: 3
+      - key: rows
+        min: 4
+        max: 4
       - key: minMoves
         min: 1
         max: 1
@@ -91,9 +100,12 @@ MonoBehaviour:
       firstLevel: 2
       lastLevel: 2
       values:
-      - key: size
+      - key: cols
         min: 3
         max: 3
+      - key: rows
+        min: 4
+        max: 4
       - key: minMoves
         min: 2
         max: 2
@@ -116,9 +128,12 @@ MonoBehaviour:
       firstLevel: 3
       lastLevel: 3
       values:
-      - key: size
+      - key: cols
         min: 3
         max: 3
+      - key: rows
+        min: 4
+        max: 4
       - key: minMoves
         min: 3
         max: 3
@@ -141,9 +156,12 @@ MonoBehaviour:
       firstLevel: 4
       lastLevel: 4
       values:
-      - key: size
+      - key: cols
         min: 4
         max: 4
+      - key: rows
+        min: 5
+        max: 5
       - key: minMoves
         min: 3
         max: 4
@@ -166,9 +184,12 @@ MonoBehaviour:
       firstLevel: 5
       lastLevel: 5
       values:
-      - key: size
+      - key: cols
         min: 4
         max: 4
+      - key: rows
+        min: 5
+        max: 5
       - key: minMoves
         min: 4
         max: 5
@@ -191,9 +212,12 @@ MonoBehaviour:
       firstLevel: 6
       lastLevel: 6
       values:
-      - key: size
+      - key: cols
         min: 4
         max: 4
+      - key: rows
+        min: 5
+        max: 5
       - key: minMoves
         min: 5
         max: 6
@@ -216,9 +240,12 @@ MonoBehaviour:
       firstLevel: 7
       lastLevel: 7
       values:
-      - key: size
+      - key: cols
         min: 5
         max: 5
+      - key: rows
+        min: 7
+        max: 7
       - key: minMoves
         min: 6
         max: 7
@@ -241,9 +268,12 @@ MonoBehaviour:
       firstLevel: 8
       lastLevel: 8
       values:
-      - key: size
+      - key: cols
         min: 5
         max: 5
+      - key: rows
+        min: 7
+        max: 7
       - key: minMoves
         min: 7
         max: 8
@@ -266,9 +296,12 @@ MonoBehaviour:
       firstLevel: 9
       lastLevel: 9
       values:
-      - key: size
+      - key: cols
         min: 5
         max: 5
+      - key: rows
+        min: 7
+        max: 7
       - key: minMoves
         min: 8
         max: 10
@@ -291,9 +324,12 @@ MonoBehaviour:
       firstLevel: 10
       lastLevel: 10
       values:
-      - key: size
+      - key: cols
         min: 4
         max: 4
+      - key: rows
+        min: 5
+        max: 5
       - key: minMoves
         min: 2
         max: 3
@@ -316,9 +352,12 @@ MonoBehaviour:
       firstLevel: 11
       lastLevel: 11
       values:
-      - key: size
+      - key: cols
         min: 4
         max: 4
+      - key: rows
+        min: 5
+        max: 5
       - key: minMoves
         min: 3
         max: 4
@@ -341,9 +380,12 @@ MonoBehaviour:
       firstLevel: 12
       lastLevel: 12
       values:
-      - key: size
+      - key: cols
         min: 4
         max: 4
+      - key: rows
+        min: 5
+        max: 5
       - key: minMoves
         min: 4
         max: 5
@@ -366,9 +408,12 @@ MonoBehaviour:
       firstLevel: 13
       lastLevel: 13
       values:
-      - key: size
+      - key: cols
         min: 4
         max: 4
+      - key: rows
+        min: 5
+        max: 5
       - key: minMoves
         min: 5
         max: 6
@@ -391,9 +436,12 @@ MonoBehaviour:
       firstLevel: 14
       lastLevel: 14
       values:
-      - key: size
+      - key: cols
         min: 5
         max: 5
+      - key: rows
+        min: 7
+        max: 7
       - key: minMoves
         min: 6
         max: 7
@@ -416,9 +464,12 @@ MonoBehaviour:
       firstLevel: 15
       lastLevel: 15
       values:
-      - key: size
+      - key: cols
         min: 5
         max: 5
+      - key: rows
+        min: 7
+        max: 7
       - key: minMoves
         min: 7
         max: 8
@@ -441,9 +492,12 @@ MonoBehaviour:
       firstLevel: 16
       lastLevel: 16
       values:
-      - key: size
+      - key: cols
         min: 5
         max: 5
+      - key: rows
+        min: 7
+        max: 7
       - key: minMoves
         min: 8
         max: 9
@@ -466,9 +520,12 @@ MonoBehaviour:
       firstLevel: 17
       lastLevel: 17
       values:
-      - key: size
+      - key: cols
         min: 5
         max: 5
+      - key: rows
+        min: 7
+        max: 7
       - key: minMoves
         min: 9
         max: 10
@@ -491,9 +548,12 @@ MonoBehaviour:
       firstLevel: 18
       lastLevel: 18
       values:
-      - key: size
+      - key: cols
         min: 5
         max: 5
+      - key: rows
+        min: 7
+        max: 7
       - key: minMoves
         min: 10
         max: 12
@@ -516,9 +576,12 @@ MonoBehaviour:
       firstLevel: 19
       lastLevel: 19
       values:
-      - key: size
+      - key: cols
         min: 5
         max: 5
+      - key: rows
+        min: 7
+        max: 7
       - key: minMoves
         min: 2
         max: 3
@@ -541,9 +604,12 @@ MonoBehaviour:
       firstLevel: 20
       lastLevel: 20
       values:
-      - key: size
+      - key: cols
         min: 5
         max: 5
+      - key: rows
+        min: 7
+        max: 7
       - key: minMoves
         min: 3
         max: 4
@@ -566,9 +632,12 @@ MonoBehaviour:
       firstLevel: 21
       lastLevel: 21
       values:
-      - key: size
+      - key: cols
         min: 5
         max: 5
+      - key: rows
+        min: 7
+        max: 7
       - key: minMoves
         min: 5
         max: 6
@@ -591,9 +660,12 @@ MonoBehaviour:
       firstLevel: 22
       lastLevel: 22
       values:
-      - key: size
+      - key: cols
         min: 5
         max: 5
+      - key: rows
+        min: 7
+        max: 7
       - key: minMoves
         min: 6
         max: 7
@@ -616,9 +688,12 @@ MonoBehaviour:
       firstLevel: 23
       lastLevel: 23
       values:
-      - key: size
+      - key: cols
         min: 6
         max: 6
+      - key: rows
+        min: 8
+        max: 8
       - key: minMoves
         min: 7
         max: 8
@@ -641,9 +716,12 @@ MonoBehaviour:
       firstLevel: 24
       lastLevel: 24
       values:
-      - key: size
+      - key: cols
         min: 6
         max: 6
+      - key: rows
+        min: 8
+        max: 8
       - key: minMoves
         min: 8
         max: 9
@@ -666,9 +744,12 @@ MonoBehaviour:
       firstLevel: 25
       lastLevel: 25
       values:
-      - key: size
+      - key: cols
         min: 6
         max: 6
+      - key: rows
+        min: 8
+        max: 8
       - key: minMoves
         min: 9
         max: 10
@@ -691,9 +772,12 @@ MonoBehaviour:
       firstLevel: 26
       lastLevel: 26
       values:
-      - key: size
+      - key: cols
         min: 6
         max: 6
+      - key: rows
+        min: 8
+        max: 8
       - key: minMoves
         min: 10
         max: 11
@@ -716,9 +800,12 @@ MonoBehaviour:
       firstLevel: 27
       lastLevel: 27
       values:
-      - key: size
+      - key: cols
         min: 6
         max: 6
+      - key: rows
+        min: 8
+        max: 8
       - key: minMoves
         min: 11
         max: 13

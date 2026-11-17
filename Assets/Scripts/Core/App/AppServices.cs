@@ -3,6 +3,7 @@ using ResolverMaster.Core.Localization;
 using ResolverMaster.Core.Puzzle;
 using ResolverMaster.Core.Save;
 using ResolverMaster.Core.UI;
+using ResolverMaster.Core.UI.Themes;
 
 namespace ResolverMaster.Core.App
 {
@@ -19,6 +20,8 @@ namespace ResolverMaster.Core.App
         /// <summary>Illustrations of the Home cards (Assets/Art/Cards); may miss images: Home draws a placeholder.</summary>
         public IconLibrary Cards;
         public PuzzleConfig Puzzle;
+        /// <summary>Chapter themes (terrain, backdrop), shared by every game.</summary>
+        public ThemeConfig Themes;
         public UiFactory Ui;
         public ScreenManager Screens;
 

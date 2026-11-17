@@ -3,6 +3,7 @@ using ResolverMaster.Core.Localization;
 using ResolverMaster.Core.Puzzle;
 using ResolverMaster.Core.Save;
 using ResolverMaster.Core.UI;
+using ResolverMaster.Core.UI.Themes;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem.UI;
@@ -44,6 +45,7 @@ namespace ResolverMaster.Core.App
                 Icons = icons,
                 Cards = Resources.Load<IconLibrary>(IconLibrary.CardsResourcesPath),
                 Puzzle = PuzzleConfig.LoadOrDefault(),
+                Themes = ThemeConfig.LoadOrDefault(),
             };
 
             if (EventSystem.current == null)

@@ -1,15 +1,15 @@
+using TMPro;
 using UnityEngine;
-using UnityEngine.UI;
 
 namespace ResolverMaster.Core.Localization
 {
-    /// <summary>Keeps a uGUI Text in sync with a key: refreshes when the language changes.</summary>
-    [RequireComponent(typeof(Text))]
+    /// <summary>Keeps a TextMeshPro text in sync with a key: refreshes when the language changes.</summary>
+    [RequireComponent(typeof(TMP_Text))]
     public sealed class LocalizedText : MonoBehaviour
     {
         [SerializeField] string key;
         Localizer _localizer;
-        Text _text;
+        TMP_Text _text;
 
         public string Key => key;
 
@@ -19,7 +19,7 @@ namespace ResolverMaster.Core.Localization
             Unbind();
             _localizer = localizer;
             key = textKey;
-            _text = GetComponent<Text>();
+            _text = GetComponent<TMP_Text>();
             _localizer.Changed += Refresh;
             Refresh();
         }

@@ -3,8 +3,9 @@ using UnityEditor;
 namespace ResolverMaster.Editor
 {
     /// <summary>
-    /// Import rules (first import only: later manual tweaks and the 9-slice borders set by UiKitGenerator are kept):
-    /// Assets/Art/Icons and Assets/Art/UI are crisp, uncompressed UI sprites; the illustrations (Assets/Art/Plumber, Assets/Art/Cards,
+    /// Import rules (first import only: later manual tweaks and the 9-slice borders set by the setup are kept):
+    /// Assets/Art/Icons (placeholder masks) are crisp, uncompressed UI sprites; Assets/Art/UI (Gemini interface art, drawn smaller than
+    /// its size) and Assets/Art/UI/Generated are uncompressed sprites with mipmaps; the illustrations (Assets/Art/Plumber, Assets/Art/Cards,
     /// and the art folder of every future minigame listed in <see cref="IllustrationDirs"/>) are sprites with mipmaps (they are drawn from
     /// 512 px down to ~100 px) and high-quality compression, at most 1024 px.
     /// </summary>
@@ -12,7 +13,9 @@ namespace ResolverMaster.Editor
     {
         public static readonly string[] IllustrationDirs = { "Assets/Art/Plumber/", "Assets/Art/Cards/" };
 
-        static bool IsUiArt(string path) => path.StartsWith("Assets/Art/Icons/") || path.StartsWith("Assets/Art/UI/");
+        static bool IsIcon(string path) => path.StartsWith("Assets/Art/Icons/");
+
+        static bool IsUiArt(string path) => path.StartsWith("Assets/Art/UI/");
 
         static bool IsIllustration(string path)
         {
@@ -25,7 +28,8 @@ namespace ResolverMaster.Editor
         {
             var imp = (TextureImporter)assetImporter;
             if (!imp.importSettingsMissing) return;
-            if (IsUiArt(assetPath)) ApplySpriteDefaults(imp);
+            if (IsIcon(assetPath)) ApplySpriteDefaults(imp);
+            else if (IsUiArt(assetPath)) ApplyUiArtDefaults(imp);
             else if (IsIllustration(assetPath)) ApplyIllustrationDefaults(imp);
         }
 
@@ -43,6 +47,15 @@ namespace ResolverMaster.Editor
             imp.ReadTextureSettings(settings);
             settings.spriteMeshType = UnityEngine.SpriteMeshType.FullRect;
             imp.SetTextureSettings(settings);
+        }
+
+        /// <summary>Gemini UI art: never scaled up, often drawn at half its size: mipmaps keep it smooth; no compression (sharp outlines).</summary>
+        public static void ApplyUiArtDefaults(TextureImporter imp)
+        {
+            ApplySpriteDefaults(imp);
+            imp.mipmapEnabled = true;
+            imp.mipmapFilter = TextureImporterMipFilter.KaiserFilter;
+            imp.filterMode = UnityEngine.FilterMode.Trilinear;
         }
 
         public static void ApplyIllustrationDefaults(TextureImporter imp)

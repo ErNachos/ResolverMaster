@@ -211,6 +211,63 @@ namespace ResolverMaster.Tests
             Assert.AreEqual(1, StarRating.Compute(4, 1, rules));
         }
 
+        // ErNa-005
+        [Test]
+        public void Generator_Grid5x7_SameSeedSameLevel_AndSolvable()
+        {
+            var tier = PlumberDifficulty.Story().ForLevel(14);   // chapter 2, 5 columns x 7 rows
+            var settings = PlumberGenerator.Settings.FromTier(tier, 20000);
+            Assert.AreEqual(5, settings.Width);
+            Assert.AreEqual(7, settings.Height);
+            var a = PlumberGenerator.Generate(settings, 777).Level;
+            var b = PlumberGenerator.Generate(settings, 777).Level;
+            Assert.AreEqual(a.cells, b.cells, "same seed, same level");
+            Assert.AreEqual(5, a.width);
+            Assert.AreEqual(7, a.height);
+            var grid = a.CreateGrid();
+            Assert.AreEqual(5, grid.Width);
+            Assert.AreEqual(7, grid.Height);
+            var sol = PlumberSolver.Solve(grid);
+            Assert.IsTrue(sol.Solvable);
+            Assert.AreEqual(a.minMoves, sol.MinMoves);
+            CollectionAssert.IsEmpty(PlumberDifficulty.CheckTier(tier, grid, sol.MinMoves, sol.PathLength));
+            foreach (int cell in sol.Taps) grid.Rotate(cell, 1);
+            Assert.IsTrue(WaterFlow.Compute(grid).Success);
+        }
+
+        // ErNa-005
+        [Test]
+        public void WaterTiming_TeeBranchesTogether_FartherCellsLaterInProportion()
+        {
+            //   . v . .     the source pours down into a T that splits left and right;
+            //   E>T = <E    the right branch is one straight longer than the left one
+            var grid = PlumberLevelCodec.Parse(". S2 . ./E1 T3 I1 E3");
+            var state = WaterFlow.Compute(grid);
+            Assert.IsTrue(state.Success);
+            var t = WaterTiming.Compute(grid, state);
+            const int tee = 5, straight = 6, leftSink = 4, rightSink = 7;
+            const int up = SquareTopology.Up, right = SquareTopology.Right, left = SquareTopology.Left;
+
+            // both branches leave the T at the same moment (same distance from the source)
+            float leftExit = t.NodeDistance(t.PortNode(tee, left)), rightExit = t.NodeDistance(t.PortNode(tee, right));
+            Assert.AreEqual(leftExit, rightExit, 1e-5f);
+            Assert.AreEqual(1.5f, leftExit, 1e-5f, "source arm 0.5 + into the T 0.5 + out of it 0.5");
+
+            // arrival = distance along the pipes: the T at 0.5, the straight at 1.5, the far fountain at 2.5 (3x, 5x the T)
+            Assert.AreEqual(0.5f, t.CellArrival(tee), 1e-5f);
+            Assert.AreEqual(t.NodeDistance(t.PortNode(tee, up)), t.CellArrival(tee), 1e-5f);
+            Assert.AreEqual(3f * t.CellArrival(tee), t.CellArrival(straight), 1e-5f);
+            Assert.AreEqual(5f * t.CellArrival(tee), t.CellArrival(rightSink), 1e-5f);
+            Assert.AreEqual(t.CellArrival(leftSink) + 1f, t.CellArrival(rightSink), 1e-5f, "one cell farther = one cell later");
+
+            // at a constant speed the times keep the same proportions; the gentle start only delays the beginning
+            var motion = new WaterMotion(4f, 0f, 1f);
+            Assert.AreEqual(3f * motion.TimeAt(t.CellArrival(tee)), motion.TimeAt(t.CellArrival(straight)), 1e-4f);
+            var eased = new WaterMotion(4f, 0.35f, 0.35f);
+            for (float d = 0.1f; d < 5f; d += 0.37f) Assert.AreEqual(d, eased.DistanceAt(eased.TimeAt(d)), 1e-3f, "time and distance agree");
+            Assert.AreEqual(t.EndDistance, t.StopDistance, 1e-5f, "success: the water stops when everything is full");
+        }
+
         static PlumberSolution Solve(string cells) => PlumberSolver.Solve(PlumberLevelCodec.Parse(cells));
     }
 }

@@ -1,4 +1,5 @@
 using ResolverMaster.Core.Localization;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -6,6 +7,9 @@ namespace ResolverMaster.Core.UI
 {
     /// <summary>
     /// Builds uGUI elements from the <see cref="UiKitStyle"/>: every screen is assembled from these helpers, so the look lives in one place.
+    /// Texts are TextMeshPro (Fredoka SDF; outlined texts use the SDF outline material of the style).
+    /// Sprites are the Gemini UI art (buttons, panels, tiles, stars, icons); icons named <c>icon_*</c> are full-color drawings
+    /// (<see cref="Icon"/>), the few remaining placeholder icons are white masks tinted by code (<see cref="MaskIcon"/>).
     /// Works in edit mode too (previews): nothing here depends on Awake/Start.
     /// </summary>
     public sealed class UiFactory
@@ -105,7 +109,8 @@ namespace ResolverMaster.Core.UI
 
         // ---------- graphics ----------
 
-        public Image Image(string name, Transform parent, Sprite sprite, Color color)
+        /// <summary>An image; sprites with a border are drawn 9-sliced. <paramref name="pill"/>: the slices keep the height (<see cref="SlicedFit"/>).</summary>
+        public Image Image(string name, Transform parent, Sprite sprite, Color color, bool pill = false)
         {
             var rt = Rect(name, parent);
             var img = rt.gameObject.AddComponent<Image>();
@@ -113,125 +118,175 @@ namespace ResolverMaster.Core.UI
             img.color = color;
             img.raycastTarget = false;
             if (sprite != null && sprite.border != Vector4.zero) img.type = UnityEngine.UI.Image.Type.Sliced;
+            if (pill) rt.gameObject.AddComponent<SlicedFit>();
             return img;
         }
 
-        public Image Icon(string name, Transform parent, string iconName, float size, Color color)
+        /// <summary>A full-color icon drawn by Gemini (icon_*, stars): never tinted, aspect kept.</summary>
+        public Image Icon(string name, Transform parent, string iconName, float size)
         {
             var sprite = Icons != null && iconName != null ? Icons.Get(iconName) : null;
             if (sprite == null && iconName != null) Debug.LogWarning($"UiFactory: icon '{iconName}' not found in the IconLibrary");
-            var img = Image(name, parent, sprite, color);
+            var img = Image(name, parent, sprite, Color.white);
             img.preserveAspect = true;
             img.rectTransform.sizeDelta = new Vector2(size, size);
             return img;
         }
 
+        /// <summary>A sprite drawn whole (stars, ribbon...), aspect kept.</summary>
+        public Image Picture(string name, Transform parent, Sprite sprite, float size)
+        {
+            var img = Image(name, parent, sprite, Color.white);
+            img.type = UnityEngine.UI.Image.Type.Simple;
+            img.preserveAspect = true;
+            img.rectTransform.sizeDelta = new Vector2(size, size);
+            return img;
+        }
+
+        /// <summary>A placeholder icon (white mask) tinted with <paramref name="color"/> (chapter themes, game icons).</summary>
+        public Image MaskIcon(string name, Transform parent, string iconName, float size, Color color)
+        {
+            var img = Icon(name, parent, iconName, size);
+            img.color = color;
+            return img;
+        }
+
         /// <summary>A localized label: the text comes from <paramref name="key"/> and follows language changes.</summary>
-        public Text Label(string name, Transform parent, string key, int size, Color color, TextAnchor align, bool bold = false)
+        public TextMeshProUGUI Label(string name, Transform parent, string key, int size, Color color, TextAnchor align, bool bold = false)
         {
             var rt = Rect(name, parent);
-            var t = rt.gameObject.AddComponent<Text>();
+            var t = rt.gameObject.AddComponent<TextMeshProUGUI>();
             t.font = bold ? Style.fontBold : Style.fontRegular;
             t.fontSize = size;
             t.color = color;
-            t.alignment = align;
-            t.horizontalOverflow = HorizontalWrapMode.Wrap;
-            t.verticalOverflow = VerticalWrapMode.Truncate;
-            t.lineSpacing = 1f;
+            t.alignment = ToTmp(align);
+            t.textWrappingMode = TextWrappingModes.Normal;
+            t.overflowMode = TextOverflowModes.Overflow;
             t.raycastTarget = false;
+            t.richText = false;
             if (!string.IsNullOrEmpty(key)) rt.gameObject.AddComponent<LocalizedText>().Bind(Loc, key);
             return t;
         }
 
-        /// <summary>A title: light text with the dark outline of the style.</summary>
-        public Text Title(string name, Transform parent, string key, int size, TextAnchor align = TextAnchor.MiddleCenter)
+        /// <summary>A title: light text with the dark SDF outline of the style.</summary>
+        public TextMeshProUGUI Title(string name, Transform parent, string key, int size, TextAnchor align = TextAnchor.MiddleCenter)
         {
             var t = Label(name, parent, key, size, Style.title, align, bold: true);
-            AddOutline(t);
+            SetOutlined(t, true);
             return t;
         }
 
-        /// <summary>Dark outline around a text (titles, labels on colored buttons).</summary>
-        public Outline AddOutline(Text text)
+        /// <summary>Dark SDF outline on a bold text (titles, labels on colored buttons), or back to the plain font material.</summary>
+        public void SetOutlined(TMP_Text text, bool on)
         {
-            var o = text.gameObject.GetComponent<Outline>();
-            if (o == null) o = text.gameObject.AddComponent<Outline>();
-            o.effectColor = Style.outline;
-            o.effectDistance = new Vector2(Style.textOutline, -Style.textOutline);
-            o.useGraphicAlpha = true;
-            return o;
+            if (on && Style.fontBoldOutlined != null)
+            {
+                text.font = Style.fontBold;
+                text.fontSharedMaterial = Style.fontBoldOutlined;
+            }
+            else if (text.font != null) text.fontSharedMaterial = text.font.material;
         }
 
-        /// <summary>Cream panel with the black outline (not tappable).</summary>
-        public Image Panel(string name, Transform parent, Color color) => Image(name, parent, Style.panelSprite, color);
+        /// <summary>Shrinks the text down to <paramref name="minSize"/> when it does not fit (one line).</summary>
+        public static void AutoSize(TMP_Text t, float minSize)
+        {
+            t.enableAutoSizing = true;
+            t.fontSizeMax = t.fontSize;
+            t.fontSizeMin = minSize;
+            t.textWrappingMode = TextWrappingModes.NoWrap;
+        }
+
+        public static TextAlignmentOptions ToTmp(TextAnchor a)
+        {
+            switch (a)
+            {
+                case TextAnchor.UpperLeft: return TextAlignmentOptions.TopLeft;
+                case TextAnchor.UpperCenter: return TextAlignmentOptions.Top;
+                case TextAnchor.UpperRight: return TextAlignmentOptions.TopRight;
+                case TextAnchor.MiddleLeft: return TextAlignmentOptions.Left;
+                case TextAnchor.MiddleRight: return TextAlignmentOptions.Right;
+                case TextAnchor.LowerLeft: return TextAlignmentOptions.BottomLeft;
+                case TextAnchor.LowerCenter: return TextAlignmentOptions.Bottom;
+                case TextAnchor.LowerRight: return TextAlignmentOptions.BottomRight;
+                default: return TextAlignmentOptions.Center;
+            }
+        }
+
+        /// <summary>Cream Gemini window (not tappable).</summary>
+        public Image Panel(string name, Transform parent) => Image(name, parent, Style.panel, Color.white);
 
         // ---------- controls ----------
 
-        /// <summary>A plain button (no press animation): tinted sprite + Button with the muted disabled tint.</summary>
-        public Button Button(string name, Transform parent, Sprite sprite, Color color)
+        /// <summary>A plain button (no press animation, no color transition): sprite + Button.</summary>
+        public Button Button(string name, Transform parent, Sprite sprite, Color color, bool pill = false)
         {
-            var img = Image(name, parent, sprite, color);
+            var img = Image(name, parent, sprite, color, pill);
             img.raycastTarget = true;
             var b = img.gameObject.AddComponent<Button>();
             b.targetGraphic = img;
-            var colors = ColorBlock.defaultColorBlock;
-            colors.normalColor = Color.white;
-            colors.highlightedColor = Color.white;
-            colors.selectedColor = Color.white;
-            colors.pressedColor = new Color(0.94f, 0.94f, 0.94f, 1f);
-            colors.disabledColor = Style.disabledTint;
-            colors.fadeDuration = Style.buttonPress;
-            b.colors = colors;
+            b.transition = Selectable.Transition.None;
             var nav = b.navigation;
             nav.mode = Navigation.Mode.None;
             b.navigation = nav;
             return b;
         }
 
-        /// <summary>A button that goes down when pressed (<see cref="PressableButton"/>): <paramref name="pressed"/> is the sprite while held.</summary>
-        public Button Pressable(string name, Transform parent, Sprite normal, Sprite pressed, Color color, float drop)
+        /// <summary>A button that goes down and gets darker when pressed, desaturated when disabled (<see cref="PressableButton"/>).</summary>
+        public Button Pressable(string name, Transform parent, Sprite sprite, Color color, bool pill = false)
         {
-            var b = Button(name, parent, normal, color);
-            b.gameObject.AddComponent<PressableButton>().Init((Image)b.targetGraphic, normal, pressed, drop, Style.disabledContentAlpha, Style.disabledDesaturate);
+            var b = Button(name, parent, sprite, color, pill);
+            b.gameObject.AddComponent<PressableButton>().Init((Image)b.targetGraphic, Style.pressDrop, Style.pressDarken, Style.disabledMaterial, Style.disabledContentAlpha);
             return b;
         }
 
-        /// <summary>Tappable card (chapters, levels, modes, Home): cream or colored, outline and bottom band.</summary>
-        public Button CardButton(string name, Transform parent, Color color) =>
-            Pressable(name, parent, Style.cardSprite, Style.cardPressedSprite, color, Mathf.Max(0, Style.cardDepth - Style.pressedDepth));
+        /// <summary>Home card: the generated frame tinted with the game color (outline and bottom band baked in the sprite).</summary>
+        public Button CardButton(string name, Transform parent, Color color) => Pressable(name, parent, Style.cardSprite, color);
 
-        /// <summary>Round button with a centred dark icon (back, settings, undo, restart, help). <paramref name="size"/> 0 = style size.</summary>
-        public Button IconButton(string name, Transform parent, string iconName, float size = 0, float iconSize = 0)
+        /// <summary>A tappable cream Gemini window (mode cards).</summary>
+        public Button PanelButton(string name, Transform parent) => Pressable(name, parent, Style.panel, Color.white);
+
+        /// <summary>Round Gemini button (cream, or yellow) with a centred full-color icon. <paramref name="size"/> 0 = style size.</summary>
+        public Button IconButton(string name, Transform parent, string iconName, float size = 0, float iconSize = 0, bool yellow = false)
         {
             if (size <= 0) size = Style.iconButtonSize;
-            if (iconSize <= 0) iconSize = Style.iconInButton;
-            float k = size / Mathf.Max(1f, Style.iconButtonSize);   // the round sprite scales with the rect: so do its depth and drop
-            var b = Pressable(name, parent, Style.roundSprite, Style.roundPressedSprite, Style.surface, Style.PressDrop * k);
+            if (iconSize <= 0) iconSize = Style.iconInButton * size / Style.iconButtonSize;
+            var b = Pressable(name, parent, yellow ? Style.roundYellow : Style.roundCream, Color.white);
+            ((Image)b.targetGraphic).preserveAspect = true;
             ((RectTransform)b.transform).sizeDelta = new Vector2(size, size);
-            var icon = Icon("Icon", b.transform, iconName, iconSize, Style.icon);
-            Place(icon.rectTransform, 0.5f, 0.5f, new Vector2(iconSize, iconSize), new Vector2(0, Style.buttonDepth * k / 2f));
+            var icon = Icon("Icon", b.transform, iconName, iconSize);
+            // the round face sits above the darker band at the bottom of the sprite: centre the icon on the face
+            Place(icon.rectTransform, 0.5f, 0.5f, new Vector2(iconSize, iconSize), new Vector2(0, size * 0.025f));
             return b;
         }
 
-        /// <summary>Rectangular button with a centred localized label (label on the face, above the bottom band).</summary>
-        public Button TextButton(string name, Transform parent, string key, Color background, Color textColor, out Text label, bool outlined = false)
+        /// <summary>Pill button with a centred localized label (the label sits on the face, above the bottom band of the sprite).</summary>
+        public Button TextButton(string name, Transform parent, string key, bool green, out TextMeshProUGUI label)
         {
-            var b = Pressable(name, parent, Style.buttonSprite, Style.buttonPressedSprite, background, Style.PressDrop);
-            label = Label("Label", b.transform, key, Style.buttonTextSize, textColor, TextAnchor.MiddleCenter, bold: true);
-            Stretch(label.rectTransform, 20, 6 + Style.buttonDepth, 20, 6);
-            if (outlined) AddOutline(label);
+            var b = Pressable(name, parent, green ? Style.buttonGreen : Style.buttonCream, Color.white, pill: true);
+            label = Label("Label", b.transform, key, Style.buttonTextSize, green ? Style.onPrimary : Style.text, TextAnchor.MiddleCenter, bold: true);
+            Stretch(label.rectTransform, 28, 14, 28, 4);
+            AutoSize(label, Style.smallSize);
+            if (green) SetOutlined(label, true);
             return b;
         }
 
-        /// <summary>Main button (PLAY, Open the water, Next): vivid green, white outlined text.</summary>
-        public Button PrimaryButton(string name, Transform parent, string key, out Text label) =>
-            TextButton(name, parent, key, Style.primary, Style.onPrimary, out label, outlined: true);
+        /// <summary>Main button (PLAY, Open the water, Next): green Gemini pill, white outlined text.</summary>
+        public Button PrimaryButton(string name, Transform parent, string key, out TextMeshProUGUI label) => TextButton(name, parent, key, true, out label);
 
-        /// <summary>Secondary button: cream, dark text.</summary>
-        public Button SecondaryButton(string name, Transform parent, string key, out Text label) =>
-            TextButton(name, parent, key, Style.surface, Style.text, out label);
+        /// <summary>Secondary button: cream Gemini pill, dark text.</summary>
+        public Button SecondaryButton(string name, Transform parent, string key, out TextMeshProUGUI label) => TextButton(name, parent, key, false, out label);
 
-        /// <summary>Enables/disables a button: muted background (Button tint) and, for pressable buttons, muted label and icon.</summary>
+        /// <summary>Switches a pill between green (selected / on, white outlined text) and cream (dark text).</summary>
+        public void SetGreen(Button pill, TMP_Text label, bool green)
+        {
+            ((Image)pill.targetGraphic).sprite = green ? Style.buttonGreen : Style.buttonCream;
+            if (label == null) return;
+            label.color = green ? Style.onPrimary : Style.text;
+            SetOutlined(label, green);
+            if (!green) label.font = Style.fontBold;
+        }
+
+        /// <summary>Enables/disables a button: pressable buttons get desaturated sprites and faded texts.</summary>
         public static void SetInteractable(Button b, bool on)
         {
             var p = b.GetComponent<PressableButton>();

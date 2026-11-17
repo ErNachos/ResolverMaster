@@ -26,8 +26,13 @@ chapters.subtitle = Storia  ·  Capitoli
 chapters.stars = {0}/{1}
 game.level = Livello {0}
 game.moves = Mosse {0} · min {1}
-win.title = Livello completato!
+win.title = Completato!
 win.moves = Mosse: {0}   Minimo: {1}
 win.retry = Ripeti
 win.next = Avanti
 win.levels = Livelli
+
+# chapter themes (ErNa-005)
+theme.garden.name = Giardino
+theme.farm.name = Fattoria
+theme.city.name = Città

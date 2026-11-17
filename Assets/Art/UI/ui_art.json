@@ -1,0 +1,515 @@
+{
+ "generatedBy": "Tools/Art/make_ui_art.py",
+ "elements": [
+  {
+   "name": "btn_green",
+   "w": 422,
+   "h": 159,
+   "slice": "pill",
+   "border": [
+    127,
+    79,
+    79,
+    79
+   ],
+   "source": "ArtSource/UI/ui_1_pulsanti.png",
+   "at": [
+    53,
+    86
+   ]
+  },
+  {
+   "name": "btn_cream",
+   "w": 422,
+   "h": 159,
+   "slice": "pill",
+   "border": [
+    127,
+    79,
+    79,
+    79
+   ],
+   "source": "ArtSource/UI/ui_1_pulsanti.png",
+   "at": [
+    555,
+    86
+   ]
+  },
+  {
+   "name": "btn_round_cream",
+   "w": 192,
+   "h": 192,
+   "slice": "none",
+   "border": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "source": "ArtSource/UI/ui_1_pulsanti.png",
+   "at": [
+    168,
+    331
+   ]
+  },
+  {
+   "name": "btn_round_yellow",
+   "w": 192,
+   "h": 192,
+   "slice": "none",
+   "border": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "source": "ArtSource/UI/ui_1_pulsanti.png",
+   "at": [
+    670,
+    331
+   ]
+  },
+  {
+   "name": "panel",
+   "w": 566,
+   "h": 272,
+   "slice": "box",
+   "border": [
+    170,
+    71,
+    60,
+    60
+   ],
+   "source": "ArtSource/UI/ui_2_pannelli.png",
+   "at": [
+    232,
+    53
+   ]
+  },
+  {
+   "name": "ribbon",
+   "w": 462,
+   "h": 152,
+   "slice": "none",
+   "border": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "source": "ArtSource/UI/ui_2_pannelli.png",
+   "at": [
+    39,
+    362
+   ]
+  },
+  {
+   "name": "banner_chapter",
+   "w": 453,
+   "h": 135,
+   "slice": "box",
+   "border": [
+    136,
+    35,
+    30,
+    30
+   ],
+   "source": "ArtSource/UI/ui_2_pannelli.png",
+   "at": [
+    538,
+    374
+   ]
+  },
+  {
+   "name": "tile_level",
+   "w": 255,
+   "h": 256,
+   "slice": "box",
+   "border": [
+    76,
+    66,
+    56,
+    56
+   ],
+   "source": "ArtSource/UI/ui_3_caselle.png",
+   "at": [
+    80,
+    161
+   ]
+  },
+  {
+   "name": "tile_done",
+   "w": 256,
+   "h": 255,
+   "slice": "box",
+   "border": [
+    77,
+    66,
+    56,
+    56
+   ],
+   "source": "ArtSource/UI/ui_3_caselle.png",
+   "at": [
+    387,
+    161
+   ]
+  },
+  {
+   "name": "tile_locked",
+   "w": 255,
+   "h": 255,
+   "slice": "box",
+   "border": [
+    76,
+    66,
+    56,
+    56
+   ],
+   "source": "ArtSource/UI/ui_3_caselle.png",
+   "at": [
+    695,
+    161
+   ]
+  },
+  {
+   "name": "icon_back",
+   "w": 214,
+   "h": 190,
+   "slice": "none",
+   "border": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "source": "ArtSource/UI/ui_4_icone_navigazione.png",
+   "at": [
+    210,
+    62
+   ]
+  },
+  {
+   "name": "icon_next",
+   "w": 213,
+   "h": 191,
+   "slice": "none",
+   "border": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "source": "ArtSource/UI/ui_4_icone_navigazione.png",
+   "at": [
+    624,
+    61
+   ]
+  },
+  {
+   "name": "icon_home",
+   "w": 213,
+   "h": 190,
+   "slice": "none",
+   "border": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "source": "ArtSource/UI/ui_4_icone_navigazione.png",
+   "at": [
+    211,
+    324
+   ]
+  },
+  {
+   "name": "icon_close",
+   "w": 189,
+   "h": 191,
+   "slice": "none",
+   "border": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "source": "ArtSource/UI/ui_4_icone_navigazione.png",
+   "at": [
+    634,
+    324
+   ]
+  },
+  {
+   "name": "icon_undo",
+   "w": 213,
+   "h": 212,
+   "slice": "none",
+   "border": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "source": "ArtSource/UI/ui_5_icone_gioco.png",
+   "at": [
+    216,
+    54
+   ]
+  },
+  {
+   "name": "icon_restart",
+   "w": 206,
+   "h": 209,
+   "slice": "none",
+   "border": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "source": "ArtSource/UI/ui_5_icone_gioco.png",
+   "at": [
+    612,
+    56
+   ]
+  },
+  {
+   "name": "icon_help",
+   "w": 146,
+   "h": 204,
+   "slice": "none",
+   "border": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "source": "ArtSource/UI/ui_5_icone_gioco.png",
+   "at": [
+    249,
+    320
+   ]
+  },
+  {
+   "name": "icon_check",
+   "w": 220,
+   "h": 196,
+   "slice": "none",
+   "border": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "source": "ArtSource/UI/ui_5_icone_gioco.png",
+   "at": [
+    607,
+    324
+   ]
+  },
+  {
+   "name": "star_full",
+   "w": 226,
+   "h": 221,
+   "slice": "none",
+   "border": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "source": "ArtSource/UI/ui_6_icone_stelle.png",
+   "at": [
+    263,
+    50
+   ]
+  },
+  {
+   "name": "star_empty",
+   "w": 227,
+   "h": 221,
+   "slice": "none",
+   "border": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "source": "ArtSource/UI/ui_6_icone_stelle.png",
+   "at": [
+    541,
+    50
+   ]
+  },
+  {
+   "name": "icon_lock",
+   "w": 175,
+   "h": 227,
+   "slice": "none",
+   "border": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "source": "ArtSource/UI/ui_6_icone_stelle.png",
+   "at": [
+    289,
+    307
+   ]
+  },
+  {
+   "name": "icon_settings",
+   "w": 221,
+   "h": 227,
+   "slice": "none",
+   "border": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "source": "ArtSource/UI/ui_6_icone_stelle.png",
+   "at": [
+    542,
+    307
+   ]
+  },
+  {
+   "name": "icon_sound_on",
+   "w": 240,
+   "h": 180,
+   "slice": "none",
+   "border": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "source": "ArtSource/UI/ui_7_icone_impostazioni.png",
+   "at": [
+    232,
+    63
+   ]
+  },
+  {
+   "name": "icon_sound_off",
+   "w": 214,
+   "h": 177,
+   "slice": "none",
+   "border": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "source": "ArtSource/UI/ui_7_icone_impostazioni.png",
+   "at": [
+    592,
+    65
+   ]
+  },
+  {
+   "name": "icon_vibration",
+   "w": 252,
+   "h": 217,
+   "slice": "none",
+   "border": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "source": "ArtSource/UI/ui_7_icone_impostazioni.png",
+   "at": [
+    223,
+    306
+   ]
+  },
+  {
+   "name": "icon_language",
+   "w": 217,
+   "h": 217,
+   "slice": "none",
+   "border": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "source": "ArtSource/UI/ui_7_icone_impostazioni.png",
+   "at": [
+    590,
+    306
+   ]
+  },
+  {
+   "name": "icon_faucet",
+   "w": 217,
+   "h": 193,
+   "slice": "none",
+   "border": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "source": "ArtSource/UI/ui_8_icone_speciali.png",
+   "at": [
+    243,
+    62
+   ]
+  },
+  {
+   "name": "icon_trophy",
+   "w": 215,
+   "h": 194,
+   "slice": "none",
+   "border": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "source": "ArtSource/UI/ui_8_icone_speciali.png",
+   "at": [
+    591,
+    65
+   ]
+  },
+  {
+   "name": "icon_bolt",
+   "w": 145,
+   "h": 218,
+   "slice": "none",
+   "border": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "source": "ArtSource/UI/ui_8_icone_speciali.png",
+   "at": [
+    279,
+    305
+   ]
+  },
+  {
+   "name": "icon_calendar",
+   "w": 193,
+   "h": 218,
+   "slice": "none",
+   "border": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "source": "ArtSource/UI/ui_8_icone_speciali.png",
+   "at": [
+    602,
+    305
+   ]
+  }
+ ]
+}

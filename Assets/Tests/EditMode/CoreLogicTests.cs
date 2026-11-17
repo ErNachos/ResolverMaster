@@ -5,6 +5,7 @@ using ResolverMaster.Core.Localization;
 using ResolverMaster.Core.Puzzle;
 using ResolverMaster.Core.Save;
 using ResolverMaster.Core.UI;
+using ResolverMaster.Core.UI.Themes;
 using ResolverMaster.Editor;
 
 namespace ResolverMaster.Tests
@@ -197,6 +198,65 @@ namespace ResolverMaster.Tests
             var old = SaveSerializer.FromJson("{\"version\":1,\"settings\":{\"sound\":false}}");
             Assert.AreEqual("", old.home.selectedGame, "older save without the home block");
             Assert.AreEqual(0, HomeSelection.IndexOf(games, old.home.selectedGame));
+        }
+
+        // ErNa-005
+        [Test]
+        public void RectangularGrid_3x4_NeighboursOnEdgesAndCorners()
+        {
+            var g = new SquareTopology(3, 4);
+            Assert.AreEqual(12, g.CellCount);
+            const int up = SquareTopology.Up, right = SquareTopology.Right, down = SquareTopology.Down, left = SquareTopology.Left;
+            // top-left corner (0): only right and down
+            Assert.AreEqual(-1, g.Neighbor(0, up));
+            Assert.AreEqual(-1, g.Neighbor(0, left));
+            Assert.AreEqual(1, g.Neighbor(0, right));
+            Assert.AreEqual(3, g.Neighbor(0, down));
+            // top-right corner (2): no wrap to the next row
+            Assert.AreEqual(-1, g.Neighbor(2, right));
+            Assert.AreEqual(-1, g.Neighbor(2, up));
+            Assert.AreEqual(5, g.Neighbor(2, down));
+            // bottom-left (9) and bottom-right (11) corners of the 4th row
+            Assert.AreEqual(-1, g.Neighbor(9, down));
+            Assert.AreEqual(-1, g.Neighbor(9, left));
+            Assert.AreEqual(6, g.Neighbor(9, up));
+            Assert.AreEqual(-1, g.Neighbor(11, down));
+            Assert.AreEqual(-1, g.Neighbor(11, right));
+            Assert.AreEqual(10, g.Neighbor(11, left));
+            // left edge (3) and right edge (8) cells: no wrap sideways
+            Assert.AreEqual(-1, g.Neighbor(3, left));
+            Assert.AreEqual(5, g.Neighbor(4, right));
+            Assert.AreEqual(-1, g.Neighbor(8, right));
+            Assert.AreEqual(11, g.Neighbor(8, down));
+            Assert.AreEqual(2, g.X(11));
+            Assert.AreEqual(3, g.Y(11));
+            Assert.AreEqual(down, g.DirectionTo(8, 11));
+        }
+
+        // ErNa-005
+        [Test]
+        public void Themes_EveryChapterGetsItsTheme_MissingOrUnknownUsesTheDefault()
+        {
+            var cfg = UnityEngine.ScriptableObject.CreateInstance<ThemeConfig>();
+            try
+            {
+                var book = new StoryBook("test");
+                var c1 = book.AddChapter(new ChapterTheme("c1", "icon", UnityEngine.Color.white, ThemeConfig.Garden), 9);
+                var c2 = book.AddChapter(new ChapterTheme("c2", "icon", UnityEngine.Color.white, ThemeConfig.Farm), 9);
+                var c3 = book.AddChapter(new ChapterTheme("c3", "icon", UnityEngine.Color.white, ThemeConfig.City), 9);
+                var none = book.AddChapter(new ChapterTheme("c4", "icon", UnityEngine.Color.white), 9);
+                var unknown = book.AddChapter(new ChapterTheme("c5", "icon", UnityEngine.Color.white, "volcano"), 9);
+                Assert.AreEqual(ThemeConfig.Garden, cfg.ForChapter(c1).id);
+                Assert.AreEqual(ThemeConfig.Farm, cfg.ForChapter(c2).id);
+                Assert.AreEqual(ThemeConfig.City, cfg.ForChapter(c3).id);
+                Assert.AreEqual(cfg.defaultTheme, cfg.ForChapter(none).id, "a chapter without a theme uses the default one");
+                Assert.AreEqual(cfg.defaultTheme, cfg.ForChapter(unknown).id, "an unknown theme id uses the default one");
+                Assert.IsFalse(cfg.Catalog.Has("volcano"));
+
+                var catalog = new ThemeCatalog(cfg.themes, "city");
+                Assert.AreEqual("city", catalog.ForChapter(none).id, "the default is the configured one");
+            }
+            finally { UnityEngine.Object.DestroyImmediate(cfg); }
         }
 
         [Test]

@@ -3,14 +3,16 @@ using ResolverMaster.Core.App;
 using ResolverMaster.Core.Games;
 using ResolverMaster.Core.Localization;
 using ResolverMaster.Core.Puzzle;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
 namespace ResolverMaster.Core.UI.Screens
 {
     /// <summary>
-    /// The levels of one Story chapter in a 3x3 grid: level number (numbered across chapters), stars earned and a lock.
-    /// Inside a chapter a level unlocks when the previous one is solved (<see cref="StoryProgress.IsLevelUnlocked"/>).
+    /// The levels of one Story chapter in a 3x3 grid of Gemini tiles over the backdrop of the chapter theme: cream = to play,
+    /// green = solved (with its stars), grey with the lock = locked. Inside a chapter a level unlocks when the previous one is solved
+    /// (<see cref="StoryProgress.IsLevelUnlocked"/>).
     /// </summary>
     public sealed class LevelSelectScreen : UiScreen
     {
@@ -20,14 +22,15 @@ namespace ResolverMaster.Core.UI.Screens
         {
             public Button Button;
             public Image Background;
-            public Text Number;
+            public TextMeshProUGUI Number;
             public Image Lock;
             public Image[] Stars;
         }
 
         AppServices _ctx;
+        ScreenLayout _layout;
         LocalizedText _title;
-        Text _subtitle;
+        TextMeshProUGUI _subtitle;
         RectTransform _grid;
         LayoutElement _gridLayout;
         readonly List<LevelButton> _buttons = new List<LevelButton>();
@@ -40,14 +43,15 @@ namespace ResolverMaster.Core.UI.Screens
             var layout = ScreenLayout.Create<LevelSelectScreen>(ctx, parent, "LevelSelectScreen");
             var screen = layout.Root.gameObject.AddComponent<LevelSelectScreen>();
             screen._ctx = ctx;
+            screen._layout = layout;
             var ui = ctx.Ui;
             var s = ctx.Style;
 
-            ScreenLayout.TopBarButton(ctx, layout.TopBar, "back", left: true).onClick.AddListener(() => ctx.Screens.Back());
+            ScreenLayout.TopBarButton(ctx, layout.TopBar, "icon_back", left: true).onClick.AddListener(() => ctx.Screens.Back());
             screen._title = ScreenLayout.TopBarTitle(ctx, layout.TopBar, null, s.headerSize).gameObject.AddComponent<LocalizedText>();
 
-            screen._subtitle = ui.Label("Subtitle", layout.Body, null, s.bodySize, s.text, TextAnchor.MiddleCenter, bold: true);
-            UiFactory.Layout(screen._subtitle, preferredHeight: 72);
+            screen._subtitle = ScreenLayout.Badge(ctx, layout.Body, "Subtitle", null, s.bodySize, out var badge);
+            UiFactory.Layout(badge, preferredHeight: 84);
 
             screen._grid = ui.Rect("Levels", layout.Body);
             var grid = screen._grid.gameObject.AddComponent<GridLayoutGroup>();
@@ -66,6 +70,7 @@ namespace ResolverMaster.Core.UI.Screens
             Module = module;
             Chapter = module.Story.Chapter(chapterNumber);
             _title.Bind(_ctx.Loc, Chapter.Theme.nameKey);
+            _layout.SetTheme(_ctx.Themes != null ? _ctx.Themes.ForChapter(Chapter) : null);
             int count = Chapter.LevelCount;
             while (_buttons.Count < count) _buttons.Add(CreateButton(_buttons.Count));
             for (int i = 0; i < _buttons.Count; i++) _buttons[i].Button.gameObject.SetActive(i < count);
@@ -82,28 +87,28 @@ namespace ResolverMaster.Core.UI.Screens
             var ui = _ctx.Ui;
             var s = _ctx.Style;
             var b = new LevelButton();
-            b.Button = ui.CardButton("Level_" + (slot + 1), _grid, s.surface);
+            b.Button = ui.Pressable("Level_" + (slot + 1), _grid, s.tileLevel, Color.white);
             b.Background = (Image)b.Button.targetGraphic;
             b.Button.onClick.AddListener(() => Play(slot));
 
             b.Number = ui.Label("Number", b.Button.transform, null, s.levelNumberSize, s.text, TextAnchor.MiddleCenter, bold: true);
             var nrt = b.Number.rectTransform;
-            nrt.anchorMin = new Vector2(0, 0.36f);
+            nrt.anchorMin = new Vector2(0, 0.43f);
             nrt.anchorMax = new Vector2(1, 1);
-            nrt.offsetMin = new Vector2(12, 0);
-            nrt.offsetMax = new Vector2(-12, -16);
+            nrt.offsetMin = new Vector2(16, 0);
+            nrt.offsetMax = new Vector2(-16, -18);
 
-            b.Lock = ui.Icon("Lock", b.Button.transform, "lock", 96, s.icon);
-            UiFactory.Place(b.Lock.rectTransform, 0.5f, 0.5f, new Vector2(96, 96), new Vector2(0, s.cardDepth / 2f));
+            b.Lock = ui.Icon("Lock", b.Button.transform, "icon_lock", s.levelLockSize);
+            UiFactory.Place(b.Lock.rectTransform, 0.5f, 0.5f, new Vector2(s.levelLockSize, s.levelLockSize), new Vector2(0, 8));
 
             b.Stars = new Image[StarRating.MaxStars];
-            float step = s.levelStarSize + 8;
+            float step = s.levelStarSize + 6;
             for (int i = 0; i < b.Stars.Length; i++)
             {
-                b.Stars[i] = ui.Icon("Star" + (i + 1), b.Button.transform, "star", s.levelStarSize, s.starOff);
+                b.Stars[i] = ui.Picture("Star" + (i + 1), b.Button.transform, s.starEmpty, s.levelStarSize);
                 // the middle star sits a little higher, like on the win panel
                 UiFactory.Place(b.Stars[i].rectTransform, 0.5f, 0, new Vector2(s.levelStarSize, s.levelStarSize),
-                    new Vector2((i - 1) * step, 28 + s.cardDepth + s.levelStarSize / 2 + (i == 1 ? 8 : 0)));
+                    new Vector2((i - 1) * step, 36 + s.levelStarSize / 2 + (i == 1 ? 8 : 0)));
                 b.Stars[i].rectTransform.pivot = new Vector2(0.5f, 0.5f);
             }
             return b;
@@ -130,15 +135,17 @@ namespace ResolverMaster.Core.UI.Screens
                 int level = Chapter.FirstLevel + i;
                 bool unlocked = StoryProgress.IsLevelUnlocked(progress, book, level);
                 int stars = StoryProgress.Stars(progress, book, level);
-                b.Button.interactable = unlocked;   // locked: the lock says it, the content stays readable
-                b.Background.color = unlocked ? s.surface : s.badge;
+                b.Button.interactable = unlocked;   // locked: the grey tile and the lock say it
+                b.Background.sprite = !unlocked ? s.tileLocked : stars > 0 ? s.tileDone : s.tileLevel;
                 b.Number.text = (level + 1).ToString();
+                b.Number.color = stars > 0 ? s.onPrimary : s.text;
+                _ctx.Ui.SetOutlined(b.Number, stars > 0);
                 b.Number.gameObject.SetActive(unlocked);
                 b.Lock.gameObject.SetActive(!unlocked);
                 for (int k = 0; k < b.Stars.Length; k++)
                 {
                     b.Stars[k].gameObject.SetActive(unlocked);
-                    b.Stars[k].color = k < stars ? s.starOn : s.starOff;
+                    b.Stars[k].sprite = k < stars ? s.starFull : s.starEmpty;
                 }
             }
         }

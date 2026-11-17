@@ -25,27 +25,16 @@ GLYPH = 112         # glyph em size inside the texture (px)
 FILL = 1            # 1 = filled symbols (read better at small sizes)
 WEIGHT = 500
 
-# asset name -> Material Symbols name
+# asset name -> Material Symbols name. ErNa-005: the UI icons are Gemini drawings (Assets/Art/UI/icon_*, Tools/Art/make_ui_art.py);
+# only these placeholders are left, until their drawings arrive.
 ICONS = {
-    "back": "arrow_back",
-    "settings": "settings",
-    "undo": "undo",
-    "restart": "restart_alt",
-    "help": "help",
-    "star": "star",
-    "lock": "lock",
-    "sound": "volume_up",
-    "vibration": "vibration",
-    "language": "language",
     "story": "menu_book",
-    "challenge": "bolt",
     "game_plumber": "plumbing",
     "game_trafficjam": "directions_car",
-    # Plumber: chapter themes, "Open the water" button
+    # Plumber: chapter themes
     "water_drop": "water_drop",
     "fork": "call_split",
     "palette": "palette",
-    "faucet": "faucet",
 }
 
 

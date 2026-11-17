@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using ResolverMaster.Core.UI;
@@ -8,8 +10,9 @@ using UnityEngine;
 namespace ResolverMaster.Editor
 {
     /// <summary>
-    /// Creates and fills the UI kit assets: the UiKitStyle (fonts, sprites) and the sprite libraries (<see cref="IconLibrary"/>):
-    /// icons (Assets/Art/Icons), Home card illustrations (Assets/Art/Cards) and the art of the minigames (Plumber fountains).
+    /// Creates and fills the UI kit assets: the UiKitStyle (TMP fonts, materials, Gemini and generated sprites) and the sprite libraries
+    /// (<see cref="IconLibrary"/>): icons (Gemini icon_* drawings in Assets/Art/UI + placeholder masks in Assets/Art/Icons), Home card
+    /// illustrations (Assets/Art/Cards) and the art of the minigames (Plumber fountains).
     /// </summary>
     public static class UiKitAssets
     {
@@ -23,12 +26,20 @@ namespace ResolverMaster.Editor
         public const string FontRegularPath = "Assets/Art/Fonts/Fredoka-Regular.ttf";
         public const string FontBoldPath = "Assets/Art/Fonts/Fredoka-SemiBold.ttf";
 
-        /// <summary>Every sprite library: (art folder, library asset). A new minigame with drawings adds one line here.</summary>
-        public static readonly (string dir, string asset)[] Libraries =
+        /// <summary>A sprite library: the folders it reads (with an optional file-name filter) and its asset.</summary>
+        public sealed class Library
         {
-            (IconsDir, IconLibraryPath),
-            (CardsDir, CardLibraryPath),
-            (PlumberArt.AssetDir, PlumberArtPath),
+            public string[] Dirs;
+            public Func<string, bool> Accept;
+            public string Asset;
+        }
+
+        /// <summary>Every sprite library. A new minigame with drawings adds one line here.</summary>
+        public static readonly Library[] Libraries =
+        {
+            new Library { Dirs = new[] { UiArtSetup.UiArtDir, IconsDir }, Accept = n => !n.Contains("/UI/") || Path.GetFileName(n).StartsWith("icon_"), Asset = IconLibraryPath },
+            new Library { Dirs = new[] { CardsDir }, Asset = CardLibraryPath },
+            new Library { Dirs = new[] { PlumberArt.AssetDir }, Asset = PlumberArtPath },
         };
 
         public static UiKitStyle LoadOrCreateStyle()
@@ -41,20 +52,22 @@ namespace ResolverMaster.Editor
             return style;
         }
 
+        /// <summary>Fonts, Gemini sprite import settings, materials, style and libraries (TMP Essentials must be imported already).</summary>
         public static void EnsureAssets()
         {
             var style = LoadOrCreateStyle();
-            style.fontRegular = AssetDatabase.LoadAssetAtPath<Font>(FontRegularPath);
-            style.fontBold = AssetDatabase.LoadAssetAtPath<Font>(FontBoldPath);
-            EditorUtility.SetDirty(style);
+            UiArtSetup.EnsureFonts();
+            int configured = UiArtSetup.ConfigureUiArt();
+            UiArtSetup.FillStyle(style);
             RebuildSpriteLibraries();
             AssetDatabase.SaveAssets();
+            Debug.Log($"UiKitAssets: style filled, {configured} Gemini UI sprites configured.");
         }
 
         [MenuItem("Resolver Master/UI Kit/Rebuild Sprite Libraries")]
         public static void RebuildSpriteLibraries()
         {
-            foreach (var (dir, asset) in Libraries) RebuildLibrary(dir, asset);
+            foreach (var lib in Libraries) RebuildLibrary(lib);
         }
 
         public static void RebuildSpriteLibrariesBatch()
@@ -63,29 +76,35 @@ namespace ResolverMaster.Editor
             EditorApplication.Exit(0);
         }
 
-        /// <summary>Fills the library at <paramref name="assetPath"/> with every sprite under <paramref name="dir"/> (name = file name).</summary>
-        public static IconLibrary RebuildLibrary(string dir, string assetPath)
+        /// <summary>Fills the library with every sprite of its folders (name = file name; the first folder wins on equal names).</summary>
+        public static IconLibrary RebuildLibrary(Library library)
         {
-            var lib = AssetDatabase.LoadAssetAtPath<IconLibrary>(assetPath);
+            var lib = AssetDatabase.LoadAssetAtPath<IconLibrary>(library.Asset);
             if (lib == null)
             {
-                Directory.CreateDirectory(Path.GetDirectoryName(assetPath));
+                Directory.CreateDirectory(Path.GetDirectoryName(library.Asset));
                 lib = ScriptableObject.CreateInstance<IconLibrary>();
-                AssetDatabase.CreateAsset(lib, assetPath);
+                AssetDatabase.CreateAsset(lib, library.Asset);
             }
-            lib.entries = AssetDatabase.IsValidFolder(dir)
-                ? AssetDatabase.FindAssets("t:Sprite", new[] { dir })
-                    .Select(AssetDatabase.GUIDToAssetPath)
-                    .Distinct()
-                    .OrderBy(p => p)
-                    .Select(p => new IconLibrary.Entry { name = Path.GetFileNameWithoutExtension(p), sprite = AssetDatabase.LoadAssetAtPath<Sprite>(p) })
-                    .Where(e => e.sprite != null)
-                    .ToList()
-                : new System.Collections.Generic.List<IconLibrary.Entry>();
+            var entries = new List<IconLibrary.Entry>();
+            var seen = new HashSet<string>();
+            foreach (var dir in library.Dirs)
+            {
+                if (!AssetDatabase.IsValidFolder(dir)) continue;
+                foreach (var path in AssetDatabase.FindAssets("t:Sprite", new[] { dir }).Select(AssetDatabase.GUIDToAssetPath).Distinct().OrderBy(p => p))
+                {
+                    if (library.Accept != null && !library.Accept(path)) continue;
+                    var name = Path.GetFileNameWithoutExtension(path);
+                    var sprite = AssetDatabase.LoadAssetAtPath<Sprite>(path);
+                    if (sprite == null || !seen.Add(name)) continue;
+                    entries.Add(new IconLibrary.Entry { name = name, sprite = sprite });
+                }
+            }
+            lib.entries = entries.OrderBy(e => e.name).ToList();
             lib.InvalidateCache();
             EditorUtility.SetDirty(lib);
             AssetDatabase.SaveAssets();
-            Debug.Log($"UiKitAssets: {assetPath} has {lib.entries.Count} sprites from {dir}: {string.Join(", ", lib.entries.Select(e => e.name))}");
+            Debug.Log($"UiKitAssets: {library.Asset} has {lib.entries.Count} sprites from {string.Join(", ", library.Dirs)}: {string.Join(", ", lib.entries.Select(e => e.name))}");
             return lib;
         }
     }

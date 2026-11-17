@@ -3,7 +3,8 @@
     "rootNamespace": "ResolverMaster.Games",
     "references": [
         "ResolverMaster.Core",
-        "UnityEngine.UI"
+        "UnityEngine.UI",
+        "Unity.TextMeshPro"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

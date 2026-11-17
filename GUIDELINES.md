@@ -20,9 +20,9 @@
 - Eccezione accettata: il salvataggio usa `JsonUtility` (funziona anche in EditMode).
 
 ## 4. Parametri in un unico file per sistema
-- Regole comuni dei rompicapi (stelle): **`PuzzleConfig`** (`Assets/Resources/ResolverMaster/PuzzleConfig.asset`). Idraulico: **`PlumberConfig`** (`Assets/Resources/Games/Plumber/PlumberConfig.asset`: colori dell'acqua e aloni degli arrivi, spessori, durate, generatore, capitoli, tabella di difficoltà). Gli asset mancanti si creano con *Setup > Ensure Config Assets* (valori predefiniti dalle classi; gli asset esistenti non vengono toccati).
-- UI: **`UiKitStyle`** (`Assets/Resources/ResolverMaster/UiKitStyle.asset`): colori, raggi, spessori, profondità dei pulsanti, misure, Home, dimensioni del testo, durate delle animazioni, font, sprite generati. Nessun colore o misura sparso nelle schermate.
-- Se un nuovo stile cambia molti valori predefiniti: `ConfigAssets.ResetVisualDefaultsBatch` riscrive `UiKitStyle` e `PlumberConfig` con i valori delle classi (controllare prima con git che non ci siano modifiche a mano).
+- Regole comuni dei rompicapi (stelle): **`PuzzleConfig`** (`Assets/Resources/ResolverMaster/PuzzleConfig.asset`). Temi dei capitoli (Core): **`ThemeConfig`** (`Assets/Resources/ResolverMaster/ThemeConfig.asset`). Idraulico: **`PlumberConfig`** (`Assets/Resources/Games/Plumber/PlumberConfig.asset`: colori dell'acqua e aloni degli arrivi, spessori, ombre, velocità dell'acqua, durate, generatore, capitoli con il loro tema, tabella di difficoltà). Gli asset mancanti si creano con *Setup > Ensure Config Assets* (valori predefiniti dalle classi; gli asset esistenti non vengono toccati).
+- UI: **`UiKitStyle`** (`Assets/Resources/ResolverMaster/UiKitStyle.asset`): colori, misure, pressione dei pulsanti, Home, dimensioni e contorno dei testi, durate delle animazioni, font TMP, materiali, sprite di Gemini e generati. Nessun colore o misura sparso nelle schermate.
+- Se un nuovo stile cambia molti valori predefiniti: `ConfigAssets.ResetVisualDefaultsBatch` riscrive `UiKitStyle`, `ThemeConfig` e `PlumberConfig` con i valori delle classi (controllare prima con git che non ci siano modifiche a mano).
 - Ogni sistema futuro (Storia, Challenge, ogni minigioco) avrà il suo unico file di parametri.
 
 ## 5. Testi e lingue
@@ -44,7 +44,7 @@
 
 ## 7b. Rompicapi
 - Ogni gioco implementa le sue regole su `PuzzleBase<TLevel, TMove>` (carica, mossa, vittoria, annulla, ricomincia; mosse fatte = mosse sulla pila di annullamento) e la sua board su `PuzzleBoard`. Schermate, contatori, stelle e salvataggio sono del Core.
-- Griglia: solo tramite `IGridTopology` (celle intere, direzioni in senso orario, `RotateMask`); oggi `SquareTopology`.
+- Griglia: solo tramite `IGridTopology` (celle intere, direzioni in senso orario, `RotateMask`); oggi `SquareTopology`, con **colonne e righe diverse** (ErNa-005). Le board riportano `GridColumns` e `GridRows` e usano celle quadrate grandi il più possibile nell'area, centrate.
 - Stelle: 3 al minimo, 2 fino a minimo + max(30% arrotondato per difetto, 2), 1 altrimenti (`StarRules`).
 - Difficoltà: `DifficultyTable` di gradini (livelli coperti + intervalli min/max con chiavi scelte dal gioco). Ogni livello salvato deve rispettare il suo gradino (controllato dal validatore).
 - Mosse minime: calcolate da un risolutore esatto del gioco, mai stimate; il validatore le ricalcola.
@@ -59,6 +59,8 @@
   - Il pulsante sta sopra la barra in basso. Con `IsBusy` la board lo disattiva durante le animazioni, insieme ad annulla e ricomincia.
   - I messaggi brevi (`MessageRequested(chiave)`) compaiono al posto del pulsante. Durate in `UiKitStyle` (`toastHold`, `toastFade`).
 - Una vittoria che non nasce da una mossa (es. aprire l'acqua) usa `PuzzleBase.RefreshSolved()`; l'azione non conta come mossa.
+- **Temi dei capitoli (Core, ErNa-005)**: ogni capitolo nomina un tema di `ThemeConfig` (`ChapterTheme.theme`); senza tema o con id sconosciuto vale il tema predefinito (`ThemeCatalog`). La grafica del tema è generata da `ThemeArt` (seed del tema) finché non arrivano le immagini (`VisualTheme.*Image`). Nei terreni niente blu né arancione forti.
+- **Animazioni che seguono un percorso** (es. l'acqua): i tempi (in che ordine e quando si raggiunge ogni punto) si calcolano nella logica pura; la vista disegna da quei tempi con il tempo reale (`Time.unscaledDeltaTime`), mai a passi per fotogramma.
 
 ## 8. Pooling
 - Gli oggetti creati spesso durante il gioco (pezzi, celle, effetti) si riusano da un pool (`ComponentPool<T>` del Core); niente `Instantiate`/`Destroy` per mossa. Le schermate sono create una volta all'avvio e poi attivate/disattivate.
@@ -68,12 +70,15 @@
 - Canvas Scaler: riferimento 1080x1920, modalità *Expand* (da 9:16 a 9:21 la larghezza resta 1080 unità e l'altezza cresce fino a 2520).
 - Ogni schermata ha sfondo a tutto schermo e contenuto dentro `SafeArea`.
 - Gli elementi si costruiscono con `UiFactory` dallo stile. Gli sprite a 9 fette si rigenerano da *Resolver Master > UI Kit > Regenerate Sprites*.
-- **Stile (ErNa-004)**: cartoon, contorno nero spesso nello sprite, angoli molto arrotondati, colori pieni, fascia d'ombra in basso. Pulsanti: `PrimaryButton` (verde, testo bianco con contorno), `SecondaryButton` (crema), `IconButton` (rotondo, icona scura), `CardButton` (scheda), `Panel` (non toccabile), `Title` (testo chiaro con contorno scuro). Ogni pulsante è un `PressableButton`: premuto scende di `buttonDepth - pressedDepth`; disattivato con `UiFactory.SetInteractable` (colori spenti).
-- **Mai blu né arancione** come colori dell'interfaccia (sono i colori dell'acqua). Pulsanti toccabili di almeno `minTouchSize` (130 px): le anteprime lo misurano.
+- **Stile (ErNa-005)**: pulsanti, pannelli, caselle, stelle e icone sono disegni di Gemini (`Assets/Art/UI`, `Tools/Art/make_ui_art.py`); dal codice restano solo la cornice colorata delle schede della Home e le pillole sottili (`UiKitGenerator`). Pulsanti: `PrimaryButton` (pillola verde, testo bianco con contorno), `SecondaryButton` (pillola crema), `IconButton` (rotondo crema o giallo con icona di Gemini), `PanelButton`, `CardButton` (scheda della Home), `Panel` (finestra crema), `Title`. Ogni pulsante è un `PressableButton`: premuto scende di `pressDrop` e si scurisce; disattivato con `UiFactory.SetInteractable` (sprite desaturati, testi sbiaditi).
+- **Testi solo TextMesh Pro** (`TextMeshProUGUI`, Fredoka SDF statico); il contorno è il materiale SDF `fontBoldOutlined`, mai copie del testo. Un carattere nuovo va aggiunto a `UiArtSetup.Charset`.
+- **Mai ingrandire la grafica di progetto**: le pillole non sono mai più alte del disegno (159 px; `SlicedFit` tiene la proporzione verticale), il nastro si disegna alla sua misura. Le anteprime segnalano ogni sprite di `Assets/` disegnato più grande della sua risoluzione.
+- Un `Graphic` scritto da noi (es. `WaterGraphic`) ha `[ExecuteAlways]` (non si eredita) e un `CanvasRenderer` aggiunto prima del componente, altrimenti non si disegna nelle anteprime.
+- **Mai blu né arancione** come colori dell'interfaccia e dei terreni (sono i colori dell'acqua). Pulsanti toccabili di almeno `minTouchSize` (130 px): le anteprime lo misurano.
 - Grafica, cartelle e script: `docs/grafica.md`.
 - Un `LayoutElement` dentro un layout group ha `flexibleHeight = 0` (vedi `UiFactory.Layout`): un layout group annidato con *force expand* altrimenti si allunga fino a riempire lo schermo.
 - Un'Image a 9 fette con layout group sullo stesso oggetto riporta come altezza preferita la somma dei bordi dello sprite: fissa l'altezza con un `LayoutElement`.
-- Icone: Google Material Symbols (Apache 2.0) generate da `Tools/Art/make_icons.py` in `Assets/Art/Icons/` (maschere bianche, colore scuro unico `UiKitStyle.icon`; segnaposto finché arrivano quelle di Gemini). Per aggiungerne una: una riga in `ICONS`, rilancia lo script, poi *UI Kit > Rebuild Sprite Libraries*.
+- Icone: quelle di Gemini (`icon_*`, a colori, `UiFactory.Icon`); le poche ancora segnaposto sono maschere Material in `Assets/Art/Icons/` (`UiFactory.MaskIcon`, colore `UiKitStyle.icon`). La `IconLibrary` le contiene tutte (*UI Kit > Rebuild Sprite Libraries*).
 - Librerie di sprite (`IconLibrary`, Core): icone, schede della Home (`Assets/Art/Cards`, `CardLibrary`) e disegni dei giochi (es. `PlumberArt`). Una nuova cartella di disegni = una riga in `UiKitAssets.Libraries` (e in `ArtImportRules.IllustrationDirs`).
 - Home: una scheda per gioco (`GameInfo.CardImage`, `GameInfo.CardColor`); immagine mancante = segnaposto e warning del validatore. Logica di scorrimento in `CardCarousel` (C# puro).
 - I popup a tutto schermo (pannello di vittoria) stanno sotto un livello scuro con `ModalOverlay`: le misure delle anteprime considerano solo il popup.
@@ -86,19 +91,20 @@
 - Controlli attuali:
   - lingue: stesse chiavi in tutte le lingue, chiavi del codice presenti, righe malformate o duplicate;
   - minigiochi: id, nome e icona validi;
-  - UI kit: stile, font, sprite, icone del Core;
+  - UI kit: tutti gli elementi di Gemini in `Assets/Art/UI`, risorse TMP, font e materiali, sprite dello stile, icone del Core;
+  - temi: `ThemeConfig` presente, id unici, tema predefinito valido, nomi tradotti, niente blu/arancione forti nei terreni;
   - PuzzleConfig;
   - schede della Home: colore impostato (errore), immagine presente (solo warning);
   - disegni dell'Idraulico: 4 fonti con maschera non vuota e 4 arrivi, nei file e nella libreria;
-  - Idraulico, sui parametri: colori e aloni, icone e nomi dei capitoli, chiavi di `PlumberKeys`;
+  - Idraulico, sui parametri: colori e aloni, icone, nomi e **tema valido** dei capitoli, chiavi di `PlumberKeys`;
   - Idraulico, su ogni livello della Storia: leggibile e risolvibile con le regole ErNa-003; mosse minime salvate = risolutore; aprendo l'acqua all'inizio non è già risolto; valori nel gradino; ogni capitolo ha esattamente 9 livelli; nel capitolo 1 la soluzione non usa T e non ne ha bisogno; avviso se il seed non lo riproduce più.
 
 ## 11. Anteprime e misure
 - *Resolver Master > Make Previews*, in IT ed EN, a 1080x1920 (9:16) e 1080x2520 (9:21), in `Previews/` (ignorata da git). La zona fuori dalla safe area simulata è tinta di rosso. Schermate:
-  - Home con la scheda Idraulico e con la scheda Traffic jam al centro, scelta della modalità, Impostazioni, lista dei capitoli, griglia 3x3 del capitolo 2;
-  - Gioco: livello 1 (3x3) e livello 27 (6x6) prima dell'apertura, apertura riuscita a due colori, apertura sbagliata per perdita nel momento dell'effetto, pannello di vittoria.
+  - Home con la scheda Idraulico e con la scheda Traffic jam al centro, scelta della modalità, Impostazioni, lista dei capitoli, griglia dei livelli di ogni capitolo (con il suo tema);
+  - Gioco: un livello per capitolo prima dell'apertura (1: 3x4, 14: 5x7, 27: 6x8), acqua a metà percorso, apertura riuscita a due colori, apertura sbagliata per perdita nel momento dell'effetto, pannello di vittoria.
 - `Previews/previews_report.txt` misura: margini della safe area, distanza minima del contenuto dai bordi sicuri, elementi fuori schermo o fuori safe area, testi tagliati, elementi sovrapposti, elementi che escono dal loro contenitore, Image senza sprite.
-- Su ogni schermata misura anche il pulsante più piccolo (errore sotto `minTouchSize`). Nella schermata di gioco: dimensione delle celle e dei disegni di fonti e arrivi, distanza della griglia da bordi e barre, posizione del pulsante d'azione (o del messaggio) rispetto a griglia e barra in basso.
+- Su ogni schermata misura anche il pulsante più piccolo (errore sotto `minTouchSize`), i testi TMP che escono dal loro rettangolo e la scala massima degli sprite (errore se uno sprite di `Assets/` è ingrandito; quelli generati sono solo riportati). Nella schermata di gioco: celle (colonne x righe e lato), spazio libero sopra e sotto la griglia, disegni di fonti e arrivi, distanze da bordi e barre, posizione del pulsante d'azione.
 - Safe area simulata: 9:16 nessun ritaglio; 9:21 120 px in alto (foro/notch) e 72 px in basso (barra dei gesti).
 - In Editor gli asset usati dalle anteprime si caricano **dopo** `NewScene(Single)`, che scarica gli asset non referenziati.
 
@@ -112,4 +118,5 @@
 - ErNa-001: prima stesura (scheletro del progetto).
 - ErNa-002: basi dei rompicapi nel Core (§7b), `SeededRandom` al posto di `System.Random` (§7), file di parametri `PuzzleConfig`/`PlumberConfig` (§4), livelli Storia generati e salvati, popup con `ModalOverlay`, `SnapVisuals` per le anteprime.
 - ErNa-004: stile cartoon del UI kit (sprite con contorno e profondità, `PressableButton`, niente blu/arancione), Home a schede (`CardCarousel`, blocco `home` del salvataggio), librerie di sprite generiche, fonti e arrivi disegnati scelti dal seed (`ArtVariants`), nuovi controlli e misure (§9, §10, §11).
+- ErNa-005: interfaccia di Gemini e TextMesh Pro (§9), pulsanti premuti/disattivati, temi dei capitoli nel Core (§4, §7b), griglie rettangolari (§7b), acqua continua con tempi nella logica (§7b), nuovi controlli e misure (§10, §11).
 - ErNa-003: capitoli da 9 livelli, sblocco e id stabili nel Core (§7b); pulsante d'azione opzionale e messaggi brevi nella schermata di gioco (§7b); `Decoration` (§9); nuove regole e controlli dell'Idraulico (§10, `docs/idraulico-regole.md`); anteprime aggiornate (§11).

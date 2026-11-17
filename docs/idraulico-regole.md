@@ -59,9 +59,9 @@ I capitoli sono di 9 livelli, numerati di seguito (1–27). Lo sblocco segue le 
 
 | Cap. | Nome | Contenuto | Griglie |
 |---|---|---|---|
-| 1 | Prima goccia / First Drop | 1 fonte → 1 fontana, dritti e curve. La T compare solo come inganno: non serve mai, e il validatore lo verifica | 3x3 → 5x5 |
-| 2 | Il bivio / The Fork | 1 fonte → 2 fontane dello stesso colore, una T sul percorso | 4x4 → 5x5 |
-| 3 | Due colori / Two Colors | 2 fonti → 2 fontane, una blu e una arancione | 5x5 → 6x6 |
+| 1 | Prima goccia / First Drop | 1 fonte → 1 fontana, dritti e curve. La T compare solo come inganno: non serve mai, e il validatore lo verifica | 3x4 → 5x7 (Giardino) |
+| 2 | Il bivio / The Fork | 1 fonte → 2 fontane dello stesso colore, una T sul percorso | 4x5 → 5x7 (Fattoria) |
+| 3 | Due colori / Two Colors | 2 fonti → 2 fontane, una blu e una arancione | 5x7 → 6x8 (Città) |
 
 - La difficoltà sale dentro il capitolo e riparte più bassa all'inizio del successivo: i primi 2 livelli di ogni capitolo nuovo sono facili.
 - I livelli 1, 2 e 3 richiedono 1, 2 e 3 mosse.

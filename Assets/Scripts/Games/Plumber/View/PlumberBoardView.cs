@@ -3,28 +3,32 @@ using System.Collections.Generic;
 using ResolverMaster.Core.App;
 using ResolverMaster.Core.Puzzle;
 using ResolverMaster.Core.UI;
+using ResolverMaster.Core.UI.Themes;
 using UnityEngine;
 using UnityEngine.UI;
 
 namespace ResolverMaster.Games.Plumber.View
 {
     /// <summary>
-    /// The plumber board on the Core game screen: a square cream card fitted into the puzzle area, one pooled cell per grid cell.
+    /// The plumber board on the Core game screen: a cream Gemini window fitted into the puzzle area (as big as possible, centred,
+    /// columns and rows may differ), the ground of the chapter theme between the cells, one pooled cell per grid cell on a theme slab.
     /// Playing: a tap rotates the piece at once in the model (the counter updates at once) and queues the visual turn; pipes stay grey.
-    /// Sources and sinks are fountain drawings (one of 4 each, picked from the level seed) that never rotate; a pipe stub under them
-    /// shows their opening; a source's mask has its water color, a sink sits on a halo of its color.
-    /// "Open the water" (the Core main action, not a move) starts the water from every source together, cell after cell (taps are
-    /// blocked meanwhile; running water shimmers): success = water splashes out of the fountains, then <see cref="PuzzleBoard.Completed"/>;
-    /// failure = the water stops at the first problem, its effect plays there (splash for a leak, blinking cells for mixed or wrong
-    /// colors, blinking fountain when dry) with a short message, then the level restarts (moves 0, undo empty).
+    /// Sources and sinks are fountain drawings (one of 4 each, picked from the level seed) that never rotate, on a soft shadow; a pipe
+    /// stub enters under them towards their opening; a source's mask has its water color, a sink sits on a halo of its color.
+    /// "Open the water" (the Core main action, not a move): pending rotations end, then the water runs continuously from every source
+    /// at the same speed, following the shape of each pipe (<see cref="WaterTiming"/>, <see cref="WaterGraphic"/>); after a T both
+    /// branches fill together; a fountain fills up when the water reaches it. Success = water splashes out of the fountains, then
+    /// <see cref="PuzzleBoard.Completed"/>; failure = the water runs up to the first problem, its effect plays there (splash for a leak,
+    /// blinking cells for mixed or wrong colors, blinking fountain when dry) with a short message, then the level restarts.
+    /// Every animation uses the real elapsed time (same duration at 30 and 60 fps).
     /// </summary>
     public sealed class PlumberBoardView : PuzzleBoard
     {
-        enum Phase { Playing, Flowing, Filling, Won, FailEffect, FailPause }
+        enum Phase { Playing, Flowing, Spraying, Won, FailEffect, FailPause }
 
         const int SplashDrops = 5;
 
-        static readonly MainActionInfo s_openWater = new MainActionInfo { LabelKey = PlumberKeys.OpenWater, IconName = "faucet" };
+        static readonly MainActionInfo s_openWater = new MainActionInfo { LabelKey = PlumberKeys.OpenWater, IconName = "icon_faucet" };
 
         PlumberModule _module;
         PlumberConfig _cfg;
@@ -32,7 +36,7 @@ namespace ResolverMaster.Games.Plumber.View
         PlumberArt _art;
         UiFactory _ui;
         RectTransform _frame, _cells, _effects;
-        float _frameDepth;
+        Image _ground;
         ComponentPool<PipeCellView> _pool;
         readonly List<PipeCellView> _views = new List<PipeCellView>();
         readonly List<int> _sinks = new List<int>();
@@ -41,15 +45,19 @@ namespace ResolverMaster.Games.Plumber.View
         readonly PlumberPuzzle _puzzle = new PlumberPuzzle();
 
         Phase _phase;
-        float _clock, _shimmerClock;
+        float _clock;
         WaterState _water;
-        bool[] _shown = Array.Empty<bool>();
+        WaterTiming _timing;
+        WaterMotion _motion;
+        /// <summary>Time from the opening when every fountain is full (success) or when the water reaches the first problem (failure).</summary>
+        float _flowEnd;
         Vector2 _fittedSize;
 
         public PlumberPuzzle Puzzle => _puzzle;
         public override IPuzzleSession Session => _puzzle;
         public override RectTransform GridRect => _cells;
         public override int GridColumns => _puzzle.Grid?.Width ?? 0;
+        public override int GridRows => _puzzle.Grid?.Height ?? 0;
         public override MainActionInfo MainAction => s_openWater;
         /// <summary>The water is running (or its failure effect): taps, undo, restart and the main action wait.</summary>
         public override bool IsBusy => _phase != Phase.Playing && _phase != Phase.Won;
@@ -82,15 +90,17 @@ namespace ResolverMaster.Games.Plumber.View
             _cfg = PlumberConfig.LoadOrDefault();
             _sprites = PipeSprites.For(_cfg);
             _art = PlumberArt.Load();
-            _frameDepth = ctx.Style.cardDepth;
-            var frame = _ui.Panel("Frame", transform, _cfg.boardColor);
+            var frame = _ui.Panel("Frame", transform);
             _frame = frame.rectTransform;
             UiFactory.Place(_frame, 0.5f, 0.5f, new Vector2(100, 100), Vector2.zero);
             float inset = _cfg.boardInset;
+            _ground = _ui.Image("Ground", _frame, null, Color.white);
+            UiFactory.Stretch(_ground.rectTransform, inset, inset, inset, inset);
+            _ground.gameObject.AddComponent<Decoration>();   // the terrain under the cells
             _cells = _ui.Rect("Cells", _frame);
-            UiFactory.Stretch(_cells, inset, inset + _frameDepth, inset, inset);
+            UiFactory.Stretch(_cells, inset, inset, inset, inset);
             _effects = _ui.Rect("Effects", _frame);
-            UiFactory.Stretch(_effects, inset, inset + _frameDepth, inset, inset);
+            UiFactory.Stretch(_effects, inset, inset, inset, inset);
             for (int i = 0; i < _drops.Length; i++)
             {
                 _drops[i] = _ui.Image("Drop" + (i + 1), _effects, _sprites.Drop, _cfg.WaterColor(0));
@@ -103,40 +113,55 @@ namespace ResolverMaster.Games.Plumber.View
 
         PipeCellView CreateCell()
         {
-            var tile = _ui.Image("Cell", _cells, _sprites.Tile, _cfg.tileColor);
+            var tile = _ui.Image("Cell", _cells, _sprites.Tile, Color.white);
             tile.raycastTarget = true;
             var halo = _ui.Image("Halo", tile.transform, _sprites.Disk, _cfg.SinkHaloColor(0));
             halo.gameObject.AddComponent<Decoration>();   // under the fountain on purpose
-            SetAnchors(halo.rectTransform, _cfg.sinkHaloSize / 2f);
+            SetAnchors(halo.rectTransform, _cfg.sinkHaloSize / 2f, 0f);
             halo.gameObject.SetActive(false);
+            var fill = _ui.Image("Fill", halo.transform, _sprites.Disk, _cfg.WaterColor(0));
+            fill.gameObject.AddComponent<Decoration>();
+            UiFactory.Place(fill.rectTransform, 0.5f, 0.5f, Vector2.zero, Vector2.zero);
             var pipe = _ui.Image("Pipe", tile.transform, null, _cfg.pipeEmpty);
             UiFactory.Stretch(pipe.rectTransform);
-            var shine = _ui.Image("Shine", pipe.transform, null, Color.white);
-            shine.gameObject.AddComponent<Decoration>();   // reflection drawn on the pipe
-            UiFactory.Stretch(shine.rectTransform);
+            var waterGo = _ui.Rect("Water", tile.transform).gameObject;
+            waterGo.AddComponent<CanvasRenderer>();   // added first: the Graphic needs it to be drawn
+            var water = waterGo.AddComponent<WaterGraphic>();
+            water.raycastTarget = false;
+            UiFactory.Stretch(water.rectTransform);
+            water.gameObject.AddComponent<Decoration>();   // runs inside the pipe on purpose
+            var shadow = _ui.Image("Shadow", tile.transform, _sprites.Shadow, new Color(0, 0, 0, _cfg.shadowAlpha));
+            shadow.gameObject.AddComponent<Decoration>();
+            var srt = shadow.rectTransform;
+            srt.anchorMin = new Vector2(0.5f - _cfg.shadowWidth / 2f, 0.5f + _cfg.shadowOffset - _cfg.shadowHeight / 2f);
+            srt.anchorMax = new Vector2(0.5f + _cfg.shadowWidth / 2f, 0.5f + _cfg.shadowOffset + _cfg.shadowHeight / 2f);
+            srt.offsetMin = srt.offsetMax = Vector2.zero;
             var obj = _ui.Image("Fountain", tile.transform, null, Color.white);
             obj.gameObject.AddComponent<Decoration>();     // on its pipe stub on purpose
             obj.preserveAspect = true;
-            SetAnchors(obj.rectTransform, _cfg.endpointSize / 2f);
+            SetAnchors(obj.rectTransform, _cfg.endpointSize / 2f, _cfg.endpointLift);
             var mask = _ui.Image("Water", obj.transform, null, _cfg.WaterColor(0));
             mask.preserveAspect = true;
             UiFactory.Stretch(mask.rectTransform);
             obj.gameObject.SetActive(false);
+            shadow.gameObject.SetActive(false);
             var view = tile.gameObject.AddComponent<PipeCellView>();
             view.Tile = tile;
             view.Pipe = pipe;
-            view.Shine = shine;
+            view.Water = water;
             view.Halo = halo;
+            view.Fill = fill;
+            view.Shadow = shadow;
             view.Object = obj;
             view.ObjectMask = mask;
             view.Tapped = OnTap;
             return view;
         }
 
-        static void SetAnchors(RectTransform rt, float halfSize)
+        static void SetAnchors(RectTransform rt, float halfSize, float lift)
         {
-            rt.anchorMin = new Vector2(0.5f - halfSize, 0.5f - halfSize);
-            rt.anchorMax = new Vector2(0.5f + halfSize, 0.5f + halfSize);
+            rt.anchorMin = new Vector2(0.5f - halfSize, 0.5f - halfSize + lift);
+            rt.anchorMax = new Vector2(0.5f + halfSize, 0.5f + halfSize + lift);
             rt.offsetMin = rt.offsetMax = Vector2.zero;
         }
 
@@ -148,6 +173,8 @@ namespace ResolverMaster.Games.Plumber.View
             var levels = _module.StoryLevels;
             if (levels.Count == 0) throw new InvalidOperationException("no Plumber Story levels");
             _puzzle.Load(levels[Mathf.Clamp(request.Index, 0, levels.Count - 1)]);
+            _water = null;
+            _timing = null;
             BuildCells();
             _phase = Phase.Playing;
             SnapVisuals();
@@ -164,7 +191,11 @@ namespace ResolverMaster.Games.Plumber.View
             int w = grid.Width, h = grid.Height;
             int seed = _puzzle.Level.seed, variants = Mathf.Max(1, _cfg.artVariants);
             int sources = 0, sinks = 0;
-            _shown = new bool[grid.CellCount];
+            var theme = Theme;
+            _ground.sprite = theme != null ? ThemeArt.Ground(theme) : null;
+            _ground.type = Image.Type.Tiled;
+            _ground.gameObject.SetActive(theme != null);
+            var waterWidth = (_cfg.PipeWidth - 2f * _cfg.pipeOutline) * _cfg.waterWidth;
             for (int c = 0; c < grid.CellCount; c++)
             {
                 var v = _pool.Get();
@@ -177,11 +208,13 @@ namespace ResolverMaster.Games.Plumber.View
                 v.name = $"Cell_{x}_{y}";
                 v.Index = c;
                 var piece = grid.Pieces[c];
+                // the slab of the theme: a variant per cell from the level seed (the same level always looks the same)
+                v.Tile.sprite = theme != null ? ThemeArt.Slab(theme, ArtVariants.Pick(seed, 3, c, ThemeArt.SlabVariants)) : _sprites.Tile;
+                v.TileColor = piece.Locked ? _cfg.lockedTileColor : Color.white;
                 v.Pipe.sprite = _sprites.Get(piece.Kind);
                 v.Pipe.enabled = piece.Kind != PieceKind.Empty;
-                v.Shine.sprite = _sprites.Shine(piece.Kind);
-                v.Shine.enabled = v.Pipe.enabled && v.Shine.sprite != null;
-                v.DryColor = _cfg.pipeEmpty;
+                v.Water.SetWidth(waterWidth);
+                v.Water.Clear();
                 v.Halo.gameObject.SetActive(piece.Kind == PieceKind.Sink);
                 v.Halo.color = _cfg.SinkHaloColor(piece.Color);
 
@@ -200,6 +233,7 @@ namespace ResolverMaster.Games.Plumber.View
                 }
                 bool endpoint = piece.Kind == PieceKind.Source || piece.Kind == PieceKind.Sink;
                 v.Object.gameObject.SetActive(endpoint);
+                v.Shadow.gameObject.SetActive(endpoint);
                 // missing drawing (art not imported yet): a disk in the water color, so the level stays playable
                 v.Object.sprite = drawing != null ? drawing : _sprites.Disk;
                 v.Object.color = drawing != null ? Color.white : _cfg.WaterColor(piece.Color);
@@ -225,12 +259,16 @@ namespace ResolverMaster.Games.Plumber.View
             RaiseChanged();
         }
 
+        /// <summary>The biggest square cells that fit the area (columns and rows may differ), the window around them, centred.</summary>
         public override void Refit()
         {
             var size = ((RectTransform)transform).rect.size;
-            float side = Mathf.Floor(Mathf.Min(size.x, size.y - _frameDepth));
-            if (side <= 0) return;
-            _frame.sizeDelta = new Vector2(side, side + _frameDepth);   // square cells; the bottom band of the frame below them
+            var grid = _puzzle.Grid;
+            if (grid == null || size.x <= 0 || size.y <= 0) return;
+            float inset = _cfg.boardInset;
+            float cell = Mathf.Floor(Mathf.Min((size.x - 2 * inset) / grid.Width, (size.y - 2 * inset) / grid.Height));
+            if (cell <= 0) return;
+            _frame.sizeDelta = new Vector2(cell * grid.Width + 2 * inset, cell * grid.Height + 2 * inset);
             _fittedSize = size;
         }
 
@@ -240,15 +278,12 @@ namespace ResolverMaster.Games.Plumber.View
             var grid = _puzzle.Grid;
             if (grid == null) return;
             for (int c = 0; c < _views.Count; c++) _views[c].SnapRotation(grid.Pieces[c].Rotation);
-            if (_phase == Phase.Flowing || _phase == Phase.Filling || _phase == Phase.Won)
+            if ((_phase == Phase.Flowing || _phase == Phase.Spraying || _phase == Phase.Won) && _water != null && _water.Success)
             {
-                if (_water != null && _water.Success)
-                {
-                    ShowWater(_water.StopStep);
-                    SetWinSplash(-1f);
-                    _phase = Phase.Won;
-                    return;
-                }
+                ShowFlow(float.MaxValue);
+                SetWinSplash(-1f);
+                _phase = Phase.Won;
+                return;
             }
             if (_phase != Phase.Playing && _phase != Phase.Won)
             {
@@ -271,6 +306,7 @@ namespace ResolverMaster.Games.Plumber.View
                     break;
                 case BoardPreview.Solved:
                 case BoardPreview.ActionSuccess:
+                case BoardPreview.ActionFlowing:
                     foreach (int tap in sol.Taps) _puzzle.ApplyMove(tap);
                     break;
                 case BoardPreview.ActionFailure:
@@ -285,11 +321,19 @@ namespace ResolverMaster.Games.Plumber.View
             }
             for (int c = 0; c < _views.Count; c++) _views[c].SnapRotation(_puzzle.Grid.Pieces[c].Rotation);
             ShowDry();
-            if (state == BoardPreview.Solved || state == BoardPreview.ActionSuccess || state == BoardPreview.ActionFailure)
+            if (state == BoardPreview.ActionFlowing)
             {
                 OpenWater();
-                // jump to the end of the flow, then to the moment of the effect
-                ShowWater(_water.StopStep);
+                // halfway along the longest route: the round fronts and the branches after a T are visible
+                _clock = _motion.TimeAt(_timing.EndDistance * 0.55f);
+                ShowFlow(_clock);
+            }
+            else if (state == BoardPreview.Solved || state == BoardPreview.ActionSuccess || state == BoardPreview.ActionFailure)
+            {
+                OpenWater();
+                // jump to the end of the flow (every fountain full), then to the moment of the effect
+                _clock = _flowEnd;
+                ShowFlow(_clock);
                 if (_water.Success)
                 {
                     _phase = Phase.Won;
@@ -302,6 +346,14 @@ namespace ResolverMaster.Games.Plumber.View
                 }
             }
             RaiseChanged();
+        }
+
+        /// <summary>Editor previews: the water <paramref name="seconds"/> after the opening of the current state (no effects).</summary>
+        public void PreviewFlowAt(float seconds)
+        {
+            OpenWater();
+            _clock = Mathf.Min(seconds, _flowEnd);
+            ShowFlow(_clock);
         }
 
         // ------------------------------------------------------------------ input and animation
@@ -325,9 +377,50 @@ namespace ResolverMaster.Games.Plumber.View
         void OpenWater()
         {
             _water = _puzzle.OpenWater();
+            _timing = WaterTiming.Compute(_puzzle.Grid, _water);
+            _motion = _cfg.Motion;
             _phase = Phase.Flowing;
             _clock = 0f;
             ShowDry();
+            PrepareWater();
+            // success: the flow ends when every fountain is full; failure: when the water reaches the first problem
+            if (_water.Success)
+            {
+                _flowEnd = _motion.TimeAt(_timing.EndDistance);
+                foreach (int s in _sinks)
+                    _flowEnd = Mathf.Max(_flowEnd, _motion.TimeAt(_timing.NodeDistance(_timing.CenterNode(s))) + _cfg.fountainFill);
+            }
+            else _flowEnd = _motion.TimeAt(_timing.StopDistance);
+        }
+
+        /// <summary>Gives every cell its water parts with the distances at which the water reaches their two ends.</summary>
+        void PrepareWater()
+        {
+            var grid = _puzzle.Grid;
+            for (int c = 0; c < _views.Count; c++)
+            {
+                var wg = _views[c].Water;
+                wg.Clear();
+                foreach (var p in _timing.Parts(c))
+                {
+                    var ca = ColorOf(p.NodeA);
+                    var cb = ColorOf(p.NodeB);
+                    if (p.Arc) wg.AddArc(p.DirA, p.DirB, _timing.NodeDistance(p.NodeA), _timing.NodeDistance(p.NodeB), ca, cb);
+                    else
+                    {
+                        wg.AddArm(p.DirB, _timing.NodeDistance(p.NodeA), _timing.NodeDistance(p.NodeB), ca, cb);
+                    }
+                }
+                var kind = grid.Pieces[c].Kind;
+                if ((kind == PieceKind.Tee || kind == PieceKind.Cross) && _timing.Reached(_timing.CenterNode(c)))
+                    wg.AddJunction(_timing.NodeDistance(_timing.CenterNode(c)), ColorOf(_timing.CenterNode(c)));
+            }
+        }
+
+        Color ColorOf(int node)
+        {
+            int col = _timing.NodeColor(node);
+            return _cfg.WaterColor(col < 0 ? 0 : col);
         }
 
         void Update()
@@ -338,22 +431,22 @@ namespace ResolverMaster.Games.Plumber.View
             switch (_phase)
             {
                 case Phase.Flowing:
-                    _clock += dt;
-                    ShowWater(Mathf.Min(_water.StopStep, Mathf.FloorToInt(_clock / Mathf.Max(0.01f, _cfg.waterStep))));
-                    if (_clock >= (_water.StopStep + 1) * _cfg.waterStep)
+                    _clock = Mathf.Min(_clock + dt, _flowEnd);
+                    ShowFlow(_clock);
+                    if (_clock >= _flowEnd)
                     {
                         if (_water.Success)
                         {
-                            _phase = Phase.Filling;
+                            _phase = Phase.Spraying;
                             _clock = 0f;
                         }
                         else StartFailEffect();
                     }
                     break;
-                case Phase.Filling:
+                case Phase.Spraying:
                     _clock += dt;
-                    SetWinSplash(Mathf.Clamp01(_clock / Mathf.Max(0.01f, _cfg.sinkFill)));
-                    if (_clock >= _cfg.sinkFill + _cfg.winPause)
+                    SetWinSplash(Mathf.Clamp01(_clock / Mathf.Max(0.01f, _cfg.winSpray)));
+                    if (_clock >= _cfg.winSpray + _cfg.winPause)
                     {
                         SetWinSplash(-1f);
                         _phase = Phase.Won;
@@ -382,11 +475,6 @@ namespace ResolverMaster.Games.Plumber.View
                     }
                     break;
             }
-            if (_phase == Phase.Flowing || _phase == Phase.Filling || _phase == Phase.Won)
-            {
-                _shimmerClock += dt;
-                Shimmer(_shimmerClock);
-            }
         }
 
         void LateUpdate()
@@ -396,40 +484,40 @@ namespace ResolverMaster.Games.Plumber.View
 
         // ------------------------------------------------------------------ water visuals
 
-        /// <summary>Every pipe grey, fountains dry, no effect.</summary>
+        /// <summary>Every pipe grey and empty, fountains dry, no effect.</summary>
         void ShowDry()
         {
             for (int c = 0; c < _views.Count; c++)
             {
-                _shown[c] = false;
                 var v = _views[c];
-                v.Pipe.color = v.DryColor;
-                v.Tile.color = _puzzle.Grid.Pieces[c].Locked ? _cfg.lockedTileColor : _cfg.tileColor;
+                v.Water.SetFront(-1f);
+                v.Tile.color = v.TileColor;
+                v.Fill.rectTransform.sizeDelta = Vector2.zero;
+                v.Fill.gameObject.SetActive(false);
             }
             SetWinSplash(-1f);
             EndFailEffect();
         }
 
-        /// <summary>Shows the water of every cell reached at a step up to <paramref name="step"/>.</summary>
-        void ShowWater(int step)
+        /// <summary>The water <paramref name="seconds"/> after the opening (clamped to the end of the flow); fountains fill as it arrives.</summary>
+        void ShowFlow(float seconds)
         {
-            for (int c = 0; c < _views.Count; c++)
+            if (_timing == null) return;
+            seconds = Mathf.Min(seconds, _flowEnd);
+            float front = _water.Success ? _motion.DistanceAt(seconds) : Mathf.Min(_motion.DistanceAt(seconds), _timing.StopDistance);
+            foreach (var v in _views) v.Water.SetFront(front);
+            foreach (int s in _sinks)
             {
-                if (_shown[c] || _water.Step[c] < 0 || _water.Step[c] > step) continue;
-                _shown[c] = true;
-                _views[c].Pipe.color = _cfg.WaterColor(_water.Color[c]);
-            }
-        }
-
-        /// <summary>Running water: a light wave travels along the path (brighter where the wave is).</summary>
-        void Shimmer(float time)
-        {
-            if (_water == null || _cfg.waterShimmer <= 0f) return;
-            for (int c = 0; c < _views.Count; c++)
-            {
-                if (!_shown[c]) continue;
-                float wave = 0.5f + 0.5f * Mathf.Sin(time * _cfg.waterShimmerSpeed - _water.Step[c] * _cfg.waterShimmerPhase);
-                _views[c].Pipe.color = Color.Lerp(_cfg.WaterColor(_water.Color[c]), Color.white, _cfg.waterShimmer * wave);
+                var v = _views[s];
+                float reach = _timing.NodeDistance(_timing.CenterNode(s));
+                bool wet = !float.IsInfinity(reach) && front >= reach;
+                v.Fill.gameObject.SetActive(wet);
+                if (!wet) continue;
+                float u = Mathf.Clamp01((seconds - _motion.TimeAt(reach)) / Mathf.Max(0.01f, _cfg.fountainFill));
+                u = 1f - (1f - u) * (1f - u);
+                var halo = v.Halo.rectTransform.rect.size;
+                v.Fill.rectTransform.sizeDelta = halo * (0.86f * u);
+                v.Fill.color = ColorOf(_timing.CenterNode(s));
             }
         }
 
@@ -441,17 +529,18 @@ namespace ResolverMaster.Games.Plumber.View
         {
             int n = Mathf.Max(1, _cfg.winDrops);
             int used = 0;
-            if (u >= 0f && _water != null)
+            if (u >= 0f && _timing != null)
             {
                 var grid = _puzzle.Grid;
                 var size = _cells.rect.size;
                 float cw = size.x / grid.Width, ch = size.y / grid.Height;
                 foreach (int c in _sinks)
                 {
-                    if (_water.Step[c] < 0) continue;
+                    var centre = _timing.CenterNode(c);
+                    if (!_timing.Reached(centre)) continue;
                     int x = c % grid.Width, y = c / grid.Width;
-                    var origin = new Vector2((x + 0.5f) * cw - size.x / 2f, size.y / 2f - (y + 0.5f) * ch + ch * 0.2f);
-                    var color = _cfg.WaterColor(_water.Color[c]);
+                    var origin = new Vector2((x + 0.5f) * cw - size.x / 2f, size.y / 2f - (y + 0.5f) * ch + ch * (0.2f + _cfg.endpointLift));
+                    var color = ColorOf(centre);
                     for (int k = 0; k < n; k++)
                     {
                         if (used == _winDrops.Count)
@@ -482,16 +571,18 @@ namespace ResolverMaster.Games.Plumber.View
 
         // ------------------------------------------------------------------ failure effects
 
+        WaterProblem FirstProblem => _water.Problems[Mathf.Max(0, _timing.FirstProblemIndex)];
+
         void StartFailEffect()
         {
             _phase = Phase.FailEffect;
             _clock = 0f;
-            var p = _water.FirstProblem;
+            var p = FirstProblem;
             if (p.Kind == WaterProblemKind.Leak)
                 foreach (var d in _drops)
                 {
                     d.gameObject.SetActive(true);
-                    d.color = _cfg.WaterColor(_water.Color[p.Cell]);
+                    d.color = ColorOf(_timing.PortNode(p.Cell, p.Direction));
                 }
             if (p.Kind == WaterProblemKind.WrongColor) SetWinSplash(0.35f);   // the wrong water splashes out of the fountain
             RaiseMessage(PlumberKeys.ForProblem(p.Kind));
@@ -499,7 +590,7 @@ namespace ResolverMaster.Games.Plumber.View
 
         void TickFailEffect(float t)
         {
-            var p = _water.FirstProblem;
+            var p = FirstProblem;
             float u = Mathf.Clamp01(t / Mathf.Max(0.01f, _cfg.failEffect));
             float pulse = 0.5f - 0.5f * Mathf.Cos(u * Mathf.Max(1, _cfg.failBlinks) * 2f * Mathf.PI);
             switch (p.Kind)
@@ -516,8 +607,7 @@ namespace ResolverMaster.Games.Plumber.View
                     break;
                 case WaterProblemKind.DrySink:
                     Blink(p.Cell, pulse);
-                    var v = _views[p.Cell];
-                    v.Object.color = Color.Lerp(Color.white, _cfg.errorColor, pulse);
+                    _views[p.Cell].Object.color = Color.Lerp(Color.white, _cfg.errorColor, pulse);
                     break;
             }
         }
@@ -525,8 +615,8 @@ namespace ResolverMaster.Games.Plumber.View
         void Blink(int cell, float pulse)
         {
             if (cell < 0) return;
-            var baseColor = _puzzle.Grid.Pieces[cell].Locked ? _cfg.lockedTileColor : _cfg.tileColor;
-            _views[cell].Tile.color = Color.Lerp(baseColor, _cfg.errorColor, pulse * 0.85f);
+            var v = _views[cell];
+            v.Tile.color = Color.Lerp(v.TileColor, _cfg.errorColor, pulse * 0.85f);
         }
 
         /// <summary>Drops fly out of the leaking opening in a small fan, slowing down and fading.</summary>
@@ -575,7 +665,7 @@ namespace ResolverMaster.Games.Plumber.View
             for (int c = 0; c < _views.Count; c++)
             {
                 var v = _views[c];
-                v.Tile.color = _puzzle.Grid.Pieces[c].Locked ? _cfg.lockedTileColor : _cfg.tileColor;
+                v.Tile.color = v.TileColor;
                 if (v.Object.sprite != _sprites.Disk) v.Object.color = Color.white;
             }
         }

@@ -5,7 +5,9 @@
         "ResolverMaster.Core",
         "ResolverMaster.Games",
         "Unity.InputSystem",
-        "UnityEngine.UI"
+        "UnityEngine.UI",
+        "Unity.TextMeshPro",
+        "Unity.TextMeshPro.Editor"
     ],
     "includePlatforms": [
         "Editor"

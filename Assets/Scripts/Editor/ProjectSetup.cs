@@ -88,6 +88,7 @@ namespace ResolverMaster.Editor
         public static void ApplyAll()
         {
             ApplyProjectSettings();
+            UiArtSetup.ImportTmpEssentials();
             UiKitGenerator.RegenerateSprites();
             UiKitAssets.EnsureAssets();
             ConfigAssets.EnsureAll();

@@ -162,3 +162,47 @@
 - `ArtSource/Reference/fontana_riferimento.png` non c'è nel progetto.
 - Icone e illustrazioni delle schede: segnaposto, arriveranno da Gemini (cartelle e nomi già pronti).
 - Il riflesso dei tubi ruota con il tubo (luce non sempre dall'alto a sinistra).
+
+## Update ErNa-005 — Grafica rivista: UI da Gemini, tubi, griglie rettangolari, temi dei capitoli (2026-11-17)
+
+**Fatto**
+- **Git:** `git pull --ff-only` già aggiornato. `Prompt/` (003–005) e `ArtSource/` (Cards, Plumber, UI) aggiunti con un commit separato ("Aggiunti Prompt/ e ArtSource/"). Il problema aperto dell'ErNa-004 è risolto.
+- **Script `Tools/Art/make_ui_art.py`**: separa gli 8 fogli di `ArtSource/UI/` in 30 elementi (4/3/3/4/4/4/4/4, come la tabella), toglie il bianco esterno e i buchi chiusi dal contorno (stella vuota, lucchetto, ingranaggio, trofeo), ritaglia senza scalare, scrive `Assets/Art/UI/ui_art.json` con i bordi a 9 fette; prepara anche le schede della Home (`card_plumber` 978x932, `card_trafficjam` 972x653).
+- **Interfaccia (Core)**:
+  - `UiKitStyle` ricreato: sprite di Gemini (pillole verde e crema, rotondi crema e giallo, pannello, nastro, banner, caselle, stelle), font TMP, materiale con contorno, materiale dei pulsanti disattivati.
+  - **TextMesh Pro** ovunque: font asset Fredoka SDF (statici, 149 caratteri), contorno SDF continuo; eliminato il vecchio contorno fatto con copie del testo. TMP Essential Resources importate in `Assets/TextMesh Pro/`.
+  - `PressableButton`: premuto scende di 8 unità e si scurisce; disattivato = sprite desaturati (shader `ResolverMaster/UI Desaturate`). `SlicedFit`: pillole a 9 fette senza deformare le estremità.
+  - Schermate: Home (ingranaggio su rotondo giallo, GIOCA! verde, illustrazioni nelle schede, "Prossimamente" con lucchetto), scelta modalità (illustrazione del gioco, finestre crema), Impostazioni (globo, pillole delle lingue, suono sì/no, vibrazione attenuata con X disegnata dal codice), capitoli (banner giallo con anteprima del tema), livelli (caselle crema/verde/grigia, stelle piene e vuote), gioco (icone di Gemini, "Apri l'acqua" con il rubinetto), vittoria (pannello, nastro con il titolo, stelle).
+  - Titolo della vittoria accorciato per stare nel nastro senza ingrandirlo: "Completato!" / "Well done!".
+  - Rimossi gli sprite generati non più usati (`button*`, `card_pressed`, `outline`, `round*`, `soft`; restano `card` e `circle` in `Assets/Art/UI/Generated/`) e 12 icone Material (restano story, icone dei giochi e dei capitoli).
+- **Temi dei capitoli (Core)**: `ThemeConfig` (un file) con Giardino, Fattoria e Città; `ThemeCatalog` (tema del capitolo, predefinito se manca); `ThemeArt` genera con il seed lastre delle celle, terreno tra le celle e sfondo; posti già pronti per le immagini di Gemini. Applicati a griglia di gioco, schermata dei livelli e banner dei capitoli. `PlumberConfig.chapters[i].theme`: garden, farm, city.
+- **Tubi**: contorno 0,022 della cella (metà), nessun riflesso, colore pieno; spessore `pipeWidthPercent` (34%); `pipeShading` (sfumatura simmetrica) pronto ma spento; sprite a 384 px.
+- **Acqua fluida**: `WaterTiming` + `WaterMotion` (logica pura) calcolano dove e quando l'acqua raggiunge ogni punto (bracci 0,5, curve pi/4, rami della T insieme, tutte le fonti insieme, velocità costante 4 celle/s con accelerazione di 0,35 s); `WaterGraphic` disegna l'acqua dentro i tubi con il fronte arrotondato, con il tempo reale. Le fontane si riempiono quando l'acqua arriva, poi gli spruzzi; in caso di errore l'acqua arriva fluida fino al punto sbagliato, poi l'effetto. Regole (`WaterFlow`) invariate.
+- **Fonti e arrivi**: ombra morbida sotto ogni oggetto; disegno sollevato (8% della cella) così il moncone entra sotto l'oggetto.
+- **Griglie rettangolari**: la tabella usa `cols`/`rows` (3x4, 4x5, 5x7, 6x8); generatore adattato (risolutore già generico); la griglia usa al massimo lo spazio tra barra in alto e "Apri l'acqua" con margini costanti, centrata. **27 livelli rigenerati** (`docs/idraulico-livelli.md`).
+- **Validatore**: 7 controlli; nuovi: elementi di Gemini, risorse e font TMP, materiali, temi (`ThemeCheck`), tema valido per ogni capitolo.
+- **Anteprime**: livelli di ogni capitolo, un livello per capitolo (3x4, 5x7, 6x8), acqua a metà percorso; nuove misure: celle per griglia, spazio sopra/sotto la griglia, testi TMP tagliati, sprite ingranditi.
+- **Test**: 4 nuovi (vicini sulla griglia 3x4, generatore 5x7, temi, tempi dell'acqua con la T).
+
+**Risultati**
+- Compilazione: 0 errori, 0 warning. Test: 22/22 verdi. Validatore: OK (7 controlli, 0 errori, 0 warning).
+- **Livelli** (griglia, mosse minime): cap. 1 → 3x4: 1, 2, 3; 4x5: 4, 5, 5; 5x7: 6, 7, 9. Cap. 2 → 4x5: 2, 4, 4, 5; 5x7: 6, 7, 9, 10, 10. Cap. 3 → 5x7: 2, 3, 6, 7; 6x8: 7, 8, 9, 10, 12. Generatore 6x8 a due colori: 0,55 ms in media su 30 seed (max 3,0 ms).
+- **Anteprime**: 60 immagini, nessun problema misurato.
+- **Misure**:
+  - celle: 3x4 → 311 px (9:16) / 321 px (9:21); 5x7 → 177 / 192 px; 6x8 → 155 / 160 px;
+  - spazio libero sopra e sotto la griglia (uguale, griglia centrata): 9:16 → 58–61 px; 9:21 → 212–244 px (lì le griglie sono limitate dalla larghezza);
+  - fonti e arrivi al 78% della cella (121–251 px);
+  - pulsante più piccolo 136x136 px (rotondi); nessun testo tagliato né sovrapposto, IT ed EN;
+  - nessuno sprite di progetto ingrandito (scala massima x1,00); solo gli sfondi generati dei temi sono disegnati a x2 (previsto).
+- Bug trovati da misure e immagini e corretti: numero della casella sovrapposto di 2 px alla stella centrale; lucchetto e badge sopra l'illustrazione di Traffic jam; ombre nascoste sotto i disegni; bordi seghettati negli sfondi (ora 2x2 campioni); acqua non disegnata nelle anteprime (al `WaterGraphic` mancavano `[ExecuteAlways]` e il `CanvasRenderer`).
+
+**Da provare a mano sul telefono**
+- Scorrimento dell'acqua (velocità, accelerazione, T, due colori) a 30 e 60 fps; riempimento delle fontane e spruzzi.
+- Pulsanti premuti (scendono e si scuriscono) e disattivati (desaturati); leggibilità dei testi con contorno.
+- Leggibilità di tubi e acqua sui tre terreni; livelli 6x8 (celle da 155 px).
+
+**Problemi aperti / prossimi passi**
+- Su schermi 9:21 le griglie sono limitate dalla larghezza: restano 212–244 px liberi sopra e sotto.
+- Icone ancora segnaposto (Material): Storia, icone dei giochi e dei capitoli.
+- Le TMP Essential Resources in batch si importano con `-importPackage` (vedi `docs/grafica.md`).
+- `.claudesettings.json` (locale) non incluso nel commit.

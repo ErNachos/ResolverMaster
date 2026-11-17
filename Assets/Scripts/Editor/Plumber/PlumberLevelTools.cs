@@ -16,7 +16,7 @@ namespace ResolverMaster.Editor.Plumber
     /// Menu Resolver Master > Idraulico > Genera livelli Storia: generates every Story level of the PlumberConfig difficulty table from the
     /// fixed seeds (storySeedBase + level), groups them in chapters of 9 (level n is in chapter (n-1)/9+1), saves them as game data
     /// (Resources/Games/Plumber/plumber_story.json) and writes the table in docs/idraulico-livelli.md, with the average generation time
-    /// of a level of the last tier (6x6, two colors).
+    /// of a level of the last tier (6x8, two colors).
     /// Batch: -executeMethod ResolverMaster.Editor.Plumber.PlumberLevelTools.GenerateStoryLevelsBatch
     /// </summary>
     public static class PlumberLevelTools
@@ -89,7 +89,7 @@ namespace ResolverMaster.Editor.Plumber
             Debug.Log(log.ToString());
         }
 
-        /// <summary>Average time to generate a level of the last tier (6x6 two colors in chapter 3) over <see cref="TimingSamples"/> other seeds.</summary>
+        /// <summary>Average time to generate a level of the last tier (6x8 two colors in chapter 3) over <see cref="TimingSamples"/> other seeds.</summary>
         static string MeasureTiming(PlumberConfig cfg, int lastLevel)
         {
             var tier = cfg.storyDifficulty.ForLevel(lastLevel);
@@ -105,7 +105,7 @@ namespace ResolverMaster.Editor.Plumber
                 times.Add(sw.Elapsed.TotalMilliseconds);
                 attempts.Add(r.Attempts);
             }
-            return $"generator {settings.Size}x{settings.Size} {settings.Layout} (tier {tier.id}), {TimingSamples} seeds: average {times.Average():0.00} ms " +
+            return $"generator {settings.Width}x{settings.Height} {settings.Layout} (tier {tier.id}), {TimingSamples} seeds: average {times.Average():0.00} ms " +
                    $"(min {times.Min():0.00}, max {times.Max():0.00}), average attempts {attempts.Average():0.0}";
         }
 

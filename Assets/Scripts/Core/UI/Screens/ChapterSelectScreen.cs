@@ -3,14 +3,17 @@ using ResolverMaster.Core.App;
 using ResolverMaster.Core.Games;
 using ResolverMaster.Core.Localization;
 using ResolverMaster.Core.Puzzle;
+using ResolverMaster.Core.UI.Themes;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
 namespace ResolverMaster.Core.UI.Screens
 {
     /// <summary>
-    /// Story of a minigame: one card per chapter with its theme icon, number, translated name, stars earned out of the maximum and a lock.
-    /// A chapter unlocks when every level of the previous one is solved (<see cref="StoryProgress"/>). Tapping a card opens its 3x3 levels.
+    /// Story of a minigame: one yellow Gemini banner per chapter with a thumbnail of its theme (a cell slab of the theme with the chapter
+    /// icon), "Chapter N · theme", the translated name, the stars earned out of the maximum and a lock. A chapter unlocks when every
+    /// level of the previous one is solved (<see cref="StoryProgress"/>); a locked banner is desaturated. Tapping a card opens its 3x3 levels.
     /// </summary>
     public sealed class ChapterSelectScreen : UiScreen
     {
@@ -19,14 +22,13 @@ namespace ResolverMaster.Core.UI.Screens
         sealed class ChapterCard
         {
             public Button Button;
-            public Image Background;
-            public Image Circle;
+            public Image Thumb;
             public Image Icon;
             public Image Lock;
-            public Text Number;
+            public TextMeshProUGUI Number;
             public LocalizedText Name;
             public Image Star;
-            public Text Stars;
+            public TextMeshProUGUI Stars;
         }
 
         AppServices _ctx;
@@ -42,10 +44,10 @@ namespace ResolverMaster.Core.UI.Screens
             var screen = layout.Root.gameObject.AddComponent<ChapterSelectScreen>();
             screen._ctx = ctx;
             var s = ctx.Style;
-            ScreenLayout.TopBarButton(ctx, layout.TopBar, "back", left: true).onClick.AddListener(() => ctx.Screens.Back());
+            ScreenLayout.TopBarButton(ctx, layout.TopBar, "icon_back", left: true).onClick.AddListener(() => ctx.Screens.Back());
             screen._title = ScreenLayout.TopBarTitle(ctx, layout.TopBar, null, s.headerSize).gameObject.AddComponent<LocalizedText>();
-            var subtitle = ctx.Ui.Label("Subtitle", layout.Body, LocKeys.ChaptersSubtitle, s.bodySize, s.text, TextAnchor.MiddleCenter, bold: true);
-            UiFactory.Layout(subtitle, preferredHeight: 72);
+            ScreenLayout.Badge(ctx, layout.Body, "Subtitle", LocKeys.ChaptersSubtitle, s.bodySize, out var badge);
+            UiFactory.Layout(badge, preferredHeight: 84);
             screen._body = layout.Body;
             return screen;
         }
@@ -65,39 +67,42 @@ namespace ResolverMaster.Core.UI.Screens
         {
             var ui = _ctx.Ui;
             var s = _ctx.Style;
-            const float pad = 32, starsWidth = 250;
+            const float pad = 36, starsWidth = 260;
             var c = new ChapterCard();
-            c.Button = ui.CardButton("Chapter_" + (index + 1), _body, s.surface);
-            c.Background = (Image)c.Button.targetGraphic;
+            c.Button = ui.Pressable("Chapter_" + (index + 1), _body, s.chapterBanner, Color.white);
             UiFactory.Layout(c.Button, preferredHeight: s.chapterCardHeight);
             c.Button.onClick.AddListener(() => OpenChapter(index + 1));
 
-            c.Circle = ui.Image("IconBg", c.Button.transform, s.circleSprite, s.primary);
-            UiFactory.Place(c.Circle.rectTransform, 0, 0.5f, new Vector2(s.chapterIconSize, s.chapterIconSize), new Vector2(pad, s.cardDepth / 2f));
-            c.Icon = ui.Icon("Icon", c.Circle.transform, null, s.chapterIconSize * 0.58f, s.icon);
+            // theme thumbnail: a cell slab of the theme, the chapter icon (or the lock) on it
+            c.Thumb = ui.Image("Theme", c.Button.transform, null, Color.white);
+            c.Thumb.preserveAspect = true;
+            UiFactory.Place(c.Thumb.rectTransform, 0, 0.5f, new Vector2(s.chapterThumbSize, s.chapterThumbSize), new Vector2(pad, 6));
+            c.Icon = ui.MaskIcon("Icon", c.Thumb.transform, null, s.chapterIconSize, s.icon);
             UiFactory.Place(c.Icon.rectTransform, 0.5f, 0.5f, c.Icon.rectTransform.sizeDelta, Vector2.zero);
-            c.Lock = ui.Icon("Lock", c.Circle.transform, "lock", s.chapterIconSize * 0.5f, s.icon);
+            c.Lock = ui.Icon("Lock", c.Thumb.transform, "icon_lock", s.chapterIconSize);
             UiFactory.Place(c.Lock.rectTransform, 0.5f, 0.5f, c.Lock.rectTransform.sizeDelta, Vector2.zero);
 
-            float left = pad + s.chapterIconSize + pad;
+            float left = pad + s.chapterThumbSize + 32;
             c.Number = ui.Label("Number", c.Button.transform, null, s.smallSize, s.textMuted, TextAnchor.LowerLeft, bold: true);
             var nrt = c.Number.rectTransform;
-            nrt.anchorMin = new Vector2(0, 0.56f);
+            nrt.anchorMin = new Vector2(0, 0.55f);
             nrt.anchorMax = new Vector2(1, 1);
             nrt.offsetMin = new Vector2(left, 0);
-            nrt.offsetMax = new Vector2(-starsWidth, -36);
+            nrt.offsetMax = new Vector2(-starsWidth, -40);
+            UiFactory.AutoSize(c.Number, s.smallSize * 0.7f);
             var name = ui.Label("Name", c.Button.transform, null, s.headerSize, s.text, TextAnchor.UpperLeft, bold: true);
             var art = name.rectTransform;
             art.anchorMin = new Vector2(0, 0);
-            art.anchorMax = new Vector2(1, 0.56f);
-            art.offsetMin = new Vector2(left, 24 + s.cardDepth);
+            art.anchorMax = new Vector2(1, 0.55f);
+            art.offsetMin = new Vector2(left, 44);
             art.offsetMax = new Vector2(-starsWidth, -4);
+            UiFactory.AutoSize(name, s.bodySize);
             c.Name = name.gameObject.AddComponent<LocalizedText>();
 
-            c.Star = ui.Icon("Star", c.Button.transform, "star", s.chapterStarSize, s.starOn);
-            UiFactory.Place(c.Star.rectTransform, 1, 0.5f, new Vector2(s.chapterStarSize, s.chapterStarSize), new Vector2(-(starsWidth - s.chapterStarSize - 8), s.cardDepth / 2f));
+            c.Star = ui.Picture("Star", c.Button.transform, s.starFull, s.chapterStarSize);
+            UiFactory.Place(c.Star.rectTransform, 1, 0.5f, new Vector2(s.chapterStarSize, s.chapterStarSize), new Vector2(-(starsWidth - s.chapterStarSize - 16), 6));
             c.Stars = ui.Label("Stars", c.Button.transform, null, s.bodySize, s.text, TextAnchor.MiddleLeft, bold: true);
-            UiFactory.Place(c.Stars.rectTransform, 1, 0.5f, new Vector2(starsWidth - s.chapterStarSize - 16 - pad, 72), new Vector2(-pad, s.cardDepth / 2f));
+            UiFactory.Place(c.Stars.rectTransform, 1, 0.5f, new Vector2(starsWidth - s.chapterStarSize - 24 - pad, 72), new Vector2(-pad, 6));
             return c;
         }
 
@@ -118,18 +123,20 @@ namespace ResolverMaster.Core.UI.Screens
             {
                 var chapter = book.Chapters[i];
                 var c = _cards[i];
+                var theme = _ctx.Themes != null ? _ctx.Themes.ForChapter(chapter) : null;
                 bool unlocked = StoryProgress.IsChapterUnlocked(progress, book, chapter);
-                UiFactory.SetInteractable(c.Button, unlocked);
-                c.Background.color = unlocked ? s.surface : s.badge;
-                c.Circle.color = unlocked ? chapter.Theme.color : s.toggleOff;
+                c.Thumb.sprite = theme != null ? ThemeArt.Slab(theme, 0) : s.tileLevel;
                 c.Icon.sprite = _ctx.Icons.Get(chapter.Theme.icon);
                 c.Icon.gameObject.SetActive(unlocked);
                 c.Lock.gameObject.SetActive(!unlocked);
-                c.Number.text = string.Format(_ctx.Loc.Get(LocKeys.LevelsChapter), chapter.Number);
+                string themeName = theme != null ? _ctx.Loc.Get(theme.nameKey) : "";
+                string number = string.Format(_ctx.Loc.Get(LocKeys.LevelsChapter), chapter.Number);
+                c.Number.text = string.IsNullOrEmpty(themeName) ? number : number + "  ·  " + themeName;
                 c.Name.Bind(_ctx.Loc, chapter.Theme.nameKey);
-                c.Name.GetComponent<Text>().color = unlocked ? s.text : s.textMuted;
+                c.Name.GetComponent<TMP_Text>().color = unlocked ? s.text : s.textMuted;
                 c.Stars.text = string.Format(_ctx.Loc.Get(LocKeys.ChaptersStars), StoryProgress.ChapterStars(progress, book, chapter), chapter.MaxStars);
-                c.Star.color = unlocked ? s.starOn : s.starOff;
+                c.Star.sprite = unlocked ? s.starFull : s.starEmpty;
+                UiFactory.SetInteractable(c.Button, unlocked);
             }
         }
 

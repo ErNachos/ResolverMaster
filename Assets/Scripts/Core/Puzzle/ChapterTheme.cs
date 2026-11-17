@@ -13,14 +13,17 @@ namespace ResolverMaster.Core.Puzzle
         public string icon;
         /// <summary>Card accent color.</summary>
         public Color color = new Color32(0x3D, 0x6F, 0xE0, 0xFF);
+        /// <summary>Id of the visual theme (terrain, background) in the Core ThemeConfig, e.g. "garden". Empty = the default theme.</summary>
+        public string theme;
 
         public ChapterTheme() { }
 
-        public ChapterTheme(string nameKey, string icon, Color color)
+        public ChapterTheme(string nameKey, string icon, Color color, string theme = null)
         {
             this.nameKey = nameKey;
             this.icon = icon;
             this.color = color;
+            this.theme = theme;
         }
     }
 }

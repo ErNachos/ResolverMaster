@@ -76,30 +76,88 @@ namespace ResolverMaster.Editor.Validation
         }
     }
 
-    /// <summary>UI kit: style asset with fonts and generated sprites (rest and pressed), every Core icon present, touch size of the round buttons.</summary>
+    /// <summary>
+    /// UI kit (ErNa-005): every Gemini element expected in Assets/Art/UI, TextMesh Pro resources, font assets and the outlined material,
+    /// the material of disabled buttons, the style filled with all its sprites, every Core icon present, touch size of the buttons.
+    /// </summary>
     public sealed class UiKitCheck : IValidationCheck
     {
         public string Name => "UiKit";
 
         public void Run(ValidationReport report)
         {
+            foreach (var name in UiArtSetup.Elements)
+                if (!System.IO.File.Exists($"{UiArtSetup.UiArtDir}/{name}.png"))
+                    report.Error($"UI element '{name}' missing in {UiArtSetup.UiArtDir}: run python Tools/Art/make_ui_art.py");
+            if (!System.IO.File.Exists(UiArtSetup.ManifestPath)) report.Error($"{UiArtSetup.ManifestPath} missing: run python Tools/Art/make_ui_art.py");
+            if (!System.IO.File.Exists(UiArtSetup.TmpSettingsPath)) report.Error("TextMesh Pro resources missing: import TMP Essential Resources (Setup > Import TMP Essentials, or -importPackage)");
+
             var style = AssetDatabase.LoadAssetAtPath<UiKitStyle>(UiKitAssets.StylePath);
             if (style == null)
             {
                 report.Error("UiKitStyle missing: run Resolver Master > Setup > Apply All");
                 return;
             }
-            if (style.fontRegular == null || style.fontBold == null) report.Error("UiKitStyle: font missing");
-            if (style.buttonSprite == null || style.buttonPressedSprite == null || style.cardSprite == null || style.cardPressedSprite == null ||
-                style.panelSprite == null || style.outlineSprite == null || style.circleSprite == null || style.roundSprite == null ||
-                style.roundPressedSprite == null || style.softSprite == null)
-                report.Error("UiKitStyle: generated sprites missing: run Resolver Master > UI Kit > Regenerate Sprites");
+            if (style.fontRegular == null || style.fontBold == null) report.Error("UiKitStyle: TextMesh Pro font asset missing (Setup > Apply All)");
+            if (style.fontBoldOutlined == null) report.Error("UiKitStyle: outlined font material missing (Setup > Apply All)");
+            if (style.disabledMaterial == null) report.Error("UiKitStyle: material of disabled buttons missing (Setup > Apply All)");
+            var sprites = new (string name, UnityEngine.Sprite sprite)[]
+            {
+                ("buttonGreen", style.buttonGreen), ("buttonCream", style.buttonCream), ("roundCream", style.roundCream), ("roundYellow", style.roundYellow),
+                ("panel", style.panel), ("ribbon", style.ribbon), ("chapterBanner", style.chapterBanner), ("tileLevel", style.tileLevel),
+                ("tileDone", style.tileDone), ("tileLocked", style.tileLocked), ("starFull", style.starFull), ("starEmpty", style.starEmpty),
+                ("cardSprite", style.cardSprite), ("circleSprite", style.circleSprite),
+            };
+            foreach (var (name, sprite) in sprites)
+                if (sprite == null) report.Error($"UiKitStyle.{name} is empty (Setup > Apply All)");
+            if (style.buttonGreen != null && style.buttonGreen.border == UnityEngine.Vector4.zero) report.Error("btn_green has no 9-slice border (Setup > Apply All)");
+            if (style.ribbon != null && style.ribbon.border != UnityEngine.Vector4.zero) report.Error("the ribbon must not be 9-sliced (its folds would bend)");
             if (style.iconButtonSize < style.minTouchSize || style.gameButtonSize < style.minTouchSize || style.buttonHeight < style.minTouchSize)
                 report.Error($"UiKitStyle: buttons smaller than minTouchSize {style.minTouchSize} (iconButtonSize, gameButtonSize, buttonHeight)");
             var icons = AssetDatabase.LoadAssetAtPath<IconLibrary>(UiKitAssets.IconLibraryPath);
             if (icons == null) return;
             foreach (var name in IconLibrary.CoreIcons)
-                if (!icons.Has(name)) report.Error($"icon '{name}' missing in Assets/Art/Icons");
+                if (!icons.Has(name)) report.Error($"icon '{name}' missing in the IconLibrary");
+        }
+    }
+
+    /// <summary>
+    /// Chapter themes (ErNa-005): ThemeConfig present, ids unique, default theme valid, names in every language, and no strong blue or
+    /// orange in the terrains (the pipes are grey and the water blue and orange: they must stand out).
+    /// </summary>
+    public sealed class ThemeCheck : IValidationCheck
+    {
+        public string Name => "Themes";
+
+        public void Run(ValidationReport report)
+        {
+            var cfg = AssetDatabase.LoadAssetAtPath<ResolverMaster.Core.UI.Themes.ThemeConfig>(ConfigAssets.ThemeConfigPath);
+            if (cfg == null)
+            {
+                report.Error($"{ConfigAssets.ThemeConfigPath} missing: run Resolver Master > Setup > Ensure Config Assets");
+                return;
+            }
+            if (cfg.themes.Count == 0) report.Error("ThemeConfig has no theme");
+            foreach (var dup in cfg.themes.GroupBy(t => t.id).Where(g => g.Count() > 1)) report.Error($"theme id '{dup.Key}' used twice");
+            if (cfg.themes.All(t => t.id != cfg.defaultTheme)) report.Error($"default theme '{cfg.defaultTheme}' does not exist");
+            var loc = LocalizationLoader.Load(Language.English);
+            foreach (var t in cfg.themes)
+            {
+                if (string.IsNullOrWhiteSpace(t.id)) report.Error("a theme has no id");
+                foreach (var lang in LanguageCodes.All)
+                    if (!loc.Has(lang, t.nameKey)) report.Error($"theme '{t.id}': name key '{t.nameKey}' missing in '{LanguageCodes.ToCode(lang)}'");
+                foreach (var (what, c) in new[] { ("ground", t.ground), ("groundDetail", t.groundDetail), ("slab", t.slab), ("slabDetail", t.slabDetail), ("slabEdge", t.slabEdge) })
+                    if (IsStrongWaterColor(c)) report.Error($"theme '{t.id}': {what} is a strong blue or orange (the water colors)");
+            }
+        }
+
+        /// <summary>Saturated and bright, with the hue of the water: blue (190-250) or orange (15-40 degrees).</summary>
+        public static bool IsStrongWaterColor(UnityEngine.Color c)
+        {
+            UnityEngine.Color.RGBToHSV(c, out float h, out float sat, out float v);
+            float deg = h * 360f;
+            bool waterHue = (deg >= 190f && deg <= 250f) || (deg >= 15f && deg <= 40f);
+            return waterHue && sat > 0.5f && v > 0.75f;
         }
     }
 }

@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using ResolverMaster.Core.Puzzle;
 using ResolverMaster.Core.UI;
+using ResolverMaster.Core.UI.Themes;
 using ResolverMaster.Games.Plumber;
 using UnityEditor;
 using UnityEngine;
@@ -11,12 +12,13 @@ namespace ResolverMaster.Editor
 {
     /// <summary>
     /// Creates the parameter files that do not exist yet, with the default values written in their classes
-    /// (Core <see cref="PuzzleConfig"/>, Plumber <see cref="PlumberConfig"/>). Existing files are never overwritten.
+    /// (Core <see cref="PuzzleConfig"/> and <see cref="ThemeConfig"/>, Plumber <see cref="PlumberConfig"/>). Existing files are never overwritten.
     /// Batch: -executeMethod ResolverMaster.Editor.ConfigAssets.EnsureAllBatch
     /// </summary>
     public static class ConfigAssets
     {
         public const string PuzzleConfigPath = UiKitAssets.ResourcesDir + "/PuzzleConfig.asset";
+        public const string ThemeConfigPath = UiKitAssets.ResourcesDir + "/ThemeConfig.asset";
         public const string PlumberDir = "Assets/Resources/Games/Plumber";
         public const string PlumberConfigPath = PlumberDir + "/PlumberConfig.asset";
         public const string PlumberStoryPath = PlumberDir + "/plumber_story.json";
@@ -25,6 +27,7 @@ namespace ResolverMaster.Editor
         public static void EnsureAll()
         {
             Ensure<PuzzleConfig>(PuzzleConfigPath);
+            Ensure<ThemeConfig>(ThemeConfigPath);
             Ensure<PlumberConfig>(PlumberConfigPath);
             AssetDatabase.SaveAssets();
         }
@@ -44,8 +47,9 @@ namespace ResolverMaster.Editor
         }
 
         /// <summary>
-        /// Overwrites the UiKitStyle and the PlumberConfig with the default values written in their classes (used when a new style changes
-        /// many defaults at once, e.g. ErNa-004), then regenerates the sprites and the libraries (fonts and sprites are filled again).
+        /// Overwrites the UiKitStyle, the ThemeConfig and the PlumberConfig with the default values written in their classes (used when a
+        /// new style changes many defaults at once, e.g. ErNa-004, ErNa-005), then regenerates the sprites and the libraries (fonts,
+        /// materials and sprites are filled again).
         /// Manual edits of those two files are lost: check them with git first.
         /// Batch only: -executeMethod ResolverMaster.Editor.ConfigAssets.ResetVisualDefaultsBatch
         /// </summary>
@@ -55,6 +59,7 @@ namespace ResolverMaster.Editor
             {
                 ResetToDefaults<UiKitStyle>(UiKitAssets.StylePath);
                 ResetToDefaults<PlumberConfig>(PlumberConfigPath);
+                ResetToDefaults<ThemeConfig>(ThemeConfigPath);
                 UiKitGenerator.RegenerateSprites();
                 UiKitAssets.EnsureAssets();
                 AssetDatabase.SaveAssets();

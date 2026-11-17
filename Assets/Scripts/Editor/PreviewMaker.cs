@@ -11,6 +11,8 @@ using ResolverMaster.Core.Save;
 using ResolverMaster.Core.UI;
 using ResolverMaster.Core.UI.Screens;
 using ResolverMaster.Games.Plumber;
+using ResolverMaster.Core.UI.Themes;
+using TMPro;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -22,12 +24,12 @@ namespace ResolverMaster.Editor
 {
     /// <summary>
     /// Menu Resolver Master > Make Previews: renders Home (with the Plumber card and with the Traffic jam card in the centre), mode choice,
-    /// Settings, chapter list, 3x3 level grid and game (a 3x3 level of chapter 1 and a 6x6 level of chapter 3 before the opening, a
-    /// successful two-color opening, a failed opening at the leak effect, win panel), in Italian and English, at 1080x1920 (9:16) and
-    /// 1080x2520 (9:21) into Previews/, with the area outside the simulated safe area tinted red, and measures the layout:
-    /// safe-area margins, elements off screen or outside the safe area, clipped texts, overlapping elements, the smallest button;
-    /// on the game screen also the cell size, the size of the fountain drawings and the gaps between the grid, the screen edges,
-    /// the bars and the main action button.
+    /// Settings, chapter list, the level grid of every chapter (its theme) and game (one level per chapter before the opening: 3x4, 5x7,
+    /// 6x8; a two-color opening halfway through the flow and at its end, a failed opening at the leak effect, win panel), in Italian
+    /// and English, at 1080x1920 (9:16) and 1080x2520 (9:21) into Previews/, with the area outside the simulated safe area tinted red,
+    /// and measures the layout: safe-area margins, elements off screen or outside the safe area, clipped texts (TextMesh Pro),
+    /// overlapping elements, the smallest button, UI sprites drawn bigger than their resolution; on the game screen also the cell size,
+    /// the free space above and below the grid, the size of the fountain drawings and the position of the main action button.
     /// Report: Previews/previews_report.txt (also in the log). Batch: -executeMethod ResolverMaster.Editor.PreviewMaker.MakePreviewsBatch
     /// </summary>
     public static class PreviewMaker
@@ -91,22 +93,29 @@ namespace ResolverMaster.Editor
                     m.PushImmediate(ScreenIds.ChapterSelect);
                 },
             },
-            new Shot
-            {
-                Name = "levels",
-                Setup = (ctx, m) =>
-                {
-                    SampleProgress(ctx);
-                    m.Get<LevelSelectScreen>(ScreenIds.LevelSelect).Open(ctx.Games.FindModule(PlumberModule.Id), 2);
-                    m.PushImmediate(ScreenIds.LevelSelect);
-                },
-            },
-            // before the opening: the first level of chapter 1 (3x3) and the last of chapter 3 (6x6), the smallest and the largest cells
+            LevelsShot(1),
+            LevelsShot(2),
+            LevelsShot(3),
+            // before the opening, one level per chapter (theme): 3x4 (level 1), 5x7 (level 14), 6x8 (level 27)
             GameShot("game_c1", 0, BoardPreview.Start, win: false),
+            GameShot("game_c2", 13, BoardPreview.Start, win: false),
             GameShot("game_c3", 26, BoardPreview.Start, win: false),
+            GameShot("game_flowing", 26, BoardPreview.ActionFlowing, win: false),
             GameShot("game_open_ok", 26, BoardPreview.ActionSuccess, win: false),
             GameShot("game_open_leak", 9, BoardPreview.ActionFailure, win: false),
             GameShot("game_win", 0, BoardPreview.Solved, win: true),
+        };
+
+        /// <summary>The level grid of a chapter (its theme backdrop), with the sample progress.</summary>
+        static Shot LevelsShot(int chapter) => new Shot
+        {
+            Name = "levels_c" + chapter,
+            Setup = (ctx, m) =>
+            {
+                SampleProgress(ctx);
+                m.Get<LevelSelectScreen>(ScreenIds.LevelSelect).Open(ctx.Games.FindModule(PlumberModule.Id), chapter);
+                m.PushImmediate(ScreenIds.LevelSelect);
+            },
         };
 
         /// <summary>Sample progress: chapter 1 complete with mixed stars, chapter 2 levels 10-12 solved (3, 2, 1 stars), chapter 3 locked.</summary>
@@ -241,6 +250,7 @@ namespace ResolverMaster.Editor
                     Icons = icons,
                     Cards = AssetDatabase.LoadAssetAtPath<IconLibrary>(UiKitAssets.CardLibraryPath),
                     Puzzle = AssetDatabase.LoadAssetAtPath<PuzzleConfig>(ConfigAssets.PuzzleConfigPath) ?? ScriptableObject.CreateInstance<PuzzleConfig>(),
+                    Themes = AssetDatabase.LoadAssetAtPath<ThemeConfig>(ConfigAssets.ThemeConfigPath) ?? ScriptableObject.CreateInstance<ThemeConfig>(),
                 };
                 ctx.Data.settings.language = LanguageCodes.ToCode(lang);
                 var manager = AppUi.Build(ctx, root);
@@ -254,6 +264,7 @@ namespace ResolverMaster.Editor
                     shot.AfterLayout(ctx, manager);
                     Relayout(root);
                 }
+                foreach (var tmp in root.GetComponentsInChildren<TMP_Text>(true)) tmp.ForceMeshUpdate(true, true);
                 board = MeasureBoard(manager, device);
                 cam.Render();   // first render requests the font glyphs
                 Canvas.ForceUpdateCanvases();
@@ -288,7 +299,7 @@ namespace ResolverMaster.Editor
             }
         }
 
-        /// <summary>Game screen only: cell size and the gaps between the grid and the screen edges / the two bars.</summary>
+        /// <summary>Game screen only: cell size, free space above and below the grid, gaps to the screen edges, the bars and the main action.</summary>
         static string MeasureBoard(ScreenManager manager, Device d)
         {
             var game = manager.Top as GameScreen;
@@ -296,9 +307,13 @@ namespace ResolverMaster.Editor
             var grid = PixelRect(game.Board.GridRect, d);
             var top = PixelRect(game.TopBarRect, d);
             var bottom = PixelRect(game.BottomBarRect, d);
-            float cell = grid.width / game.Board.GridColumns;
-            var sb = new StringBuilder($"{game.Board.GridColumns}x{game.Board.GridColumns} cells of {cell:0.0} px, grid {Fmt(grid)}; gap to screen left {grid.xMin:0} / right {d.Width - grid.xMax:0} px, " +
-                   $"to safe area left {grid.xMin - d.Safe.x:0} / right {d.Safe.xMax - grid.xMax:0} px; gap to top bar {top.yMin - grid.yMax:0} px, to bottom bar {grid.yMin - bottom.yMax:0} px");
+            int cols = game.Board.GridColumns, rows = game.Board.GridRows;
+            float cell = grid.width / cols;
+            var action = game.MainActionRect ?? game.MessageRect;
+            float below = action != null ? grid.yMin - PixelRect(action, d).yMax : grid.yMin - bottom.yMax;
+            var sb = new StringBuilder($"{cols}x{rows} cells of {cell:0.0}x{grid.height / Math.Max(1, rows):0.0} px, grid {Fmt(grid)}; free space above the grid (to the top bar) {top.yMin - grid.yMax:0} px, " +
+                   $"below (to the {(action != null ? "main action" : "bottom bar")}) {below:0} px; gap to screen left {grid.xMin:0} / right {d.Width - grid.xMax:0} px, " +
+                   $"to safe area left {grid.xMin - d.Safe.x:0} / right {d.Safe.xMax - grid.xMax:0} px; gap to the bottom bar {grid.yMin - bottom.yMax:0} px");
             // fountain drawings (sources and sinks): drawn size of the square they sit in
             if (game.Board is ResolverMaster.Games.Plumber.View.PlumberBoardView plumber)
             {
@@ -370,7 +385,7 @@ namespace ResolverMaster.Editor
                     issues.Add($"hidden by scroll list (scroll to see it): {it.Path}");
 
                 if (deco != null) continue;
-                if (it.Graphic is Text t && IsClipped(t)) issues.Add($"text clipped: {it.Path} \"{t.text.Replace('\n', ' ')}\"");
+                if (it.Graphic is TMP_Text t && IsClipped(t, out string how)) issues.Add($"text clipped ({how}): {it.Path} \"{t.text.Replace('\n', ' ')}\"");
 
                 freeTop = Mathf.Min(freeTop, safe.yMax - r.yMax);
                 freeBottom = Mathf.Min(freeBottom, r.yMin - safe.yMin);
@@ -415,7 +430,7 @@ namespace ResolverMaster.Editor
                 foreach (var b in buttons.Where(b => Mathf.Min(b.rect.width, b.rect.height) < style.minTouchSize - 0.5f))
                     issues.Add($"button smaller than {style.minTouchSize:0} px: {b.path} {b.rect.width:0}x{b.rect.height:0}");
             }
-            margins = $"content-to-safe-edge min gap top {freeTop:0}, bottom {freeBottom:0}, left {freeLeft:0}, right {freeRight:0} px; {smallest}";
+            margins = $"content-to-safe-edge min gap top {freeTop:0}, bottom {freeBottom:0}, left {freeLeft:0}, right {freeRight:0} px; {smallest}; {MeasureScale(visible, device, root, issues)}";
             return issues;
         }
 
@@ -426,21 +441,68 @@ namespace ResolverMaster.Editor
             if (!g.enabled || !g.gameObject.activeInHierarchy || g.color.a <= 0.01f) return false;
             if (g is Image img && img.sprite == null && IsScreenBackground(g)) return false;
             if (g.GetComponent<ModalOverlay>() != null) return false;   // the dim layer itself
-            if (g is Text txt && string.IsNullOrEmpty(txt.text)) return false;
+            if (g is TMP_Text txt && string.IsNullOrEmpty(txt.text)) return false;
             foreach (var cg in g.GetComponentsInParent<CanvasGroup>())
                 if (cg.alpha <= 0.01f) return false;
             return true;
         }
 
-        static bool IsClipped(Text t)
+        /// <summary>The drawn glyphs of a TextMesh Pro text go out of its rect (more than 2 units): too long, too tall, or wrapped onto too many lines.</summary>
+        static bool IsClipped(TMP_Text t, out string how)
         {
-            var size = t.rectTransform.rect.size;
-            var gen = t.cachedTextGeneratorForLayout;
-            var settings = t.GetGenerationSettings(new Vector2(t.horizontalOverflow == HorizontalWrapMode.Wrap ? size.x : 0, 0));
-            float ppu = t.pixelsPerUnit;
-            float height = gen.GetPreferredHeight(t.text, settings) / ppu;
-            float width = gen.GetPreferredWidth(t.text, settings) / ppu;
-            return height > size.y + 1f || (t.horizontalOverflow == HorizontalWrapMode.Overflow && width > size.x + 1f);
+            t.ForceMeshUpdate(true, true);
+            var r = t.rectTransform.rect;
+            var b = t.textBounds;
+            how = null;
+            if (t.textInfo == null || t.textInfo.characterCount == 0) return false;
+            const float tol = 2f;
+            if (b.min.x < r.xMin - tol || b.max.x > r.xMax + tol) how = $"text {b.size.x:0} wide in {r.width:0}";
+            else if (b.min.y < r.yMin - tol || b.max.y > r.yMax + tol) how = $"text {b.size.y:0} tall in {r.height:0}";
+            return how != null;
+        }
+
+        /// <summary>
+        /// Scale at which every visible sprite is drawn (screen px per texture px): above 1 = scaled up (blurry). Sprites of the project
+        /// (Assets/Art: Gemini UI, icons, illustrations) must never be scaled up (issue); sprites generated at run time (pipes, theme
+        /// art) are only reported. Sliced and tiled sprites: the scale of their borders.
+        /// </summary>
+        static string MeasureScale(List<Graphic> visible, Device d, RectTransform root, List<string> issues)
+        {
+            float maxAsset = 0f, maxGenerated = 0f;
+            string maxAssetPath = "-", maxGeneratedPath = "-";
+            foreach (var g in visible)
+            {
+                if (!(g is Image img) || img.sprite == null) continue;
+                var px = PixelRect(img.rectTransform, d);
+                var sr = img.sprite.rect;
+                float scale;
+                if (img.type == Image.Type.Sliced || img.type == Image.Type.Tiled)
+                {
+                    scale = (100f / img.sprite.pixelsPerUnit) / Mathf.Max(0.01f, img.pixelsPerUnitMultiplier);
+                    // borders larger than the rect are drawn smaller
+                    var border = img.sprite.border;
+                    float bw = border.x + border.z, bh = border.y + border.w;
+                    float fit = 1f;
+                    if (bw * scale > px.width + 0.5f) fit = Mathf.Min(fit, px.width / (bw * scale));
+                    if (bh * scale > px.height + 0.5f) fit = Mathf.Min(fit, px.height / (bh * scale));
+                    scale *= fit;
+                }
+                else if (img.preserveAspect) scale = Mathf.Min(px.width / sr.width, px.height / sr.height);
+                else scale = Mathf.Max(px.width / sr.width, px.height / sr.height);
+                bool asset = AssetDatabase.Contains(img.sprite);
+                if (asset && scale > maxAsset)
+                {
+                    maxAsset = scale;
+                    maxAssetPath = PathOf(g.transform, root) + " (" + img.sprite.name + ")";
+                }
+                if (!asset && scale > maxGenerated)
+                {
+                    maxGenerated = scale;
+                    maxGeneratedPath = PathOf(g.transform, root) + " (" + img.sprite.name + ")";
+                }
+                if (asset && scale > 1.02f) issues.Add($"sprite scaled up x{scale:0.00}: {PathOf(g.transform, root)} ({img.sprite.name} {sr.width:0}x{sr.height:0} drawn {px.width:0}x{px.height:0})");
+            }
+            return $"largest sprite scale: project art x{maxAsset:0.00} ({maxAssetPath}), generated x{maxGenerated:0.00} ({maxGeneratedPath})";
         }
 
         static Rect PixelRect(RectTransform rt, Device d)

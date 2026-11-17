@@ -6,25 +6,29 @@ using UnityEngine.UI;
 namespace ResolverMaster.Games.Plumber.View
 {
     /// <summary>
-    /// One pooled cell: tile background (takes the tap); for a sink the colored halo under it; the pipe image with its reflection
-    /// (both rotate; for a source or a sink it is only the stub towards the opening); for a source or a sink the fountain drawing on
-    /// top, which never rotates (a source also has its mask, tinted with the water color). Rotation is animated at a constant speed
-    /// towards the target, so taps made during an animation queue up (one 90-degree turn each).
+    /// One pooled cell, from the bottom: the theme slab (takes the tap); for a sink the colored halo and the water filling it; the pipe
+    /// (rotates; for a source or a sink only the stub towards the opening); the water running inside the pipe (not rotated: drawn in its
+    /// final position while the water runs); for a source or a sink a soft shadow and the drawing on top, lifted so that its base sits
+    /// on the pipe (a source also has its mask, tinted with the water color). Rotation is animated at a constant speed towards the
+    /// target, so taps made during an animation queue up (one 90-degree turn each).
     /// </summary>
     public sealed class PipeCellView : MonoBehaviour, IPointerClickHandler
     {
         public Image Tile;
         public Image Pipe;
-        public Image Shine;
+        public WaterGraphic Water;
         public Image Halo;
+        /// <summary>Sink only: the water filling the fountain (a disk that grows on the halo).</summary>
+        public Image Fill;
+        public Image Shadow;
         /// <summary>Source or fountain drawing (inactive on pipe cells).</summary>
         public Image Object;
         /// <summary>Source only: the magenta parts of the drawing, tinted with the water color.</summary>
         public Image ObjectMask;
         public int Index;
         public Action<int> Tapped;
-        /// <summary>Pipe color while dry (grey).</summary>
-        public Color DryColor;
+        /// <summary>Tint of the slab (white, or the locked tint).</summary>
+        public Color TileColor = Color.white;
 
         int _steps;
         float _angle;
