@@ -59,6 +59,9 @@ namespace ResolverMaster.Games.Plumber.View
         public override int GridColumns => _puzzle.Grid?.Width ?? 0;
         public override int GridRows => _puzzle.Grid?.Height ?? 0;
         public override MainActionInfo MainAction => s_openWater;
+        /// <summary>ErNa-007: the light bulb can fix a piece (playing, not solved, a piece still to turn).</summary>
+        public override bool CanHint => _phase == Phase.Playing && _puzzle.Grid != null && !_puzzle.IsSolved && _puzzle.TryFindHint(out _, out _);
+        public override bool HintUsed => _puzzle.HintUsed;
         /// <summary>The water is running (or its failure effect): taps, undo, restart and the main action wait.</summary>
         public override bool IsBusy => _phase != Phase.Playing && _phase != Phase.Won;
         public int PooledCells => _pool.Created;
@@ -127,6 +130,10 @@ namespace ResolverMaster.Games.Plumber.View
             plate.gameObject.AddComponent<Decoration>();   // under the pipe on purpose
             UiFactory.Stretch(plate.rectTransform);
             plate.gameObject.SetActive(false);
+            var glow = _ui.Image("HintGlow", tile.transform, _sprites.HintGlow, _cfg.hintGlowColor);
+            glow.gameObject.AddComponent<Decoration>();   // on the rim of the tile on purpose
+            UiFactory.Stretch(glow.rectTransform);
+            glow.gameObject.SetActive(false);
             var pipe = _ui.Image("Pipe", tile.transform, null, _cfg.pipeEmpty);
             UiFactory.Stretch(pipe.rectTransform);
             var water = NewWater("Water", tile.transform);
@@ -155,6 +162,7 @@ namespace ResolverMaster.Games.Plumber.View
             view.Pipe = pipe;
             view.Water = water;
             view.Plate = plate;
+            view.Glow = glow;
             view.PipeTop = pipeTop;
             view.WaterTop = waterTop;
             view.Halo = halo;
@@ -280,7 +288,16 @@ namespace ResolverMaster.Games.Plumber.View
         public override void Undo()
         {
             if (_phase != Phase.Playing || !_puzzle.Undo(out int cell)) return;
-            _views[cell].AddSteps(-1);
+            if (!_puzzle.Locks.IsPinned(cell)) _views[cell].AddSteps(-1);   // a piece fixed by a hint does not move back
+            RaiseChanged();
+        }
+
+        /// <summary>ErNa-007: the hinted piece turns into place (animated, not a move) and gets the glowing outline.</summary>
+        public override void ApplyHint()
+        {
+            if (_phase != Phase.Playing || !_puzzle.ApplyHint(out int cell, out int taps)) return;
+            _views[cell].AddSteps(taps);
+            _views[cell].Glow.gameObject.SetActive(true);
             RaiseChanged();
         }
 
@@ -328,6 +345,7 @@ namespace ResolverMaster.Games.Plumber.View
             {
                 _views[c].SnapRotation(ViewSteps(grid, c));
                 _views[c].StopShake();
+                _views[c].Glow.gameObject.SetActive(_puzzle.Locks.IsPinned(c));
             }
             if ((_phase == Phase.Flowing || _phase == Phase.Spraying || _phase == Phase.Won) && _water != null && _water.Success)
             {

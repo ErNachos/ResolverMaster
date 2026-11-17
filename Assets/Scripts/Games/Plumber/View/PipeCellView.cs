@@ -22,6 +22,8 @@ namespace ResolverMaster.Games.Plumber.View
         public WaterGraphic WaterTop;
         /// <summary>ErNa-006, locked pieces only: the dark plate with 4 bolts under the pipe.</summary>
         public Image Plate;
+        /// <summary>ErNa-007, pieces fixed by the light bulb: a glowing outline on the tile.</summary>
+        public Image Glow;
         public Image Halo;
         /// <summary>Sink only: the water filling the fountain (a disk that grows on the halo).</summary>
         public Image Fill;

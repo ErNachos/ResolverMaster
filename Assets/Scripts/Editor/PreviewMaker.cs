@@ -108,7 +108,25 @@ namespace ResolverMaster.Editor
             GameShot("game_open_ok", 26, BoardPreview.ActionSuccess, win: false),
             GameShot("game_open_leak", 9, BoardPreview.ActionFailure, win: false),
             GameShot("game_win", 0, BoardPreview.Solved, win: true),
-            // ErNa-007: the test rewarded ad over the game screen (the wait is over)
+            // ErNa-007: two pieces fixed by the light bulb (glowing outline), and the test rewarded ad (the wait is over)
+            new Shot
+            {
+                Name = "game_hint",
+                Setup = (ctx, m) =>
+                {
+                    m.Get<GameScreen>(ScreenIds.Game).StartLevel(ctx.Games.FindModule(PlumberModule.Id), 40);
+                    m.PushImmediate(ScreenIds.Game);
+                },
+                AfterLayout = (ctx, m) =>
+                {
+                    var board = m.Get<GameScreen>(ScreenIds.Game).Board;
+                    board.Refit();
+                    board.SnapVisuals();
+                    board.ApplyHint();
+                    board.ApplyHint();
+                    board.SnapVisuals();
+                },
+            },
             new Shot
             {
                 Name = "ad_test",

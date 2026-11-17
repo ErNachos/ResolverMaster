@@ -45,6 +45,8 @@ namespace ResolverMaster.Games.Plumber
         /// <summary>ErNa-006: plate under a locked piece (dark, visible on every terrain) and its 4 bolts.</summary>
         public Color lockPlateColor = new Color32(0x3E, 0x42, 0x4C, 0xFF);
         public Color lockBoltColor = new Color32(0xD3, 0xD6, 0xDC, 0xFF);
+        /// <summary>ErNa-007: glowing outline of a piece fixed by the light bulb (different from the bolts of a locked piece).</summary>
+        public Color hintGlowColor = new Color32(0xFF, 0xFF, 0xF2, 0xFF);
         /// <summary>Failure highlight (mixed colors, wrong or dry fountain).</summary>
         public Color errorColor = new Color32(0xE5, 0x48, 0x4D, 0xFF);
 

@@ -1,6 +1,8 @@
 using System;
 using NUnit.Framework;
 using ResolverMaster.Core.Ads;
+using ResolverMaster.Core.Puzzle;
+using ResolverMaster.Games.Plumber;
 
 namespace ResolverMaster.Tests
 {
@@ -48,6 +50,55 @@ namespace ResolverMaster.Tests
             Assert.IsTrue(test.IsAvailable);
             test.Enabled = false;
             Assert.IsFalse(RewardedAds.CanOffer(test, true));
+        }
+
+        [Test]
+        public void Hint_FixesThePieceClosestToASource_NotAMove_TwoStarsAtMost_SurvivesRestart()
+        {
+            // S> | | <E : both straights need one tap; the one next to the source is hinted first
+            var level = new PlumberLevel { minMoves = 2, cells = "S1 I0 I0 E3" };
+            var puzzle = new PlumberPuzzle();
+            puzzle.Load(level);
+            Assert.IsTrue(puzzle.ApplyMove(1));
+            Assert.IsTrue(puzzle.ApplyMove(1), "turned twice: wrong again");
+            Assert.IsTrue(puzzle.TryFindHint(out int cell, out int taps));
+            Assert.AreEqual(1, cell, "the piece the water reaches first");
+            Assert.AreEqual(1, taps);
+
+            Assert.IsTrue(puzzle.ApplyHint(out cell, out _));
+            Assert.AreEqual(2, puzzle.MovesMade, "the hint is not a move");
+            Assert.IsTrue(puzzle.HintUsed);
+            Assert.IsTrue(puzzle.Locks.IsPinned(1));
+            int fixedRotation = puzzle.Grid.Pieces[1].Rotation;
+            Assert.IsFalse(puzzle.ApplyMove(1), "a fixed piece no longer turns");
+            Assert.IsTrue(puzzle.Undo(out int undone));
+            Assert.AreEqual(1, undone);
+            Assert.AreEqual(fixedRotation, puzzle.Grid.Pieces[1].Rotation, "undo removes the move, the fixed piece stays");
+            Assert.AreEqual(1, puzzle.MovesMade);
+
+            // the next hint is the other straight; after it nothing is left to fix
+            Assert.IsTrue(puzzle.TryFindHint(out cell, out _));
+            Assert.AreEqual(2, cell);
+            Assert.IsTrue(puzzle.ApplyHint(out _, out _));
+            Assert.IsFalse(puzzle.TryFindHint(out _, out _), "every piece right: the light bulb is disabled");
+            Assert.IsTrue(puzzle.OpenWater().Success);
+            var rules = new StarRules();
+            Assert.AreEqual(3, StarRating.Compute(1, 2, rules));
+            Assert.AreEqual(2, StarRating.Compute(1, 2, rules, hintUsed: true), "with a hint: at most 2 stars");
+
+            // a restart (e.g. after a failed opening) keeps the fixed pieces and the 2-star limit; a new load forgets them
+            puzzle.Load(level);
+            Assert.IsTrue(puzzle.ApplyHint(out _, out _));
+            fixedRotation = puzzle.Grid.Pieces[1].Rotation;
+            Assert.IsFalse(puzzle.OpenWater().Success, "the second straight is still wrong");
+            puzzle.Restart();
+            Assert.AreEqual(0, puzzle.MovesMade);
+            Assert.IsTrue(puzzle.Locks.IsPinned(1));
+            Assert.AreEqual(fixedRotation, puzzle.Grid.Pieces[1].Rotation);
+            Assert.IsTrue(puzzle.HintUsed);
+            puzzle.Load(level);
+            Assert.IsFalse(puzzle.Locks.IsPinned(1));
+            Assert.IsFalse(puzzle.HintUsed);
         }
     }
 }

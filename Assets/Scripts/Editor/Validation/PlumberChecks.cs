@@ -59,6 +59,7 @@ namespace ResolverMaster.Editor.Validation
                     others.Add(($"theme '{t.id}'.{f.Name}", (Color)f.GetValue(t)));
             for (int i = 0; i < cfg.chapters.Count; i++) others.Add(($"chapter {i + 1} color", cfg.chapters[i].color));
             others.Add(("pipeEmpty", cfg.pipeEmpty));
+            others.Add(("hintGlowColor", cfg.hintGlowColor));
             foreach (var (what, color) in others)
             {
                 if (color.a < 0.99f) continue;

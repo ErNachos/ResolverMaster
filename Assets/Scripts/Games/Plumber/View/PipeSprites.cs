@@ -34,6 +34,8 @@ namespace ResolverMaster.Games.Plumber.View
         public Sprite BridgeTop { get; private set; }
         /// <summary>ErNa-006: dark plate with 4 bolts drawn under a locked piece (not tinted).</summary>
         public Sprite LockPlate { get; private set; }
+        /// <summary>ErNa-007: a soft glowing ring along the edge of the tile (white, tinted): a piece fixed by the light bulb.</summary>
+        public Sprite HintGlow { get; private set; }
 
         public Sprite Get(PieceKind kind) => _pieces.TryGetValue(kind, out var s) ? s : null;
 
@@ -48,7 +50,7 @@ namespace ResolverMaster.Games.Plumber.View
         }
 
         /// <summary>False after the textures were destroyed (e.g. editor domain/scene changes): regenerate.</summary>
-        bool IsAlive => Tile != null && Disk != null && Drop != null && Shadow != null && BridgeTop != null && LockPlate != null && _pieces.Count > 0 && AllAlive();
+        bool IsAlive => Tile != null && Disk != null && Drop != null && Shadow != null && BridgeTop != null && LockPlate != null && HintGlow != null && _pieces.Count > 0 && AllAlive();
 
         bool AllAlive()
         {
@@ -104,6 +106,26 @@ namespace ResolverMaster.Games.Plumber.View
             Shadow = MakeShadow("pipe_shadow", size / 2);
             BridgeTop = MakeBridgeTop("pipe_bridge_top", size, w, cfg.pipeOutline, cfg.pipeShading, cfg.bridgeShadowAlpha);
             LockPlate = MakeLockPlate("pipe_lock_plate", size, cfg.tileMargin, cfg.lockPlateColor, cfg.lockBoltColor);
+            HintGlow = MakeGlow("pipe_hint_glow", size, cfg.tileMargin);
+        }
+
+        /// <summary>A bright ring on the rim of the tile fading inwards and outwards (white: the image color tints it).</summary>
+        static Sprite MakeGlow(string name, int size, float margin)
+        {
+            var tex = NewTexture(name, size);
+            var px = new Color32[size * size];
+            float pixel = 1f / size, half = 0.5f - margin;
+            for (int y = 0; y < size; y++)
+            for (int x = 0; x < size; x++)
+            {
+                var p = new Vector2((x + 0.5f) * pixel, (y + 0.5f) * pixel);
+                float d = Mathf.Abs(RoundBox(p, half, 0.13f));   // distance from the rim line
+                float core = Mathf.Clamp01(0.5f - (d - 0.03f) / pixel);
+                float halo = Mathf.Clamp01(1f - d / 0.12f);
+                float a = Mathf.Max(core, halo * halo * 0.9f);
+                px[y * size + x] = new Color32(255, 255, 255, (byte)Mathf.RoundToInt(a * 255));
+            }
+            return Finish(tex, px, name);
         }
 
         /// <summary>

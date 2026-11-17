@@ -39,6 +39,7 @@ namespace ResolverMaster.Core.Puzzle
             Level = level;
             IsLoaded = true;
             _undo.Clear();
+            OnFreshLoad();
             OnLoad(level);
             IsSolved = CheckSolved();
         }
@@ -73,6 +74,9 @@ namespace ResolverMaster.Core.Puzzle
 
         /// <summary>Resets the state to the level start (also used by <see cref="Restart"/>).</summary>
         protected abstract void OnLoad(TLevel level);
+
+        /// <summary>Only on <see cref="Load"/>, not on <see cref="Restart"/>: forget what must survive restarts (e.g. hints, ErNa-007).</summary>
+        protected virtual void OnFreshLoad() { }
         protected abstract bool TryApply(TMove move);
         protected abstract void Revert(TMove move);
         protected abstract bool CheckSolved();
