@@ -1,3 +1,4 @@
+using ResolverMaster.Core.Ads;
 using ResolverMaster.Core.UI;
 using ResolverMaster.Core.UI.Screens;
 using UnityEngine;
@@ -36,6 +37,10 @@ namespace ResolverMaster.Core.App
             manager.Register(ChapterSelectScreen.Create(ctx, root));
             manager.Register(LevelSelectScreen.Create(ctx, root));
             manager.Register(GameScreen.Create(ctx, root));
+            // rewarded ads (ErNa-007): the test panel above every screen, the service chosen in one place
+            var adConfig = AdConfig.LoadOrDefault();
+            ctx.TestAds = TestAdPanel.Create(ctx, root, adConfig.testAdSeconds);
+            ctx.Ads ??= RewardedAds.Create(adConfig, ctx.TestAds);
             manager.ShowRoot(ScreenIds.Home);
             return manager;
         }

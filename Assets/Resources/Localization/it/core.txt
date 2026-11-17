@@ -43,3 +43,10 @@ theme.harbor.name = Porto
 theme.mountain.name = Montagna
 theme.lab.name = Laboratorio
 theme.castle.name = Castello
+
+# rewarded ads, test version (ErNa-007)
+ad.test.title = Annuncio di prova
+ad.test.wait = Attendi {0} s…
+ad.test.ready = Fine dell'annuncio
+ad.test.watched = Guardato
+ad.test.closed = Chiudi

@@ -65,6 +65,15 @@ namespace ResolverMaster.Core.UI
         /// <summary>The player pressed the main action button (only called when <see cref="IsBusy"/> is false).</summary>
         public virtual void RunMainAction() { }
 
+        /// <summary>ErNa-007, the light bulb: a hint can fix something now (false = button disabled; games without hints keep false).</summary>
+        public virtual bool CanHint => false;
+
+        /// <summary>A hint was used since the level was loaded (restarts after a failure keep it): at most 2 stars.</summary>
+        public virtual bool HintUsed => false;
+
+        /// <summary>Applies one hint (called after the rewarded ad was watched). Not a move.</summary>
+        public virtual void ApplyHint() { }
+
         public abstract void Load(LevelRequest request);
         public abstract void Undo();
         public abstract void Restart();

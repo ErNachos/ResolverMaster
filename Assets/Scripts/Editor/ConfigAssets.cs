@@ -19,6 +19,7 @@ namespace ResolverMaster.Editor
     {
         public const string PuzzleConfigPath = UiKitAssets.ResourcesDir + "/PuzzleConfig.asset";
         public const string ThemeConfigPath = UiKitAssets.ResourcesDir + "/ThemeConfig.asset";
+        public const string AdConfigPath = UiKitAssets.ResourcesDir + "/AdConfig.asset";
         public const string PlumberDir = "Assets/Resources/Games/Plumber";
         public const string PlumberConfigPath = PlumberDir + "/PlumberConfig.asset";
         public const string PlumberStoryPath = PlumberDir + "/plumber_story.json";
@@ -27,6 +28,7 @@ namespace ResolverMaster.Editor
         public static void EnsureAll()
         {
             Ensure<PuzzleConfig>(PuzzleConfigPath);
+            Ensure<ResolverMaster.Core.Ads.AdConfig>(AdConfigPath);
             Ensure<ThemeConfig>(ThemeConfigPath);
             Ensure<PlumberConfig>(PlumberConfigPath);
             AssetDatabase.SaveAssets();

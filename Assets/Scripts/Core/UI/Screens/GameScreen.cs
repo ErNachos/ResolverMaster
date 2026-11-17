@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using ResolverMaster.Core.Ads;
 using ResolverMaster.Core.App;
 using ResolverMaster.Core.Games;
 using ResolverMaster.Core.Localization;
@@ -32,7 +33,7 @@ namespace ResolverMaster.Core.UI.Screens
         CanvasGroup _toast;
         TextMeshProUGUI _toastText;
         float _toastTime = -1f;
-        bool _lastBusy;
+        bool _lastBusy, _lastAds;
 
         public MinigameModule Module { get; private set; }
         public PuzzleBoard Board { get; private set; }
@@ -88,7 +89,7 @@ namespace ResolverMaster.Core.UI.Screens
             screen._help = screen.BarButton("Help", "icon_help", dx);
             screen._undo.onClick.AddListener(() => { if (screen.Board != null && !screen.Board.IsBusy) screen.Board.Undo(); });
             screen._restart.onClick.AddListener(() => { if (screen.Board != null && !screen.Board.IsBusy) screen.Board.Restart(); });
-            UiFactory.SetInteractable(screen._help, false);   // hints come in a later Update
+            screen._help.onClick.AddListener(screen.RequestHint);   // ErNa-007: the light bulb (rewarded ad, then a hint)
 
             // ---- optional main action, centred above the bottom bar; the short messages appear in its place ----
             var slot = new Vector2(s.mainActionWidth, s.mainActionHeight);
@@ -190,7 +191,9 @@ namespace ResolverMaster.Core.UI.Screens
             UiFactory.SetInteractable(_undo, playing && session.CanUndo);
             UiFactory.SetInteractable(_restart, playing && session.MovesMade > 0);
             UiFactory.SetInteractable(_action, playing);
+            UiFactory.SetInteractable(_help, RewardedAds.CanOffer(_ctx.Ads, playing && Board.CanHint));
             _lastBusy = busy;
+            _lastAds = _ctx.Ads != null && _ctx.Ads.IsAvailable;
         }
 
         /// <summary>Short message in place of the main action button (shown at once, held, then faded out).</summary>
@@ -228,7 +231,7 @@ namespace ResolverMaster.Core.UI.Screens
         public void ShowWin(bool animate)
         {
             var session = Board.Session;
-            int stars = StarRating.Compute(session.MovesMade, session.MinMoves, _ctx.Puzzle.stars);
+            int stars = StarRating.Compute(session.MovesMade, session.MinMoves, _ctx.Puzzle.stars, Board.HintUsed);
             if (_ctx.Data.progress.SetBest(StoryProgress.Mode, Level, stars)) _ctx.Save();
             Refresh();
             _win.Show(stars, session.MovesMade, session.MinMoves, HasNext(), animate);
@@ -259,6 +262,18 @@ namespace ResolverMaster.Core.UI.Screens
             StartLevel(Module, LevelIndex + 1);
         }
 
+        /// <summary>The light bulb: a rewarded ad, then (if watched) one hint. Disabled without an ad or without anything to fix.</summary>
+        void RequestHint()
+        {
+            if (Board == null || Board.IsBusy || Board.Session.IsSolved || !RewardedAds.CanOffer(_ctx.Ads, Board.CanHint)) return;
+            var board = Board;
+            _ctx.Ads.Show(() =>
+            {
+                if (board == Board && !board.IsBusy && !board.Session.IsSolved) board.ApplyHint();
+                Refresh();
+            }, Refresh);
+        }
+
         public override void OnShow() => Refresh();
 
         void Update()
@@ -266,7 +281,7 @@ namespace ResolverMaster.Core.UI.Screens
             float dt = Time.unscaledDeltaTime;
             _win.Tick(dt);
             TickMessage(dt);
-            if (Board != null && Board.IsBusy != _lastBusy) Refresh();   // animations start and end without a move
+            if (Board != null && (Board.IsBusy != _lastBusy || (_ctx.Ads != null && _ctx.Ads.IsAvailable) != _lastAds)) Refresh();   // animations and ads start and end without a move
         }
 
         // ------------------------------------------------------------------ win panel

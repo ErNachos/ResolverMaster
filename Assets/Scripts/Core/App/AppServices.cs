@@ -1,3 +1,4 @@
+using ResolverMaster.Core.Ads;
 using ResolverMaster.Core.Games;
 using ResolverMaster.Core.Localization;
 using ResolverMaster.Core.Puzzle;
@@ -24,6 +25,10 @@ namespace ResolverMaster.Core.App
         public ThemeConfig Themes;
         public UiFactory Ui;
         public ScreenManager Screens;
+        /// <summary>Rewarded ads (ErNa-007): chosen by <see cref="RewardedAds.Create"/> when the UI is built, unless already set (tests, previews).</summary>
+        public IRewardedAdService Ads;
+        /// <summary>The panel of the test ad (null when the app uses no test ads).</summary>
+        public TestAdPanel TestAds;
 
         public void Save()
         {

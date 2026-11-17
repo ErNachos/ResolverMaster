@@ -43,3 +43,10 @@ theme.harbor.name = Harbour
 theme.mountain.name = Mountain
 theme.lab.name = Laboratory
 theme.castle.name = Castle
+
+# rewarded ads, test version (ErNa-007)
+ad.test.title = Test ad
+ad.test.wait = Wait {0} s…
+ad.test.ready = End of the ad
+ad.test.watched = Watched
+ad.test.closed = Close

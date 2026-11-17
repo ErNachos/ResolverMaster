@@ -44,6 +44,14 @@ namespace ResolverMaster.Core.Localization
         public const string WinNext = "win.next";
         public const string WinLevels = "win.levels";
 
+        // ErNa-007: rewarded ads (test version)
+        public const string AdTestTitle = "ad.test.title";
+        /// <summary>"Wait {0} s..."</summary>
+        public const string AdTestWait = "ad.test.wait";
+        public const string AdTestReady = "ad.test.ready";
+        public const string AdTestWatched = "ad.test.watched";
+        public const string AdTestClosed = "ad.test.closed";
+
         /// <summary>Language display name key: "language.it", "language.en".</summary>
         public static string LanguageName(Language language) => "language." + LanguageCodes.ToCode(language);
     }

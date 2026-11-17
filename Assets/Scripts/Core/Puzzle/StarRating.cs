@@ -10,6 +10,8 @@ namespace ResolverMaster.Core.Puzzle
         public int twoStarExtraPercent = 30;
         /// <summary>...but always at least this many extra moves.</summary>
         public int twoStarMinExtra = 2;
+        /// <summary>ErNa-007: the most stars of a level solved with the help of a hint (light bulb).</summary>
+        public int maxStarsWithHint = 2;
     }
 
     /// <summary>3 stars at the minimum, 2 stars up to minimum + max(30%, 2), 1 star for any other solution.</summary>
@@ -21,11 +23,11 @@ namespace ResolverMaster.Core.Puzzle
         public static int TwoStarLimit(int minMoves, StarRules rules) =>
             minMoves + Math.Max(rules.twoStarMinExtra, minMoves * rules.twoStarExtraPercent / 100);
 
-        /// <summary>Stars of a solved level.</summary>
-        public static int Compute(int moves, int minMoves, StarRules rules)
+        /// <summary>Stars of a solved level; with a hint used, at most <see cref="StarRules.maxStarsWithHint"/>.</summary>
+        public static int Compute(int moves, int minMoves, StarRules rules, bool hintUsed = false)
         {
-            if (moves <= minMoves) return 3;
-            return moves <= TwoStarLimit(minMoves, rules) ? 2 : 1;
+            int stars = moves <= minMoves ? 3 : moves <= TwoStarLimit(minMoves, rules) ? 2 : 1;
+            return hintUsed ? Math.Min(stars, Math.Max(1, rules.maxStarsWithHint)) : stars;
         }
     }
 }

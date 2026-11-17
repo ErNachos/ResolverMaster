@@ -108,6 +108,17 @@ namespace ResolverMaster.Editor
             GameShot("game_open_ok", 26, BoardPreview.ActionSuccess, win: false),
             GameShot("game_open_leak", 9, BoardPreview.ActionFailure, win: false),
             GameShot("game_win", 0, BoardPreview.Solved, win: true),
+            // ErNa-007: the test rewarded ad over the game screen (the wait is over)
+            new Shot
+            {
+                Name = "ad_test",
+                Setup = (ctx, m) =>
+                {
+                    m.Get<GameScreen>(ScreenIds.Game).StartLevel(ctx.Games.FindModule(PlumberModule.Id), 20);
+                    m.PushImmediate(ScreenIds.Game);
+                },
+                AfterLayout = (ctx, m) => ctx.TestAds.ShowForPreview(),
+            },
             // ErNa-006: chapters 4-9 (bridges, locked pieces, 3 and 4 colors, 7x9), two levels each from chapter 6 on (also color-blind)
             GameShot("game_c4_33", 32, BoardPreview.Start, win: false),
             GameShot("game_c5_44", 43, BoardPreview.Start, win: false),
