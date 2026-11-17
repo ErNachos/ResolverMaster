@@ -24,6 +24,10 @@ namespace ResolverMaster.Core.Challenge
         public int changes;
         /// <summary>ErNa-008: "Change level" is allowed in this run (not in the daily challenge: its levels are the same for everyone).</summary>
         public bool allowChange = true;
+        /// <summary>ErNa-008: the day (YYYYMMDD, phone local date) of a daily challenge run; 0 = the endless Challenge.</summary>
+        public int dayKey;
+        /// <summary>ErNa-008: the step of each level of a run with a fixed number of levels (daily challenge); empty = endless.</summary>
+        public List<int> fixedSteps = new List<int>();
 
         // ---- the current level (kept so a resumed run never depends on a newer generator)
         public string levelData = "";
@@ -51,6 +55,18 @@ namespace ResolverMaster.Core.Challenge
         public bool over;
 
         public bool HasLevel => !string.IsNullOrEmpty(levelData);
+
+        /// <summary>ErNa-008: a daily challenge run (it counts for its own day, also when it is finished on a later day).</summary>
+        public bool IsDaily => dayKey != 0;
+
+        /// <summary>Levels of a fixed run (daily: 5); 0 = endless.</summary>
+        public int LevelCount => fixedSteps != null ? fixedSteps.Count : 0;
+
+        /// <summary>A fixed run with every level solved.</summary>
+        public bool IsComplete => LevelCount > 0 && levelsCleared >= LevelCount;
+
+        /// <summary>The step forced on the current level (daily challenge), -1 = by level number.</summary>
+        public int FixedStep(int levelNumber) => LevelCount > 0 && levelNumber >= 1 && levelNumber <= LevelCount ? fixedSteps[levelNumber - 1] : -1;
 
         public static ChallengeRunState Start(string game, int runSeed) => new ChallengeRunState { game = game, runSeed = runSeed };
 
@@ -176,29 +192,61 @@ namespace ResolverMaster.Core.Challenge
             than == null || stars > than.stars || (stars == than.stars && levels > than.levels);
     }
 
-    /// <summary>Save block of the Challenge (optional: missing = no run, no record).</summary>
+    /// <summary>
+    /// Save block of the Challenge (optional: missing = no run, no record). ErNa-008: also the daily challenge (its run in progress
+    /// in <see cref="runs"/> with a <see cref="ChallengeRunState.dayKey"/>, its results in <see cref="daily"/>).
+    /// </summary>
     [Serializable]
     public sealed class ChallengeBlock
     {
         public List<ChallengeRunState> runs = new List<ChallengeRunState>();
         public List<ChallengeRecord> records = new List<ChallengeRecord>();
+        /// <summary>ErNa-008: results of the daily challenge, one entry per game.</summary>
+        public List<DailyStats> daily = new List<DailyStats>();
 
-        /// <summary>The run in progress of a game (null if none or over).</summary>
-        public ChallengeRunState ActiveRun(string game)
+        /// <summary>The endless run in progress of a game (null if none or over).</summary>
+        public ChallengeRunState ActiveRun(string game) => Find(game, false);
+
+        /// <summary>ErNa-008: the daily challenge in progress of a game, of any day (null if none).</summary>
+        public ChallengeRunState ActiveDaily(string game) => Find(game, true);
+
+        ChallengeRunState Find(string game, bool daily)
         {
             foreach (var r in runs)
-                if (r != null && r.game == game && !r.over) return r;
+                if (r != null && r.game == game && !r.over && r.IsDaily == daily) return r;
             return null;
         }
 
-        /// <summary>Replaces the run of the game (one active run per game).</summary>
+        /// <summary>Replaces the run of the game of the same kind (one endless run and one daily challenge per game).</summary>
         public void SetRun(ChallengeRunState run)
         {
-            runs.RemoveAll(r => r == null || r.game == run.game);
+            runs.RemoveAll(r => r == null || (r.game == run.game && r.IsDaily == run.IsDaily));
             runs.Add(run);
         }
 
-        public void EndRun(string game) => runs.RemoveAll(r => r == null || r.game == game);
+        /// <summary>Removes the endless run of the game.</summary>
+        public void EndRun(string game) => runs.RemoveAll(r => r == null || (r.game == game && !r.IsDaily));
+
+        /// <summary>ErNa-008: removes the daily challenge run of the game.</summary>
+        public void EndDaily(string game) => runs.RemoveAll(r => r == null || (r.game == game && r.IsDaily));
+
+        /// <summary>ErNa-008: the daily results of a game (null if never played).</summary>
+        public DailyStats Daily(string game)
+        {
+            foreach (var d in daily)
+                if (d != null && d.game == game) return d;
+            return null;
+        }
+
+        /// <summary>ErNa-008: the daily results of a game, created when missing.</summary>
+        public DailyStats DailyFor(string game)
+        {
+            var d = Daily(game);
+            if (d != null) return d;
+            d = new DailyStats { game = game };
+            daily.Add(d);
+            return d;
+        }
 
         public ChallengeRecord Record(string game)
         {
@@ -221,14 +269,17 @@ namespace ResolverMaster.Core.Challenge
         {
             runs ??= new List<ChallengeRunState>();
             records ??= new List<ChallengeRecord>();
+            daily ??= new List<DailyStats>();
             runs.RemoveAll(r => r == null || string.IsNullOrEmpty(r.game));
             records.RemoveAll(r => r == null || string.IsNullOrEmpty(r.game));
+            daily.RemoveAll(d => d == null || string.IsNullOrEmpty(d.game));
             foreach (var r in runs)
             {
                 r.undoHistory ??= new List<int>();
                 r.levelData ??= "";
                 r.rotations ??= "";
                 r.tierId ??= "";
+                r.fixedSteps ??= new List<int>();
             }
         }
     }

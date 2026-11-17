@@ -19,7 +19,8 @@ namespace ResolverMaster.Core.UI.Screens
     /// ErNa-007, Challenge mode (<see cref="StartChallenge"/>): moves made / minimum / maximum (the counter turns red with 2 moves
     /// left), pieces stop turning at the maximum, 3 undos per run (the undo takes the move back), no restart and no light bulb, a
     /// failure ends the run (end panel), Back opens the pause; the run is saved at every move and at every level change.
-    /// ErNa-008: on the end panel "Continue" (rewarded ad, once per run) plays the same level again from the start with 3 undos.
+    /// ErNa-008: on the end panel "Continue" (rewarded ad, once per run) plays the same level again from the start with 3 undos;
+    /// "Change level" (rewarded ad, 0 moves); the daily challenge (5 fixed levels, no change, its own end panel).
     /// </summary>
     public sealed class GameScreen : UiScreen
     {
@@ -45,7 +46,7 @@ namespace ResolverMaster.Core.UI.Screens
         GameMode _mode = GameMode.Story;
         ChallengeRunState _run;
         readonly Dictionary<string, ChallengeQueue> _queues = new Dictionary<string, ChallengeQueue>();
-        DialogPanel _pause, _end;
+        DialogPanel _pause, _end, _dailyEnd;
         Image _undoBadge;
         TextMeshProUGUI _undoCount;
         bool _lastNewRecord;
@@ -67,7 +68,7 @@ namespace ResolverMaster.Core.UI.Screens
         /// <summary>The Challenge run being played (null in Story).</summary>
         public ChallengeRunState Run => _run;
         public bool PauseVisible => _pause.Visible;
-        public bool EndVisible => _end.Visible;
+        public bool EndVisible => _end.Visible || _dailyEnd.Visible;
 
         public static GameScreen Create(AppServices ctx, Transform parent)
         {
@@ -162,6 +163,9 @@ namespace ResolverMaster.Core.UI.Screens
             screen._pause = new DialogPanel(ctx, layout.Root, "Pause", LocKeys.ChallengePause, 1, LocKeys.ChallengeHome, LocKeys.ChallengeResume);
             screen._end = new DialogPanel(ctx, layout.Root, "RunOver", LocKeys.ChallengeOver, 3, LocKeys.ChallengeHome, LocKeys.ChallengeNewRun,
                 extraKey: LocKeys.ChallengeContinue, extraIcon: AdIcon);
+            // ErNa-008: end of the daily challenge (result, stars out of 15, streak), "Continue" while the lifeline is unused
+            screen._dailyEnd = new DialogPanel(ctx, layout.Root, "DailyOver", LocKeys.DailyTitle, 3, null, LocKeys.ChallengeHome,
+                extraKey: LocKeys.ChallengeContinue, extraIcon: AdIcon);
             return screen;
         }
 
@@ -200,6 +204,7 @@ namespace ResolverMaster.Core.UI.Screens
             }
             _pause.Hide();
             _end.Hide();
+            _dailyEnd.Hide();
         }
 
         /// <summary>Loads Story level <paramref name="index"/> (0-based, whole Story) of <paramref name="module"/>; creates its board the first time.</summary>
@@ -263,7 +268,9 @@ namespace ResolverMaster.Core.UI.Screens
             bool playing = !session.IsSolved && !busy;
             if (_mode == GameMode.Challenge && _run != null)
             {
-                _title.text = string.Format(_ctx.Loc.Get(LocKeys.ChallengeLevel), _run.level);
+                _title.text = _run.IsDaily
+                    ? string.Format(_ctx.Loc.Get(LocKeys.DailyLevel), Mathf.Min(_run.level, _run.LevelCount), _run.LevelCount)
+                    : string.Format(_ctx.Loc.Get(LocKeys.ChallengeLevel), _run.level);
                 _moves.text = string.Format(_ctx.Loc.Get(LocKeys.GameMovesMax), session.MovesMade, session.MinMoves, _run.maxMoves);
                 // 2 moves left or fewer: the counter turns red (never a water color)
                 _moves.color = _run.maxMoves - session.MovesMade <= 2 ? _ctx.Style.offMark : _ctx.Style.text;
@@ -273,6 +280,7 @@ namespace ResolverMaster.Core.UI.Screens
                 UiFactory.SetInteractable(_change, RewardedAds.CanOffer(_ctx.Ads, playing && _run.CanChangeLevel && session.MovesMade == 0));
                 UiFactory.SetInteractable(_action, playing);
                 _end.SetExtraInteractable(RewardedAds.CanOffer(_ctx.Ads, _run.CanContinue));
+                _dailyEnd.SetExtraInteractable(RewardedAds.CanOffer(_ctx.Ads, _run.CanContinue));
                 _lastBusy = busy;
                 _lastAds = _ctx.Ads != null && _ctx.Ads.IsAvailable;
                 return;
@@ -329,8 +337,12 @@ namespace ResolverMaster.Core.UI.Screens
                 int earned = StarRating.Compute(session.MovesMade, session.MinMoves, _ctx.Puzzle.stars);
                 int moves = session.MovesMade, min = session.MinMoves;
                 _run.OnSolved(earned);
-                _ctx.Save();
-                QueueFor(Module).Prefetch(_run.level, 0, _run.allowChange);
+                if (_run.IsComplete) FinishRun();   // ErNa-008: the last level of the daily challenge: result and streak saved now
+                else
+                {
+                    _ctx.Save();
+                    QueueFor(Module, _run.IsDaily).Prefetch(_run.level, 0, _run.allowChange);
+                }
                 Refresh();
                 _win.Show(earned, moves, min, true, animate, showRetry: false);
                 return;
@@ -347,9 +359,11 @@ namespace ResolverMaster.Core.UI.Screens
 
         // ------------------------------------------------------------------ Challenge (ErNa-007)
 
-        ChallengeQueue QueueFor(MinigameModule module)
+        /// <summary>The level queue of a game: one for the endless Challenge and one for the daily challenge.</summary>
+        ChallengeQueue QueueFor(MinigameModule module, bool daily)
         {
-            if (!_queues.TryGetValue(module.Info.Id, out var q)) _queues[module.Info.Id] = q = new ChallengeQueue(module.Challenge);
+            string key = module.Info.Id + (daily ? "#daily" : "");
+            if (!_queues.TryGetValue(key, out var q)) _queues[key] = q = new ChallengeQueue(module.Challenge);
             return q;
         }
 
@@ -359,16 +373,16 @@ namespace ResolverMaster.Core.UI.Screens
             UseModule(module);
             SetMode(GameMode.Challenge);
             _run = run;
-            QueueFor(module).Reset(run.runSeed);
+            QueueFor(module, run.IsDaily).Reset(run.runSeed, run.IsDaily ? run.fixedSteps : null);
             _change.gameObject.SetActive(run.allowChange);
             LoadChallengeLevel(resume: true);
-            if (run.lost) ShowRunOver(run, false);   // ErNa-008: closed on the end panel: the choice (Continue or not) is still open
+            if (run.lost) ShowEnd(run);   // ErNa-008: closed on the end panel: the choice (Continue or not) is still open
         }
 
         /// <summary>The current level of the run (generated and saved first if new), with its saved moves when resuming.</summary>
         void LoadChallengeLevel(bool resume)
         {
-            var queue = QueueFor(Module);
+            var queue = QueueFor(Module, _run.IsDaily);
             if (!_run.HasLevel)
             {
                 _run.SetLevel(queue.Get(_run.level, _run.changes));
@@ -423,18 +437,49 @@ namespace ResolverMaster.Core.UI.Screens
             _lastNewRecord = false;
             if (_run.over) FinishRun();
             else _ctx.Save();
-            ShowRunOver(_run, _lastNewRecord);
+            ShowEnd(_run);
         }
 
-        /// <summary>The run is over for good: the score goes to the record and the run is removed from the save.</summary>
+        /// <summary>
+        /// The run is over for good: the score goes to the record and the run is removed from the save. ErNa-008: a daily challenge
+        /// goes to today's result, best score and streak instead (not to the Challenge record).
+        /// </summary>
         void FinishRun()
         {
             if (_run == null) return;
-            _run.Finish();
             var block = _ctx.Data.challenge;
-            _lastNewRecord = block.SubmitScore(Module.Info.Id, _run.stars, _run.levelsCleared);
-            block.EndRun(Module.Info.Id);
+            if (_run.IsDaily) DailyChallenge.Finish(block, _run);
+            else
+            {
+                _run.Finish();
+                _lastNewRecord = block.SubmitScore(Module.Info.Id, _run.stars, _run.levelsCleared);
+                block.EndRun(Module.Info.Id);
+            }
             _ctx.Save();
+        }
+
+        /// <summary>The end panel of the kind of run (endless Challenge or daily challenge).</summary>
+        void ShowEnd(ChallengeRunState run)
+        {
+            if (run.IsDaily) ShowDailyOver(run);
+            else ShowRunOver(run, _lastNewRecord);
+        }
+
+        /// <summary>
+        /// ErNa-008, end of the daily challenge: completed or not, stars out of 15, streak and best streak; Home; "Continue" (rewarded
+        /// ad) while the lifeline is unused.
+        /// </summary>
+        public void ShowDailyOver(ChallengeRunState run)
+        {
+            var loc = _ctx.Loc;
+            var stats = _ctx.Data.challenge.Daily(Module.Info.Id);
+            bool completed = run.IsComplete;
+            _dailyEnd.SetLine(0, loc.Get(completed ? LocKeys.DailyCompleted : LocKeys.DailyFailed), completed ? _ctx.Style.primary : (Color?)null);
+            _dailyEnd.SetLine(1, string.Format(loc.Get(LocKeys.DailyStars), run.stars, run.LevelCount * StarRating.MaxStars));
+            _dailyEnd.SetLine(2, string.Format(loc.Get(LocKeys.DailyStreak), DailyChallenge.CurrentStreak(stats, _ctx.Today), stats?.bestStreak ?? 0));
+            _dailyEnd.SetExtra(run.CanContinue, RewardedAds.CanOffer(_ctx.Ads, run.CanContinue), ContinueRun);
+            Refresh();
+            _dailyEnd.Show(GoHome, null);
         }
 
         /// <summary>
@@ -485,22 +530,27 @@ namespace ResolverMaster.Core.UI.Screens
                 if (run != _run || !run.Continue()) return;
                 _ctx.Save();
                 _end.Hide();
+                _dailyEnd.Hide();
                 LoadChallengeLevel(resume: false);
             }, Refresh);
         }
 
         void ShowPause()
         {
-            if (_run != null) _pause.SetLine(0, string.Format(_ctx.Loc.Get(LocKeys.ChallengeSummary), _run.level, _run.stars));
+            if (_run != null)
+                _pause.SetLine(0, _run.IsDaily
+                    ? string.Format(_ctx.Loc.Get(LocKeys.DailySummary), _run.level, _run.LevelCount, _run.stars)
+                    : string.Format(_ctx.Loc.Get(LocKeys.ChallengeSummary), _run.level, _run.stars));
             _pause.Show(() => _pause.Hide(), GoHome);
         }
 
         /// <summary>Back to Home (the run is already saved; a lost run left without "Continue" is over).</summary>
         void GoHome()
         {
-            if (_end.Visible && _run != null && _run.lost && !_run.over) FinishRun();
+            if ((_end.Visible || _dailyEnd.Visible) && _run != null && _run.lost && !_run.over) FinishRun();
             _pause.Hide();
             _end.Hide();
+            _dailyEnd.Hide();
             _ctx.Save();
             _ctx.Screens.ShowRoot(ScreenIds.Home);
         }
@@ -510,7 +560,7 @@ namespace ResolverMaster.Core.UI.Screens
         {
             if (_ctx.TestAds != null && _ctx.TestAds.Showing) return true;   // the ad answers with its own buttons
             if (_mode != GameMode.Challenge) return false;
-            if (_end.Visible) GoHome();
+            if (_end.Visible || _dailyEnd.Visible) GoHome();
             else if (_pause.Visible) _pause.Hide();
             else ShowPause();
             return true;
@@ -531,7 +581,12 @@ namespace ResolverMaster.Core.UI.Screens
         {
             if (_mode == GameMode.Challenge)
             {
-                LoadChallengeLevel(resume: false);
+                if (_run != null && _run.IsComplete)
+                {
+                    _win.Hide();
+                    ShowDailyOver(_run);   // ErNa-008: the 5th daily level solved: the end panel
+                }
+                else LoadChallengeLevel(resume: false);
                 return;
             }
             if (!HasNext())

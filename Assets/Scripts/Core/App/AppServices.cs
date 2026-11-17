@@ -29,6 +29,11 @@ namespace ResolverMaster.Core.App
         public IRewardedAdService Ads;
         /// <summary>The panel of the test ad (null when the app uses no test ads).</summary>
         public TestAdPanel TestAds;
+        /// <summary>ErNa-008: the phone's local date and time (the daily challenge); previews set a fixed date.</summary>
+        public System.Func<System.DateTime> Clock = () => System.DateTime.Now;
+
+        /// <summary>Today as YYYYMMDD (local date).</summary>
+        public int Today => ResolverMaster.Core.Challenge.DailyChallenge.DayKey(Clock());
 
         public void Save()
         {

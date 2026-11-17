@@ -37,7 +37,7 @@
 - Scrittura sicura: prima `save.json.tmp`, poi `File.Replace`.
 - Nuovo campo = nuovo campo con valore predefinito, senza cambiare versione. Aumenta `SaveData.CurrentVersion` solo se i dati vecchi vanno convertiti, e aggiungi il passo in `SaveSerializer.Migrate`.
 - Gli id dei giochi (`GameInfo.Id`) non si cambiano mai dopo l'uscita: sono le chiavi dei blocchi di salvataggio.
-- Blocco `challenge` (ErNa-007): run in corso (`runs`, una per gioco) e record (`records`: stelle, poi livelli).
+- Blocco `challenge` (ErNa-007): run in corso (`runs`: per gioco una run infinita e una Sfida del giorno, distinte da `dayKey`), record (`records`: stelle, poi livelli) e risultati della Sfida del giorno (`daily`, ErNa-008).
 
 ## 7. Casualità con seed
 - Ogni generatore (livelli Challenge, ecc.) riceve un **seed** esplicito e usa un proprio **`SeededRandom(seed)`** del Core (PCG32, solo aritmetica intera: stesso risultato su ogni piattaforma); mai `UnityEngine.Random` né `System.Random` nella logica. Stesso seed = stesso livello (riproducibile nei test e nei report dei bug).
@@ -48,6 +48,9 @@
 - **Lampadina** (aiuto della Storia): la board espone `CanHint`, `ApplyHint`, `HintUsed`; con un aiuto usato al massimo `StarRules.maxStarsWithHint` (2) stelle. I pezzi fissati sono `Pinned` nel `CellLockSet`, non sono mosse e sopravvivono ai reset (non a un nuovo caricamento: `PuzzleBase.OnFreshLoad`).
 - **Challenge**: un gioco fornisce solo `IChallengeSource` (tabella a gradini, margini, generatore con risolutore esatto) da `MinigameModule.Challenge`. Il Core fa seed del livello (`ChallengeRules.LevelSeed`: hash di seed della run, livello, cambi), gradini, massimo (minimo + margine dal 60% al 10%, mai sotto +1), scorta in background (`ChallengeQueue`), run (`ChallengeRunState`), salvataggio, schermate (`GameScreen.StartChallenge`, `ChallengeLauncher`). Limite del generatore in **tentativi**, mai in tempo; poi seed + 1.
 - Una sola run attiva per gioco; salvataggio a ogni mossa e a ogni cambio di livello; la run salva anche il livello generato (una nuova versione del generatore non cambia una run in corso).
+- **Continua (ErNa-008)**: un salvavita per run. Al primo errore la run resta salvata in attesa (`lost`); il punteggio va nel record solo quando la run finisce davvero (Home, Nuova run, Indietro, seconda sconfitta). Continua = stesso livello dall'inizio, mosse 0, annullamenti a 3.
+- **Cambia livello (ErNa-008)**: solo a 0 mosse, con un annuncio, quante volte si vuole; seed con cambi + 1, stesso gradino, stesso numero di livello. Il contatore dei cambi è del livello corrente (torna a 0 al livello dopo). `ChallengeQueue` identifica i livelli con (numero, cambi).
+- **Sfida del giorno (ErNa-008, `DailyChallenge`)**: 5 livelli, seed = data locale AAAAMMGG (la data arriva da `AppServices.Clock`, mai letta nella logica), gradini in `ChallengeSettings.dailyTiers` del gioco (validatore: 5, esistenti, mai in discesa). Niente Cambia livello; un tentativo al giorno (`lastStartedDay`); una sfida in sospeso resta giocabile e vale per il suo giorno; serie +1 solo per il giorno dopo l'ultimo completato, 0 se si salta un giorno o si perde.
 
 ## 7b. Rompicapi
 - Ogni gioco implementa le sue regole su `PuzzleBase<TLevel, TMove>` (carica, mossa, vittoria, annulla, ricomincia; mosse fatte = mosse sulla pila di annullamento) e la sua board su `PuzzleBoard`. Schermate, contatori, stelle e salvataggio sono del Core.
@@ -99,6 +102,7 @@
 - *Resolver Master > Validate*. Ogni classe che implementa `IValidationCheck` viene eseguita automaticamente: un gioco aggiunge i suoi controlli solo dichiarando una classe.
 - Controlli attuali:
   - lingue: stesse chiavi in tutte le lingue, chiavi del codice presenti, righe malformate o duplicate;
+  - Sfida del giorno (ErNa-008): per ogni gioco con Challenge 5 gradini esistenti e mai in discesa, i 5 livelli di un giorno di prova generati;
   - minigiochi: id, nome e icona validi;
   - UI kit: tutti gli elementi di Gemini in `Assets/Art/UI`, risorse TMP, font e materiali, sprite dello stile, icone del Core;
   - temi: `ThemeConfig` presente, id unici, tema predefinito valido, nomi tradotti, niente blu/arancione forti nei terreni;
@@ -131,5 +135,6 @@
 - ErNa-004: stile cartoon del UI kit (sprite con contorno e profondità, `PressableButton`, niente blu/arancione), Home a schede (`CardCarousel`, blocco `home` del salvataggio), librerie di sprite generiche, fonti e arrivi disegnati scelti dal seed (`ArtVariants`), nuovi controlli e misure (§9, §10, §11).
 - ErNa-005: interfaccia di Gemini e TextMesh Pro (§9), pulsanti premuti/disattivati, temi dei capitoli nel Core (§4, §7b), griglie rettangolari (§7b), acqua continua con tempi nella logica (§7b), nuovi controlli e misure (§10, §11).
 - ErNa-007: pubblicità con premio e lampadina, Challenge generica nel Core (§7a), blocco `challenge` del salvataggio (§6), `DialogPanel` (pausa, fine run, conferme).
+- ErNa-008: Continua, Cambia livello, Sfida del giorno (§6, §7a), pulsante extra del `DialogPanel`, controllo `DailyChallenge` del validatore (§10).
 - ErNa-006: 4 colori dell'acqua con controlli di palette e daltonismo (§9, §10, §11), ponte (due nodi, `PipeNodes`), croce e ponte non contano mosse, elementi bloccati nel Core (§7b), griglia 7x9 con cornice compatta, liste scorrevoli (§9), 9 capitoli e 6 temi nuovi.
 - ErNa-003: capitoli da 9 livelli, sblocco e id stabili nel Core (§7b); pulsante d'azione opzionale e messaggi brevi nella schermata di gioco (§7b); `Decoration` (§9); nuove regole e controlli dell'Idraulico (§10, `docs/idraulico-regole.md`); anteprime aggiornate (§11).

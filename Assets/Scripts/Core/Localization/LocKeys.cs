@@ -83,6 +83,26 @@ namespace ResolverMaster.Core.Localization
         // ErNa-008: lifeline, change level, daily challenge
         /// <summary>"Continue" (end of a run, rewarded ad).</summary>
         public const string ChallengeContinue = "challenge.continue";
+        /// <summary>"Daily challenge" (end panel title, Home card).</summary>
+        public const string DailyTitle = "daily.title";
+        /// <summary>"Daily · Level {0}/{1}" (game screen title).</summary>
+        public const string DailyLevel = "daily.level";
+        /// <summary>Home card status: "To do".</summary>
+        public const string DailyToDo = "daily.todo";
+        /// <summary>Home card status: "In progress".</summary>
+        public const string DailyInProgress = "daily.in_progress";
+        /// <summary>Home card status: "Done · {0} stars".</summary>
+        public const string DailyDone = "daily.done";
+        /// <summary>End panel: "Completed!".</summary>
+        public const string DailyCompleted = "daily.completed";
+        /// <summary>End panel: "Not completed".</summary>
+        public const string DailyFailed = "daily.failed";
+        /// <summary>"Stars: {0}/{1}".</summary>
+        public const string DailyStars = "daily.stars";
+        /// <summary>"Streak: {0} · best {1}".</summary>
+        public const string DailyStreak = "daily.streak";
+        /// <summary>"Level {0}/{1} · {2} stars" (pause).</summary>
+        public const string DailySummary = "daily.summary";
 
         /// <summary>Language display name key: "language.it", "language.en".</summary>
         public static string LanguageName(Language language) => "language." + LanguageCodes.ToCode(language);

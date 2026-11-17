@@ -266,3 +266,27 @@
 **Problemi aperti / prossimi passi**
 - "Numero di cambi" e "salvavita usato" sono salvati ma oggi restano 0 / no: serviranno con "Continua" (ErNa-008).
 - AdMob non integrato: in una build di rilascio la lampadina resta disattivata.
+
+## Update ErNa-008 — Challenge: Continua, Cambia livello e Sfida del giorno (2026-11-17)
+
+**Fatto** (dettagli e scelte in `Prompt/Note-ErNa-008.md`)
+- **Nota**: l'Editor di Unity era chiuso: batchmode direttamente sul progetto. Il prompt 008 ora ha il suo contenuto (non più la copia del 007).
+- **A — Continua (Core)**: un salvavita per run con un annuncio. Al primo errore la run resta salvata in attesa (`lost`); Continua = stesso livello dall'inizio, mosse 0, annullamenti di nuovo a 3, stelle e livelli restano. Il record si aggiorna solo quando la run finisce davvero. `DialogPanel` con pulsante extra (icona della pubblicità) che allarga la finestra solo quando c'è.
+- **B — Cambia livello (Core)**: pulsante nella barra in basso con il badge della pubblicità, solo a 0 mosse, quante volte si vuole; stesso gradino e stesso numero, seed con un cambio in più (`changes`, del livello corrente, salvato). `ChallengeQueue` per (livello, cambi), con il prossimo cambio già pronto.
+- **C — Sfida del giorno (Core, `DailyChallenge`)**: 5 livelli dalla data locale (AAAAMMGG), gradini ch-6 → ch-15 in `PlumberConfig.challenge.dailyTiers`, niente Cambia livello, 3 annullamenti, un salvavita, un tentativo al giorno, sfida in sospeso valida per il suo giorno, punteggio su 15, serie (attuale e migliore) e miglior punteggio nel blocco `challenge.daily`. Riga sulla scheda della Home (stato di oggi e serie), pannello di fine sfida. Data da `AppServices.Clock`.
+- Icone segnaposto Material: `ad_video`, `change_level`, `streak`. Validatore: nuovo controllo `DailyChallenge`. Anteprime nuove: Continua, Cambia livello, Home con la sfida, sfida in gioco, sfida persa con Continua, sfida completata.
+- **Test**: 4 nuovi (Continua; Cambia livello e ripresa; stessa data = stessi livelli e un tentativo; serie e cambio di data). Adattati 2 test esistenti (sconfitta che aspetta il Continua, `ChallengeQueue.Reset`).
+
+**Risultati**
+- Compilazione: 0 errori, 0 warning. Test: 35/35 verdi. Validatore: OK (9 controlli, 0 errori, 0 warning).
+- Anteprime: 200 immagini, nessun problema misurato. Le misure hanno trovato e fatto correggere la riga della sfida sulla Home (numero della serie largo 8 px, fiamma sovrapposta ai testi).
+
+**Da provare a mano sul telefono**
+- Continua dopo un errore (anche chiudendo l'app sul pannello), seconda sconfitta senza Continua.
+- Cambia livello solo a 0 mosse; riapertura dell'app dopo un cambio.
+- Sfida del giorno: 5 livelli, fine sfida, riga della Home "Fatta", giorno dopo e serie; sfida lasciata a metà oltre la mezzanotte.
+
+**Problemi aperti / prossimi passi**
+- AdMob non integrato: in rilascio Continua, Cambia livello e lampadina restano disattivati.
+- Icone della pubblicità, del cambio e della serie: segnaposto.
+- La data è quella del telefono: cambiandola si può anticipare la sfida.

@@ -31,6 +31,11 @@ namespace ResolverMaster.Core.Challenge
         public int marginEndPercent = 10;
         /// <summary>When a seed gives no level within its attempts, the next fixed seed (seed + 1) is tried, up to this many times.</summary>
         public int maxSeedRetries = 30;
+        /// <summary>
+        /// ErNa-008, daily challenge: the step (tier id of the Challenge table) of each of its <see cref="DailyChallenge.Levels"/> levels,
+        /// from a medium step to a hard one. Checked by the validator.
+        /// </summary>
+        public List<string> dailyTiers = new List<string>();
     }
 
     /// <summary>A generated Challenge level: the game's level data plus what the Core shows and checks.</summary>
@@ -117,9 +122,17 @@ namespace ResolverMaster.Core.Challenge
         /// Generates level <paramref name="level"/> of a run. Deterministic: same run seed, level and changes give the same level everywhere.
         /// If the level seed gives nothing within the generator's attempts, seed + 1, + 2, ... (fixed) are tried.
         /// </summary>
-        public static ChallengeLevel Generate(IChallengeSource source, int runSeed, int level, int changes)
+        /// <param name="fixedStep">ErNa-008: the step to use instead of the one of the level number (daily challenge); -1 = by level.</param>
+        public static ChallengeLevel Generate(IChallengeSource source, int runSeed, int level, int changes, int fixedStep = -1)
         {
-            var tier = StepFor(source.Table, level, out int step) ?? throw new InvalidOperationException("empty Challenge table");
+            int step;
+            DifficultyTier tier;
+            if (fixedStep >= 0 && fixedStep < source.Table.tiers.Count)
+            {
+                step = fixedStep;
+                tier = source.Table.tiers[fixedStep];
+            }
+            else tier = StepFor(source.Table, level, out step) ?? throw new InvalidOperationException("empty Challenge table");
             int seed = LevelSeed(runSeed, level, changes);
             var s = source.Settings ?? new ChallengeSettings();
             for (int retry = 0; retry <= Math.Max(0, s.maxSeedRetries); retry++)
@@ -139,7 +152,8 @@ namespace ResolverMaster.Core.Challenge
     /// <summary>
     /// The next levels of a run generated off the main thread (ErNa-007): asking for level n also prepares n+1 and n+2.
     /// ErNa-008: a level is identified by (number, changes): the prepared next levels have 0 changes, and the next change of the
-    /// current level is prepared too, so "Change level" is instant.
+    /// current level is prepared too, so "Change level" is instant. A run with fixed steps (daily challenge) has a fixed number of
+    /// levels: nothing after the last one is prepared.
     /// <see cref="TryGet"/> never blocks; <see cref="Get"/> waits (used when nothing else can be shown).
     /// </summary>
     public sealed class ChallengeQueue
@@ -150,18 +164,33 @@ namespace ResolverMaster.Core.Challenge
         readonly Dictionary<long, Task<ChallengeLevel>> _tasks = new Dictionary<long, Task<ChallengeLevel>>();
         int _runSeed;
         bool _started;
+        List<int> _steps;
 
         public ChallengeQueue(IChallengeSource source) => _source = source;
 
         static long Key(int level, int changes) => ((long)level << 32) | (uint)changes;
 
-        /// <summary>A new run: forgets the prepared levels (nothing happens for the same run).</summary>
-        public void Reset(int runSeed)
+        /// <summary>
+        /// A new run: forgets the prepared levels (nothing happens for the same run). <paramref name="fixedSteps"/>: the step of each
+        /// level of a run with a fixed number of levels (daily challenge), null = steps by level number, endless.
+        /// </summary>
+        public void Reset(int runSeed, IReadOnlyList<int> fixedSteps = null)
         {
-            if (_started && runSeed == _runSeed) return;
+            var steps = fixedSteps != null ? new List<int>(fixedSteps) : null;
+            if (_started && runSeed == _runSeed && SameSteps(steps, _steps)) return;
             _runSeed = runSeed;
+            _steps = steps;
             _started = true;
             _tasks.Clear();
+        }
+
+        static bool SameSteps(List<int> a, List<int> b)
+        {
+            if (a == null || b == null) return a == b;
+            if (a.Count != b.Count) return false;
+            for (int i = 0; i < a.Count; i++)
+                if (a[i] != b[i]) return false;
+            return true;
         }
 
         /// <summary>
@@ -186,8 +215,9 @@ namespace ResolverMaster.Core.Challenge
         {
             long key = Key(level, changes);
             if (_tasks.ContainsKey(key)) return;
-            int seed = _runSeed;
-            _tasks[key] = Task.Run(() => ChallengeRules.Generate(_source, seed, level, changes));
+            if (_steps != null && (level < 1 || level > _steps.Count)) return;   // a fixed run has no level after its last one
+            int seed = _runSeed, step = _steps != null ? _steps[level - 1] : -1;
+            _tasks[key] = Task.Run(() => ChallengeRules.Generate(_source, seed, level, changes, step));
         }
 
         public bool TryGet(int level, int changes, out ChallengeLevel result)
@@ -201,7 +231,9 @@ namespace ResolverMaster.Core.Challenge
         public ChallengeLevel Get(int level, int changes = 0)
         {
             Start(level, changes);
-            return _tasks[Key(level, changes)].GetAwaiter().GetResult();
+            if (!_tasks.TryGetValue(Key(level, changes), out var task))
+                throw new InvalidOperationException($"Challenge: level {level} is outside the run ({_steps?.Count} levels)");
+            return task.GetAwaiter().GetResult();
         }
     }
 }

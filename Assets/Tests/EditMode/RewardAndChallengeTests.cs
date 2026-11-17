@@ -275,6 +275,125 @@ namespace ResolverMaster.Tests
             Assert.IsFalse(daily.ChangeLevel());
         }
 
+        /// <summary>The default Plumber settings (the daily steps of PlumberConfig).</summary>
+        static ChallengeSettings DailySettings()
+        {
+            var cfg = UnityEngine.ScriptableObject.CreateInstance<PlumberConfig>();
+            var settings = cfg.challenge;
+            UnityEngine.Object.DestroyImmediate(cfg);
+            return settings;
+        }
+
+        [Test]
+        public void Daily_SameDateSameFiveLevels_RisingSteps_OneAttemptPerDay_NoChangeLevel()
+        {
+            var source = new PlumberChallenge(PlumberDifficulty.Challenge(), DailySettings(), 4000);
+            var steps = DailyChallenge.Steps(source);
+            Assert.AreEqual(DailyChallenge.Levels, steps.Count);
+            for (int i = 1; i < steps.Count; i++) Assert.GreaterOrEqual(steps[i], steps[i - 1], "difficulty rises");
+            Assert.AreEqual(20261117, DailyChallenge.DayKey(new System.DateTime(2026, 11, 17, 23, 59, 0)));
+
+            // the same date gives the same 5 levels on every phone (two queues, as two phones); another date other levels
+            var a = new ChallengeQueue(source);
+            var b = new ChallengeQueue(source);
+            a.Reset(DailyChallenge.RunSeed(20261117), steps);
+            b.Reset(DailyChallenge.RunSeed(20261117), steps);
+            for (int n = 1; n <= DailyChallenge.Levels; n++)
+            {
+                var la = a.Get(n);
+                Assert.AreEqual(la.data, b.Get(n).data, $"level {n}");
+                Assert.AreEqual(steps[n - 1], la.step, "the step of the settings");
+                Assert.AreNotEqual(la.data, ChallengeRules.Generate(source, DailyChallenge.RunSeed(20261118), n, 0, steps[n - 1]).data);
+            }
+            Assert.Throws<System.InvalidOperationException>(() => a.Get(DailyChallenge.Levels + 1), "only 5 levels");
+
+            // one attempt a day: started = closed for today; no "Change level"
+            var block = new ChallengeBlock();
+            Assert.AreEqual(DailyStatus.ToDo, DailyChallenge.Status(block, "plumber", 20261117, out _));
+            var run = DailyChallenge.Begin(block, "plumber", 20261117, steps);
+            Assert.IsNotNull(run);
+            Assert.IsTrue(run.IsDaily);
+            Assert.IsNull(block.ActiveRun("plumber"), "the endless run is a different run");
+            Assert.AreSame(run, block.ActiveDaily("plumber"));
+            run.SetLevel(a.Get(1));
+            Assert.IsFalse(run.CanChangeLevel);
+            Assert.IsFalse(run.ChangeLevel());
+            Assert.IsNull(DailyChallenge.Begin(block, "plumber", 20261117, steps), "already in progress");
+            Assert.AreEqual(DailyStatus.InProgress, DailyChallenge.Status(block, "plumber", 20261117, out _));
+            run.OnFailed();
+            Assert.IsTrue(run.Continue(), "one lifeline in the daily challenge too");
+            Assert.AreEqual(ChallengeRunState.UndosPerRun, run.undosLeft);
+            for (int i = 0; i < 2; i++) run.OnSolved(3);
+            run.OnFailed();
+            Assert.IsTrue(run.over, "second loss: over");
+            DailyChallenge.Finish(block, run);
+            Assert.IsNull(block.ActiveDaily("plumber"));
+            Assert.AreEqual(DailyStatus.Done, DailyChallenge.Status(block, "plumber", 20261117, out int stars));
+            Assert.AreEqual(6, stars);
+            Assert.IsNull(DailyChallenge.Begin(block, "plumber", 20261117, steps), "one attempt a day");
+            Assert.IsNotNull(DailyChallenge.Begin(block, "plumber", 20261118, steps), "tomorrow again");
+        }
+
+        [Test]
+        public void Daily_StreakGrowsOnConsecutiveDays_ResetsWhenSkippedOrLost_PendingRunKeepsItsDay()
+        {
+            var steps = new System.Collections.Generic.List<int> { 5, 8, 11, 12, 14 };
+            var block = new ChallengeBlock();
+            void Complete(int day)
+            {
+                var r = DailyChallenge.Begin(block, "plumber", day, steps);
+                Assert.IsNotNull(r, $"day {day}");
+                for (int i = 0; i < DailyChallenge.Levels; i++) r.OnSolved(3);
+                Assert.IsTrue(r.IsComplete);
+                DailyChallenge.Finish(block, r);
+            }
+
+            Complete(20261130);
+            Complete(20261201);   // across a month
+            Complete(20261202);
+            var s = block.Daily("plumber");
+            Assert.AreEqual(3, s.streak);
+            Assert.AreEqual(3, DailyChallenge.CurrentStreak(s, 20261203), "still alive the day after");
+            Assert.AreEqual(0, DailyChallenge.CurrentStreak(s, 20261204), "a day skipped: 0");
+            Assert.AreEqual(DailyChallenge.MaxStars, s.bestScore);
+
+            // skipping a day: the next completed challenge starts again from 1
+            Complete(20261204);
+            Assert.AreEqual(1, s.streak);
+            Assert.AreEqual(3, s.bestStreak);
+
+            // losing: 0
+            var lost = DailyChallenge.Begin(block, "plumber", 20261205, steps);
+            lost.OnSolved(2);
+            lost.lifelineUsed = true;
+            lost.OnFailed();
+            DailyChallenge.Finish(block, lost);
+            Assert.AreEqual(0, s.streak);
+            Assert.IsFalse(s.resultCompleted);
+            Assert.AreEqual(2, s.resultStars);
+
+            // a challenge started on the 6th and finished on the 7th (date changed meanwhile): still playable, counts for the 6th;
+            // today's (7th) can only start once it is over, and the streak goes on from the 6th
+            Complete(20261206);
+            var pending = DailyChallenge.Begin(block, "plumber", 20261207, steps);
+            for (int i = 0; i < 3; i++) pending.OnSolved(3);
+            var data = new SaveData { challenge = block };
+            var reloaded = SaveSerializer.FromJson(SaveSerializer.ToJson(data)).challenge;
+            var resumed = reloaded.ActiveDaily("plumber");
+            Assert.IsNotNull(resumed, "saved, and resumed on the next day");
+            Assert.AreEqual(20261207, resumed.dayKey);
+            CollectionAssert.AreEqual(steps, resumed.fixedSteps);
+            Assert.AreEqual(DailyStatus.InProgress, DailyChallenge.Status(reloaded, "plumber", 20261208, out _));
+            Assert.IsNull(DailyChallenge.Begin(reloaded, "plumber", 20261208, steps), "the pending one first");
+            for (int i = 0; i < 2; i++) resumed.OnSolved(3);
+            DailyChallenge.Finish(reloaded, resumed);
+            var rs = reloaded.Daily("plumber");
+            Assert.AreEqual(20261207, rs.resultDay, "it counts for its own day");
+            Assert.AreEqual(2, rs.streak, "6th + 7th");
+            Assert.AreEqual(2, DailyChallenge.CurrentStreak(rs, 20261208));
+            Assert.AreEqual(DailyStatus.ToDo, DailyChallenge.Status(reloaded, "plumber", 20261208, out _), "today's is free now");
+        }
+
         static string Rotations(PipeGrid grid)
         {
             var chars = new char[grid.CellCount];

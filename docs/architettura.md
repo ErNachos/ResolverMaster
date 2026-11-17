@@ -9,6 +9,7 @@ Assets/
       Games/                   GameInfo (+ immagine e colore della scheda, HomeSelection), MinigameModule (hook Storia + board), GameRegistry (moduli)
       Ads/                     IRewardedAdService, TestRewardedAdService, UnavailableRewardedAdService, RewardedAds (scelta), AdConfig (ErNa-007)
       Challenge/               ChallengeGeneration (IChallengeSource, ChallengeRules, ChallengeQueue), ChallengeRun (stato, record, blocco del salvataggio) (ErNa-007)
+                               DailyChallenge (Sfida del giorno: regole pure, serie, DailyStats) (ErNa-008)
       Puzzle/                  basi comuni dei rompicapi (C# puro): Grid/ (IGridTopology, SquareTopology, DirectionMask),
                                SeededRandom (PCG32), PuzzleBase/IPuzzle/IPuzzleSession, UndoStack, StarRating/StarRules,
                                DifficultyTable, BucketQueue, GameMode/LevelRequest, PuzzleConfig (asset delle stelle),
@@ -95,8 +96,10 @@ Release/Site, Release/PlayStore  materiale di pubblicazione
 ```
 Home ──(GIOCA! sulla scheda al centro)──> Scelta modalità ──(Storia)──> Capitoli ──> Livelli del capitolo (3x3) ──> Gioco ──(vinto)──> pannello: Ripeti / Avanti
                               └──(Challenge: riprende la run o ne inizia una; "Nuova run" con conferma)──> Gioco (Challenge) ──(vinto)──> Avanti
-                                                                                    └──(errore)──> fine run: Nuova run / Home
+                                                                                    └──(errore)──> fine run: Continua (pubblicità, 1 per run) / Nuova run / Home
   Home ──(pulsante Challenge / Riprendi sulla scheda)──> Gioco (Challenge)   ·   Indietro nella Challenge = pausa (Riprendi / Home)
+  Home ──(riga "Sfida del giorno" sulla scheda)──> Gioco (5 livelli del giorno) ──> fine sfida: Continua / Home
+  Gioco (Challenge, 0 mosse) ──(Cambia livello, pubblicità)──> nuovo livello dello stesso gradino
   │                           │
   └──(ingranaggio)──> Impostazioni (lingua, suono, vibrazione)
 Indietro (pulsante o tasto Android): chiude la schermata in cima; sulla Home chiude l'app.

@@ -3461,4 +3461,10 @@ MonoBehaviour:
     marginStartPercent: 60
     marginEndPercent: 10
     maxSeedRetries: 30
+    dailyTiers:
+    - ch-6
+    - ch-9
+    - ch-12
+    - ch-13
+    - ch-15
   challengeMaxAttempts: 4000

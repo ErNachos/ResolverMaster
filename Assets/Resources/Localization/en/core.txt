@@ -73,3 +73,15 @@ home.challenge.resume = Resume
 
 # ErNa-008: lifeline
 challenge.continue = Continue
+
+# ErNa-008: daily challenge
+daily.title = Daily challenge
+daily.level = Daily · Level {0}/{1}
+daily.todo = To do
+daily.in_progress = In progress
+daily.done = Done · {0} stars
+daily.completed = Completed!
+daily.failed = Not completed
+daily.stars = Stars: {0}/{1}
+daily.streak = Streak: {0} · best {1}
+daily.summary = Level {0}/{1} · {2} stars

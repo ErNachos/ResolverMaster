@@ -120,6 +120,41 @@ namespace ResolverMaster.Editor
                 ctx.Data.challenge.SubmitScore(PlumberModule.Id, over.stars, over.levelsCleared);
                 g.ShowRunOver(over, newRecord: true);
             }),
+            // ErNa-008: the daily challenge: Home card (done today, streak), level 3 of 5, lost with Continue, completed
+            new Shot
+            {
+                Name = "home_daily",
+                Setup = (ctx, m) =>
+                {
+                    SampleRun(ctx, 5);
+                    var stats = ctx.Data.challenge.DailyFor(PlumberModule.Id);
+                    stats.lastStartedDay = stats.resultDay = stats.lastCompletedDay = ctx.Today;
+                    stats.resultStars = 12;
+                    stats.resultCompleted = true;
+                    stats.streak = 4;
+                    stats.bestStreak = 6;
+                    stats.bestScore = 14;
+                },
+                AfterLayout = (ctx, m) =>
+                {
+                    var home = m.Get<HomeScreen>(ScreenIds.Home);
+                    home.OnShow();
+                    home.ShowCard(Math.Max(0, ctx.Games.Games.ToList().FindIndex(g => g.Id == PlumberModule.Id)));
+                },
+            },
+            DailyShot("daily_game", 2, null),
+            DailyShot("daily_continue", 2, (ctx, g) =>
+            {
+                g.Run.OnFailed();
+                g.ShowDailyOver(g.Run);
+            }),
+            DailyShot("daily_over", 4, (ctx, g) =>
+            {
+                var run = g.Run;
+                run.OnSolved(3);
+                ResolverMaster.Core.Challenge.DailyChallenge.Finish(ctx.Data.challenge, run);
+                g.ShowDailyOver(run);
+            }),
             // ErNa-008: a level with 0 moves: "Change level" (ad badge) enabled
             ChallengeShot("challenge_change", int.MaxValue, null),
             // ErNa-008: lost with the lifeline unused: "Continue" (ad icon) on the end panel
@@ -253,6 +288,39 @@ namespace ResolverMaster.Editor
             ctx.Data.challenge.SubmitScore(PlumberModule.Id, 28, 12);
             return run;
         }
+
+        /// <summary>ErNa-008: the fixed date of the previews (daily challenge).</summary>
+        static readonly DateTime PreviewDate = new DateTime(2026, 11, 17, 12, 0, 0);
+
+        /// <summary>
+        /// ErNa-008: today's daily challenge with <paramref name="solved"/> levels solved (3, 2, 3, 3 stars...), a streak of 3 from
+        /// yesterday, then <paramref name="after"/>.
+        /// </summary>
+        static Shot DailyShot(string name, int solved, Action<AppServices, GameScreen> after) => new Shot
+        {
+            Name = name,
+            Setup = (ctx, m) =>
+            {
+                var module = ctx.Games.FindModule(PlumberModule.Id);
+                var block = ctx.Data.challenge;
+                var stats = block.DailyFor(PlumberModule.Id);
+                stats.lastStartedDay = stats.resultDay = stats.lastCompletedDay = 20261116;
+                stats.streak = 3;
+                stats.bestStreak = 5;
+                var run = ResolverMaster.Core.Challenge.DailyChallenge.Begin(block, PlumberModule.Id, ctx.Today,
+                    ResolverMaster.Core.Challenge.DailyChallenge.Steps(module.Challenge));
+                for (int i = 0; i < solved; i++) run.OnSolved(i % 4 == 1 ? 2 : 3);
+                m.Get<GameScreen>(ScreenIds.Game).StartChallenge(module, run);
+                m.PushImmediate(ScreenIds.Game);
+            },
+            AfterLayout = (ctx, m) =>
+            {
+                var game = m.Get<GameScreen>(ScreenIds.Game);
+                game.Board.Refit();
+                game.Board.SnapVisuals();
+                after?.Invoke(ctx, game);
+            },
+        };
 
         static Shot ChallengeShot(string name, int movesLeft, Action<AppServices, GameScreen> after) => new Shot
         {
@@ -419,6 +487,7 @@ namespace ResolverMaster.Editor
                     Cards = AssetDatabase.LoadAssetAtPath<IconLibrary>(UiKitAssets.CardLibraryPath),
                     Puzzle = AssetDatabase.LoadAssetAtPath<PuzzleConfig>(ConfigAssets.PuzzleConfigPath) ?? ScriptableObject.CreateInstance<PuzzleConfig>(),
                     Themes = AssetDatabase.LoadAssetAtPath<ThemeConfig>(ConfigAssets.ThemeConfigPath) ?? ScriptableObject.CreateInstance<ThemeConfig>(),
+                    Clock = () => PreviewDate,   // ErNa-008: the daily challenge of a fixed day
                 };
                 ctx.Data.settings.language = LanguageCodes.ToCode(lang);
                 var manager = AppUi.Build(ctx, root);

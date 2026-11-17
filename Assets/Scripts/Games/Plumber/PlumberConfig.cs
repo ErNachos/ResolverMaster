@@ -154,7 +154,11 @@ namespace ResolverMaster.Games.Plumber
 
         [Header("Challenge (ErNa-007): steps by level of the run, margins, generator attempts per seed")]
         public DifficultyTable challengeDifficulty = PlumberDifficulty.Challenge();
-        public ResolverMaster.Core.Challenge.ChallengeSettings challenge = new ResolverMaster.Core.Challenge.ChallengeSettings();
+        /// <summary>Margins, seed retries and (ErNa-008) the 5 steps of the daily challenge, from a medium step to a hard one.</summary>
+        public ResolverMaster.Core.Challenge.ChallengeSettings challenge = new ResolverMaster.Core.Challenge.ChallengeSettings
+        {
+            dailyTiers = { "ch-6", "ch-9", "ch-12", "ch-13", "ch-15" },
+        };
         /// <summary>Generator attempts for one Challenge seed (then the next fixed seed is tried): a number, never a time.</summary>
         public int challengeMaxAttempts = 4000;
 

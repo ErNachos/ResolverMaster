@@ -161,3 +161,48 @@ namespace ResolverMaster.Editor.Validation
         }
     }
 }
+
+namespace ResolverMaster.Editor.Validation
+{
+    /// <summary>
+    /// ErNa-008, daily challenge of every game with a Challenge: exactly <see cref="ResolverMaster.Core.Challenge.DailyChallenge.Levels"/>
+    /// steps, every tier id in the Challenge table, steps never going down (difficulty rising), and the 5 levels of a sample day generated.
+    /// </summary>
+    public sealed class DailyChallengeCheck : IValidationCheck
+    {
+        public string Name => "DailyChallenge";
+
+        public void Run(ValidationReport report)
+        {
+            foreach (var module in GameRegistry.Discover().Modules)
+            {
+                var source = module.Challenge;
+                if (source == null) continue;
+                string id = module.Info.Id;
+                var ids = source.Settings?.dailyTiers;
+                int levels = ResolverMaster.Core.Challenge.DailyChallenge.Levels;
+                if (ids == null || ids.Count != levels)
+                {
+                    report.Error($"'{id}': the daily challenge needs {levels} steps (ChallengeSettings.dailyTiers), found {ids?.Count ?? 0}");
+                    continue;
+                }
+                foreach (var t in ids)
+                    if (source.Table.tiers.FindIndex(x => x.id == t) < 0) report.Error($"'{id}': daily step '{t}' is not in the Challenge table");
+                var steps = ResolverMaster.Core.Challenge.DailyChallenge.Steps(source);
+                for (int i = 1; i < steps.Count; i++)
+                    if (steps[i] < steps[i - 1]) report.Error($"'{id}': daily step {i + 1} ('{ids[i]}') is easier than step {i} ('{ids[i - 1]}')");
+                if (steps.Count != levels) continue;
+                const int day = 20261117;
+                try
+                {
+                    for (int n = 1; n <= levels; n++)
+                        ResolverMaster.Core.Challenge.ChallengeRules.Generate(source, ResolverMaster.Core.Challenge.DailyChallenge.RunSeed(day), n, 0, steps[n - 1]);
+                }
+                catch (System.Exception e)
+                {
+                    report.Error($"'{id}': the daily challenge of {day} cannot be generated: {e.Message}");
+                }
+            }
+        }
+    }
+}

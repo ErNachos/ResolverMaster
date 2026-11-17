@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using ResolverMaster.Core.App;
+using ResolverMaster.Core.Challenge;
 using ResolverMaster.Core.Games;
 using ResolverMaster.Core.Localization;
 using UnityEngine;
@@ -29,6 +30,9 @@ namespace ResolverMaster.Core.UI.Screens
             public Button Challenge;
             public LocalizedText ChallengeLabel;
             public TMPro.TextMeshProUGUI Record;
+            // ErNa-008: the daily challenge (state of today and current streak)
+            public Button Daily;
+            public TMPro.TextMeshProUGUI DailyState, DailyStreak;
         }
 
         AppServices _ctx;
@@ -126,7 +130,7 @@ namespace ResolverMaster.Core.UI.Screens
                 var img = ui.Image("Illustration", art.transform, sprite, soon ? s.disabledTint : Color.white);
                 img.preserveAspect = true;
                 // inside the inner frame line of the window (a "coming soon" card, or one with a Challenge, keeps the bottom free)
-                UiFactory.Stretch(img.rectTransform, 40, soon || HasChallenge(game) ? 210 : 44, 40, 40);
+                UiFactory.Stretch(img.rectTransform, 40, soon ? 210 : HasChallenge(game) ? DailyBottom + s.buttonHeight + 24 : 44, 40, 40);
             }
             else
             {
@@ -156,6 +160,7 @@ namespace ResolverMaster.Core.UI.Screens
                 c.ChallengeLabel = label.GetComponent<LocalizedText>();
                 UiFactory.AutoSize(label, s.smallSize);
                 c.Challenge.onClick.AddListener(() => OpenChallenge(index));
+                CreateDaily(c, art.transform, index);
             }
 
             if (soon)
@@ -170,6 +175,51 @@ namespace ResolverMaster.Core.UI.Screens
                 UiFactory.AutoSize(text, s.smallSize);
             }
             return c;
+        }
+
+        /// <summary>Bottom of the daily challenge row in the illustration window (above the Challenge row).</summary>
+        const float DailyBottom = 52 + 136 + 20;
+
+        /// <summary>
+        /// ErNa-008: the daily challenge row of a card: a cream pill with the calendar, "Daily challenge" and today's state (to do /
+        /// in progress / done with N stars), the current streak on the right (placeholder flame). Disabled when today's is over.
+        /// </summary>
+        void CreateDaily(Card c, Transform art, int index)
+        {
+            var ui = _ctx.Ui;
+            var s = _ctx.Style;
+            // right end of the pill, from the edge: pad | count | flame | gap; the texts stop before it
+            const float width = 560, iconSize = 84, pad = 26, countWidth = 60, flameSize = 56, gap = 12;
+            const float streakWidth = pad + countWidth + flameSize + gap;
+            c.Daily = ui.Pressable("Daily", art, s.buttonCream, Color.white, pill: true);
+            UiFactory.Place((RectTransform)c.Daily.transform, 0.5f, 0, new Vector2(width, s.buttonHeight), new Vector2(0, DailyBottom));
+            c.Daily.onClick.AddListener(() => OpenDaily(index));
+            var calendar = ui.Icon("Calendar", c.Daily.transform, "icon_calendar", iconSize);
+            UiFactory.Place(calendar.rectTransform, 0, 0.5f, new Vector2(iconSize, iconSize), new Vector2(pad, 5));
+            float left = pad + iconSize + 12;
+            var title = ui.Label("Title", c.Daily.transform, LocKeys.DailyTitle, s.smallSize, s.text, TextAnchor.LowerLeft, bold: true);
+            title.rectTransform.anchorMin = new Vector2(0, 0.5f);
+            title.rectTransform.anchorMax = new Vector2(1, 1);
+            title.rectTransform.offsetMin = new Vector2(left, 0);
+            title.rectTransform.offsetMax = new Vector2(-streakWidth, -12);
+            UiFactory.AutoSize(title, s.smallSize * 0.8f);
+            c.DailyState = ui.Label("State", c.Daily.transform, null, s.smallSize, s.textMuted, TextAnchor.UpperLeft);
+            c.DailyState.rectTransform.anchorMin = new Vector2(0, 0);
+            c.DailyState.rectTransform.anchorMax = new Vector2(1, 0.5f);
+            c.DailyState.rectTransform.offsetMin = new Vector2(left, 18);
+            c.DailyState.rectTransform.offsetMax = new Vector2(-streakWidth, 0);
+            UiFactory.AutoSize(c.DailyState, s.smallSize * 0.8f);
+            // the streak: flame + number, on the right end of the pill
+            var flame = ui.MaskIcon("Streak", c.Daily.transform, "streak", flameSize, s.offMark);
+            UiFactory.Place(flame.rectTransform, 1, 0.5f, new Vector2(flameSize, flameSize), new Vector2(-(pad + countWidth), 5));
+            c.DailyStreak = ui.Label("StreakCount", c.Daily.transform, null, s.bodySize, s.text, TextAnchor.MiddleLeft, bold: true);
+            var srt = c.DailyStreak.rectTransform;
+            srt.anchorMin = new Vector2(1, 0);
+            srt.anchorMax = new Vector2(1, 1);
+            srt.pivot = new Vector2(1, 0.5f);
+            srt.offsetMin = new Vector2(-(pad + countWidth) + 4, 14);
+            srt.offsetMax = new Vector2(-pad, -4);
+            UiFactory.AutoSize(c.DailyStreak, s.smallSize);
         }
 
         // ------------------------------------------------------------------ input
@@ -228,6 +278,17 @@ namespace ResolverMaster.Core.UI.Screens
             ChallengeLauncher.Open(_ctx, _ctx.Games.FindModule(_cards[index].Game.Id), forceNew: false);
         }
 
+        /// <summary>ErNa-008: the daily challenge of a card (a side card first comes to the centre).</summary>
+        void OpenDaily(int index)
+        {
+            if (index != _carousel.Target || !_carousel.Resting)
+            {
+                _carousel.MoveTo(index);
+                return;
+            }
+            ChallengeLauncher.OpenDaily(_ctx, _ctx.Games.FindModule(_cards[index].Game.Id));
+        }
+
         /// <summary>Record and "Resume" of every card with a Challenge (after a run they change).</summary>
         void RefreshChallenge()
         {
@@ -238,6 +299,14 @@ namespace ResolverMaster.Core.UI.Screens
                 c.Record.text = (record?.stars ?? 0).ToString();
                 bool running = _ctx.Data.challenge.ActiveRun(c.Game.Id) != null;
                 c.ChallengeLabel.Bind(_ctx.Loc, running ? LocKeys.HomeChallengeResume : LocKeys.HomeChallenge);
+                // ErNa-008: today's daily challenge and the current streak
+                var module = _ctx.Games.FindModule(c.Game.Id);
+                var state = ChallengeLauncher.DailyStatusOf(_ctx, module, out int stars);
+                c.DailyState.text = state == DailyStatus.ToDo ? _ctx.Loc.Get(LocKeys.DailyToDo)
+                    : state == DailyStatus.InProgress ? _ctx.Loc.Get(LocKeys.DailyInProgress)
+                    : string.Format(_ctx.Loc.Get(LocKeys.DailyDone), stars);
+                c.DailyStreak.text = DailyChallenge.CurrentStreak(_ctx.Data.challenge.Daily(c.Game.Id), _ctx.Today).ToString();
+                UiFactory.SetInteractable(c.Daily, state != DailyStatus.Done);
             }
         }
 
