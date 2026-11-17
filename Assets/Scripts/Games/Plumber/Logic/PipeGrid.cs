@@ -58,6 +58,15 @@ namespace ResolverMaster.Games.Plumber
             return n;
         }
 
+        /// <summary>Locked pieces (ErNa-006).</summary>
+        public int CountLocked()
+        {
+            int n = 0;
+            foreach (var p in Pieces)
+                if (p.Locked && p.Kind != PieceKind.Empty) n++;
+            return n;
+        }
+
         /// <summary>Number of distinct water colors used by sources and sinks.</summary>
         public int ColorCount()
         {

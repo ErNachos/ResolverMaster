@@ -16,6 +16,9 @@ namespace ResolverMaster.Games.Plumber
         /// <summary>The current state (rotations change with every move).</summary>
         public PipeGrid Grid { get; private set; }
 
+        /// <summary>Cells the player cannot turn (Core, ErNa-006): the locked pieces of the level.</summary>
+        public CellLockSet Locks { get; } = new CellLockSet();
+
         public override int MinMoves => Level?.minMoves ?? 0;
 
         /// <summary>Opens the water from every source. Success marks the level solved (stars = moves made so far).</summary>
@@ -41,11 +44,12 @@ namespace ResolverMaster.Games.Plumber
                 Grid = _start.Clone();
             }
             else Grid.CopyFrom(_start);
+            Locks.ResetToLevel(Grid.CellCount, c => Grid.Pieces[c].Locked);
         }
 
         protected override bool TryApply(int cell)
         {
-            if (cell < 0 || cell >= Grid.CellCount || !Grid.Pieces[cell].IsRotatable) return false;
+            if (cell < 0 || cell >= Grid.CellCount || !Grid.Pieces[cell].IsRotatable || !Locks.CanChange(cell)) return false;
             Grid.Rotate(cell, 1);
             return true;
         }

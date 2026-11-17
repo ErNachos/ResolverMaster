@@ -389,7 +389,28 @@ namespace ResolverMaster.Tests
             Assert.IsTrue(puzzle.ApplyMove(1), "a normal straight still turns");
             Assert.AreEqual(1, puzzle.MovesMade);
             Assert.IsTrue(puzzle.Grid.Pieces[5].Locked);
+            Assert.AreEqual(CellLock.Locked, puzzle.Locks.Get(5), "the Core lock set mirrors the level");
+            Assert.IsTrue(puzzle.Locks.CanChange(1));
             Assert.AreEqual(PieceKind.Bridge, puzzle.Grid.Pieces[4].Kind);
+
+            // the solver keeps locked pieces as they are: a wrong locked straight blocks the only route, a right one costs nothing
+            Assert.IsFalse(Solve("S1 I0# E3").Solvable);
+            Assert.AreEqual(1, Solve("S1 I1# I0 E3").MinMoves);
+
+            // the generator: locked pieces on the route are already right, the level stays exact and solvable
+            var settings = new PlumberGenerator.Settings
+            {
+                Width = 5, Height = 7, ColorCount = 2, Layout = PlumberGenerator.Layout.Colors,
+                MinMoves = new DifficultyRange(PlumberDifficulty.MinMoves, 4, 30), Path = new DifficultyRange(PlumberDifficulty.Path, 8, 14),
+                Tees = new DifficultyRange(PlumberDifficulty.Tees, 0, 1), Crosses = new DifficultyRange(PlumberDifficulty.Crosses, 0, 0),
+                Locked = new DifficultyRange(PlumberDifficulty.Locked, 3, 4),
+            };
+            var level = PlumberGenerator.Generate(settings, 31337).Level;
+            var lockedGrid = level.CreateGrid();
+            Assert.That(lockedGrid.CountLocked(), Is.InRange(3, 4));
+            var lockedSol = PlumberSolver.Solve(lockedGrid);
+            Assert.AreEqual(level.minMoves, lockedSol.MinMoves);
+            Assert.IsFalse(lockedSol.Taps.Any(c => lockedGrid.Pieces[c].Locked), "no tap on a locked piece");
 
             // the format round trip keeps bridges and locks; an ErNa-005 level (no bridges, no locks) reads the same as before
             const string withNew = "S1 I0 E3/X0 B0 C1#";

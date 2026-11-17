@@ -9,7 +9,8 @@ namespace ResolverMaster.Games.Plumber
     /// 1. the water routes, by self-avoiding random walks: one source -> one sink (chapter 1); one source -> a T -> two sinks (chapter 2);
     ///    one separate route per color, 2-4 colors (chapters 3, 6, 8). Each route cell gets the piece its openings ask for (straight, curve, T);
     /// 2. decoy T and cross pieces off the routes, as many as the tier asks; 3. random straights and curves everywhere else;
-    /// 4. a random rotation for every rotatable piece;
+    /// 4. (ErNa-006) locked pieces: on a route already right (a constraint) or off the routes (obstacles, decoys);
+    ///    a random rotation for every other rotatable piece;
     /// 5. the solver measures it: candidates that are already solved, not solvable, too hard for the solver, outside the tier, or
     ///    (one sink) whose best solution uses a T, are discarded and the next attempt continues the same random sequence.
     /// Same seed + same tier = same level, on every platform.
@@ -31,6 +32,8 @@ namespace ResolverMaster.Games.Plumber
             /// <summary>Grid columns and rows (they can differ).</summary>
             public int Width, Height;
             public DifficultyRange MinMoves, Path, Tees, Crosses;
+            /// <summary>ErNa-006: locked pieces on the grid, some on the route (already right: a constraint), some off it (obstacles).</summary>
+            public DifficultyRange Locked;
             public Layout Layout;
             /// <summary>Water colors (= routes) of the <see cref="Layout.Colors"/> layout.</summary>
             public int ColorCount = 1;
@@ -50,6 +53,7 @@ namespace ResolverMaster.Games.Plumber
                     Path = tier.Get(PlumberDifficulty.Path),
                     Tees = tier.GetOr(PlumberDifficulty.Tees, 0),
                     Crosses = tier.GetOr(PlumberDifficulty.Crosses, 0),
+                    Locked = tier.GetOr(PlumberDifficulty.Locked, 0),
                     Layout = colors >= 2 ? Layout.Colors : sinks >= 2 ? Layout.Fork : Layout.Single,
                     ColorCount = Math.Max(1, colors),
                     MaxAttempts = maxAttempts,
@@ -190,6 +194,30 @@ namespace ResolverMaster.Games.Plumber
                     : i < decoyTees + crosses ? PieceKind.Cross
                     : rng.Chance(0.5) ? PieceKind.Straight : PieceKind.Curve;
                 grid.Pieces[free[i]] = new Piece(kind);
+            }
+            // locked pieces (ErNa-006): on the route already right, or off the route as obstacles. Only when the tier asks for them,
+            // so the random sequence of the older tiers (and their saved levels) does not change.
+            if (s.Locked.max > 0)
+            {
+                var routePipes = new List<int>();
+                for (int c = 0; c < n; c++)
+                    if (onRoute[c] && grid.Pieces[c].IsRotatable) routePipes.Add(c);
+                var offRoute = new List<int>();
+                for (int c = 0; c < n; c++)
+                    if (!onRoute[c] && grid.Pieces[c].IsRotatable) offRoute.Add(c);
+                rng.Shuffle(routePipes);
+                rng.Shuffle(offRoute);
+                int locks = rng.Range(s.Locked.min, s.Locked.max);
+                for (int i = 0; i < locks; i++)
+                {
+                    bool onPath = routePipes.Count > 0 && (offRoute.Count == 0 || rng.Chance(0.5));
+                    var list = onPath ? routePipes : offRoute;
+                    if (list.Count == 0) return null;
+                    int c = list[list.Count - 1];
+                    list.RemoveAt(list.Count - 1);
+                    grid.Pieces[c].Rotation = onPath ? RotationFor(topo, c, PieceShapes.BaseMask(grid.Pieces[c].Kind), open[c]) : rng.Next(topo.RotationSteps);
+                    grid.Pieces[c].Locked = true;
+                }
             }
             for (int c = 0; c < n; c++)
                 if (grid.Pieces[c].IsRotatable) grid.Pieces[c].Rotation = rng.Next(topo.RotationSteps);

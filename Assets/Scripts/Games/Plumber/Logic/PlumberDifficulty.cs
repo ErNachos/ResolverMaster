@@ -19,6 +19,12 @@ namespace ResolverMaster.Games.Plumber
         public const string Crosses = "crosses";
         public const string Sinks = "sinks";
         public const string Colors = "colors";
+        /// <summary>ErNa-006: locked pieces on the grid.</summary>
+        public const string Locked = "locked";
+        /// <summary>ErNa-006: bridges on the grid (on the routes, where two of them cross).</summary>
+        public const string Bridges = "bridges";
+        /// <summary>ErNa-006: 1 = the level is impossible when its bridges are crosses (a bridge is needed), 0 = no requirement.</summary>
+        public const string NeedBridge = "needBridge";
 
         static DifficultyRange R(string key, int min, int max) => new DifficultyRange(key, min, max);
 
@@ -90,6 +96,8 @@ namespace ResolverMaster.Games.Plumber
             Check(Crosses, grid.Count(PieceKind.Cross));
             Check(Sinks, grid.Count(PieceKind.Sink));
             Check(Colors, grid.ColorCount());
+            Check(Locked, grid.CountLocked());
+            Check(Bridges, grid.Count(PieceKind.Bridge));
             return problems;
         }
     }
