@@ -37,3 +37,5 @@ unity_*.log
 *.p12
 *.pepk
 keystore.properties
+# local Unity tooling cache
+.utmp/
