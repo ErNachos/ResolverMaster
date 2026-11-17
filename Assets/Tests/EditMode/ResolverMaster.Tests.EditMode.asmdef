@@ -3,6 +3,7 @@
     "rootNamespace": "ResolverMaster.Tests",
     "references": [
         "ResolverMaster.Core",
+        "ResolverMaster.Games",
         "ResolverMaster.Editor",
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner"

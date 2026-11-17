@@ -26,6 +26,8 @@ namespace ResolverMaster.Core.Save
             }
             if (data.settings == null) data.settings = new SettingsBlock();
             if (data.settings.language == null) data.settings.language = "";
+            if (data.progress == null) data.progress = new ProgressBlock();
+            data.progress.Sanitize();
             Migrate(data);
             return data;
         }

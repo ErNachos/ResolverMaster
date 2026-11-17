@@ -1,3 +1,6 @@
+using ResolverMaster.Core.App;
+using ResolverMaster.Core.UI;
+using UnityEngine;
 using UnityEngine.Scripting;
 
 namespace ResolverMaster.Core.Games
@@ -5,11 +8,17 @@ namespace ResolverMaster.Core.Games
     /// <summary>
     /// Entry point of a minigame. Each minigame (Assets/Scripts/Games/&lt;Name&gt;/) has exactly one non-abstract subclass with a
     /// public parameterless constructor: <see cref="GameRegistry"/> finds it by reflection, so Core never references a game.
-    /// Later Updates add here the hooks for Story/Challenge (level source, board view, rules).
+    /// The Core screens (level choice, game screen, win panel) use the hooks below; the game only provides its board.
     /// </summary>
     [Preserve]
     public abstract class MinigameModule
     {
         public abstract GameInfo Info { get; }
+
+        /// <summary>Number of saved Story levels. 0 = Story not playable yet (Mode choice shows the placeholder).</summary>
+        public virtual int StoryLevelCount => 0;
+
+        /// <summary>Creates the game's board under <paramref name="parent"/> (stretched to it). Called once per app run.</summary>
+        public virtual PuzzleBoard CreateBoard(AppServices ctx, RectTransform parent) => null;
     }
 }

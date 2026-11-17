@@ -8,8 +8,8 @@ using UnityEngine.UI;
 namespace ResolverMaster.Core.UI.Screens
 {
     /// <summary>
-    /// Story / Challenge choice for the selected minigame. In this Update both modes only show a placeholder message;
-    /// later Updates open the Story map and the Challenge run from here.
+    /// Story / Challenge choice for the selected minigame. Story opens the level choice (if the game has Story levels);
+    /// Challenge still shows a placeholder message.
     /// </summary>
     public sealed class ModeSelectScreen : UiScreen
     {
@@ -45,7 +45,7 @@ namespace ResolverMaster.Core.UI.Screens
             var choose = ui.Label("Choose", layout.Body, LocKeys.ModeTitle, s.bodySize, s.textMuted, TextAnchor.MiddleCenter);
             UiFactory.Layout(choose, preferredHeight: 72);
 
-            CreateModeCard(ctx, layout.Body, "story", s.primary, LocKeys.ModeStory, LocKeys.ModeStoryDesc).onClick.AddListener(screen.ShowPlaceholder);
+            CreateModeCard(ctx, layout.Body, "story", s.primary, LocKeys.ModeStory, LocKeys.ModeStoryDesc).onClick.AddListener(screen.OpenStory);
             CreateModeCard(ctx, layout.Body, "challenge", s.accent, LocKeys.ModeChallenge, LocKeys.ModeChallengeDesc).onClick.AddListener(screen.ShowPlaceholder);
 
             // placeholder message, hidden until a mode is tapped
@@ -95,6 +95,19 @@ namespace ResolverMaster.Core.UI.Screens
         {
             if (_messageFade != null) StopCoroutine(_messageFade);
             _message.alpha = 0f;
+        }
+
+        /// <summary>Story: level choice when the minigame has saved Story levels, otherwise the placeholder message.</summary>
+        void OpenStory()
+        {
+            var module = Game != null ? _ctx.Games.FindModule(Game.Id) : null;
+            if (module == null || module.StoryLevelCount == 0)
+            {
+                ShowPlaceholder();
+                return;
+            }
+            _ctx.Screens.Get<LevelSelectScreen>(ScreenIds.LevelSelect).Open(module);
+            _ctx.Screens.Push(ScreenIds.LevelSelect);
         }
 
         void ShowPlaceholder()

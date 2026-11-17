@@ -20,6 +20,7 @@
 - Eccezione accettata: il salvataggio usa `JsonUtility` (funziona anche in EditMode).
 
 ## 4. Parametri in un unico file per sistema
+- Regole comuni dei rompicapi (stelle): **`PuzzleConfig`** (`Assets/Resources/ResolverMaster/PuzzleConfig.asset`). Idraulico: **`PlumberConfig`** (`Assets/Resources/Games/Plumber/PlumberConfig.asset`: colori, spessori, durate, generatore, tabella di difficoltà). Gli asset mancanti si creano con *Setup > Ensure Config Assets* (valori predefiniti dalle classi; gli asset esistenti non vengono toccati).
 - UI: **`UiKitStyle`** (`Assets/Resources/ResolverMaster/UiKitStyle.asset`): colori, raggi, spessori, misure, dimensioni del testo, durate delle animazioni, font, sprite generati. Nessun colore o misura sparso nelle schermate.
 - Ogni sistema futuro (Storia, Challenge, ogni minigioco) avrà il suo unico file di parametri.
 
@@ -37,10 +38,18 @@
 - Gli id dei giochi (`GameInfo.Id`) non si cambiano mai dopo l'uscita: sono le chiavi dei blocchi di salvataggio.
 
 ## 7. Casualità con seed
-- Ogni generatore (livelli Challenge, ecc.) riceve un **seed** esplicito e usa un proprio `System.Random(seed)`; mai `UnityEngine.Random` globale nella logica. Stesso seed = stesso livello (riproducibile nei test e nei report dei bug).
+- Ogni generatore (livelli Challenge, ecc.) riceve un **seed** esplicito e usa un proprio **`SeededRandom(seed)`** del Core (PCG32, solo aritmetica intera: stesso risultato su ogni piattaforma); mai `UnityEngine.Random` né `System.Random` nella logica. Stesso seed = stesso livello (riproducibile nei test e nei report dei bug).
+- I livelli della Storia si generano **una volta** nell'Editor e si salvano come dati; il telefono non li rigenera. Il validatore avvisa se il generatore non riproduce più un livello dal suo seed.
+
+## 7b. Rompicapi
+- Ogni gioco implementa le sue regole su `PuzzleBase<TLevel, TMove>` (carica, mossa, vittoria, annulla, ricomincia; mosse fatte = mosse sulla pila di annullamento) e la sua board su `PuzzleBoard`. Schermate, contatori, stelle e salvataggio sono del Core.
+- Griglia: solo tramite `IGridTopology` (celle intere, direzioni in senso orario, `RotateMask`); oggi `SquareTopology`.
+- Stelle: 3 al minimo, 2 fino a minimo + max(30% arrotondato per difetto, 2), 1 altrimenti (`StarRules`).
+- Difficoltà: `DifficultyTable` di gradini (livelli coperti + intervalli min/max con chiavi scelte dal gioco). Ogni livello salvato deve rispettare il suo gradino (controllato dal validatore).
+- Mosse minime: calcolate da un risolutore esatto del gioco, mai stimate; il validatore le ricalcola.
 
 ## 8. Pooling
-- Gli oggetti creati spesso durante il gioco (pezzi, celle, effetti) si riusano da un pool; niente `Instantiate`/`Destroy` per mossa. Le schermate sono create una volta all'avvio e poi attivate/disattivate.
+- Gli oggetti creati spesso durante il gioco (pezzi, celle, effetti) si riusano da un pool (`ComponentPool<T>` del Core); niente `Instantiate`/`Destroy` per mossa. Le schermate sono create una volta all'avvio e poi attivate/disattivate.
 
 ## 9. UI
 - uGUI, una sola scena `Main`, schermate come pannelli gestiti da `ScreenManager` (pila; tasto Indietro di Android = `Keyboard.escapeKey` del nuovo Input System; Indietro sulla Home chiude l'app).
@@ -50,15 +59,17 @@
 - Un `LayoutElement` dentro un layout group ha `flexibleHeight = 0` (vedi `UiFactory.Layout`): un layout group annidato con *force expand* altrimenti si allunga fino a riempire lo schermo.
 - Un'Image a 9 fette con layout group sullo stesso oggetto riporta come altezza preferita la somma dei bordi dello sprite: fissa l'altezza con un `LayoutElement`.
 - Icone: Google Material Symbols (Apache 2.0) generate da `Tools/Art/make_icons.py` in `Assets/Art/Icons/` (maschere bianche colorate dalla UI). Per aggiungerne una: una riga in `ICONS`, rilancia lo script, poi *UI Kit > Rebuild Icon Library*.
+- I popup a tutto schermo (pannello di vittoria) stanno sotto un livello scuro con `ModalOverlay`: le misure delle anteprime considerano solo il popup.
+- Nessuna animazione deve dipendere da `Awake`/`Start`/coroutine per lo stato finale: ogni board offre `SnapVisuals()` (le anteprime girano in edit mode, dove `Update` non avanza).
 - Font: Fredoka (OFL), `Assets/Art/Fonts/`. Ogni nuovo asset di terze parti va in `docs/crediti.md` con la licenza.
 
 ## 10. Validatore
 - *Resolver Master > Validate*. Ogni classe che implementa `IValidationCheck` viene eseguita automaticamente: un gioco aggiunge i suoi controlli solo dichiarando una classe.
-- Controlli attuali: lingue (stesse chiavi in tutte le lingue, chiavi del codice presenti, righe malformate/duplicate), minigiochi (id, nome e icona validi), UI kit (stile, font, sprite, icone del Core).
+- Controlli attuali: lingue (stesse chiavi in tutte le lingue, chiavi del codice presenti, righe malformate/duplicate), minigiochi (id, nome e icona validi), UI kit (stile, font, sprite, icone del Core), PuzzleConfig, Idraulico (ogni livello della Storia leggibile, risolvibile, non già risolto, mosse minime salvate = risolutore, valori nel gradino; avviso se il seed non lo riproduce più).
 
 ## 11. Anteprime e misure
-- *Resolver Master > Make Previews*: Home e Impostazioni, IT ed EN, a 1080x1920 (9:16) e 1080x2520 (9:21), in `Previews/` (ignorata da git). La zona fuori dalla safe area simulata è tinta di rosso.
-- `Previews/previews_report.txt` misura: margini della safe area, distanza minima del contenuto dai bordi sicuri, elementi fuori schermo o fuori safe area, testi tagliati, elementi sovrapposti, elementi che escono dal loro contenitore, Image senza sprite.
+- *Resolver Master > Make Previews*: Home, Impostazioni, Scelta livello, Gioco (livello 1 all'inizio, livello 8 con acqua parziale, pannello di vittoria), IT ed EN, a 1080x1920 (9:16) e 1080x2520 (9:21), in `Previews/` (ignorata da git). La zona fuori dalla safe area simulata è tinta di rosso.
+- `Previews/previews_report.txt` misura: margini della safe area, distanza minima del contenuto dai bordi sicuri, elementi fuori schermo o fuori safe area, testi tagliati, elementi sovrapposti, elementi che escono dal loro contenitore, Image senza sprite; nella schermata di gioco dimensione delle celle e distanza della griglia da bordi e barre.
 - Safe area simulata: 9:16 nessun ritaglio; 9:21 120 px in alto (foro/notch) e 72 px in basso (barra dei gesti).
 - In Editor gli asset usati dalle anteprime si caricano **dopo** `NewScene(Single)`, che scarica gli asset non referenziati.
 
@@ -70,3 +81,4 @@
 
 ## Changelog
 - ErNa-001: prima stesura (scheletro del progetto).
+- ErNa-002: basi dei rompicapi nel Core (§7b), `SeededRandom` al posto di `System.Random` (§7), file di parametri `PuzzleConfig`/`PlumberConfig` (§4), livelli Storia generati e salvati, popup con `ModalOverlay`, `SnapVisuals` per le anteprime.

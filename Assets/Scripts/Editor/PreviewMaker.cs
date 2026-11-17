@@ -6,9 +6,11 @@ using System.Text;
 using ResolverMaster.Core.App;
 using ResolverMaster.Core.Games;
 using ResolverMaster.Core.Localization;
+using ResolverMaster.Core.Puzzle;
 using ResolverMaster.Core.Save;
 using ResolverMaster.Core.UI;
 using ResolverMaster.Core.UI.Screens;
+using ResolverMaster.Games.Plumber;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -19,9 +21,11 @@ using Object = UnityEngine.Object;
 namespace ResolverMaster.Editor
 {
     /// <summary>
-    /// Menu Resolver Master > Make Previews: renders Home and Settings (Italian and English) at 1080x1920 (9:16) and 1080x2520 (9:21)
+    /// Menu Resolver Master > Make Previews: renders Home, Settings, level choice and game (start, partial water, win panel), in Italian
+    /// and English, at 1080x1920 (9:16) and 1080x2520 (9:21)
     /// into Previews/, with the area outside the simulated safe area tinted red, and measures the layout:
-    /// safe-area margins, elements off screen or outside the safe area, clipped texts, overlapping elements.
+    /// safe-area margins, elements off screen or outside the safe area, clipped texts, overlapping elements; on the game screen also the
+    /// cell size and the gaps between the grid, the screen edges and the bars.
     /// Report: Previews/previews_report.txt (also in the log). Batch: -executeMethod ResolverMaster.Editor.PreviewMaker.MakePreviewsBatch
     /// </summary>
     public static class PreviewMaker
@@ -51,7 +55,54 @@ namespace ResolverMaster.Editor
             new Device("9x21", 1080, 2520, new RectInt(0, 72, 1080, 2520 - 120 - 72)),
         };
 
-        static readonly string[] ScreensToShoot = { ScreenIds.Home, ScreenIds.Settings };
+        /// <summary>One preview: a name and how to bring the UI into the wanted state.</summary>
+        sealed class Shot
+        {
+            public string Name;
+            /// <summary>Right after the UI is built (push screens, load levels).</summary>
+            public Action<AppServices, ScreenManager> Setup;
+            /// <summary>After the first layout pass, when rect sizes are known (fit the board, preview states).</summary>
+            public Action<AppServices, ScreenManager> AfterLayout;
+        }
+
+        static readonly Shot[] Shots =
+        {
+            new Shot { Name = ScreenIds.Home },
+            new Shot { Name = ScreenIds.Settings, Setup = (ctx, m) => m.PushImmediate(ScreenIds.Settings) },
+            new Shot
+            {
+                Name = "levels",
+                Setup = (ctx, m) =>
+                {
+                    // sample progress: levels 1-3 solved with 3, 2 and 1 stars, level 4 unlocked, 5+ locked
+                    string mode = GameModeCodes.ToCode(GameMode.Story);
+                    for (int i = 0; i < 3; i++) ctx.Data.progress.SetBest(PlumberModule.Id, mode, i, 3 - i);
+                    m.Get<LevelSelectScreen>(ScreenIds.LevelSelect).Open(ctx.Games.FindModule(PlumberModule.Id));
+                    m.PushImmediate(ScreenIds.LevelSelect);
+                },
+            },
+            GameShot("game_start", 0, BoardPreview.Start, win: false),
+            GameShot("game_partial", 7, BoardPreview.Partial, win: false),
+            GameShot("game_win", 0, BoardPreview.Solved, win: true),
+        };
+
+        static Shot GameShot(string name, int levelIndex, BoardPreview state, bool win) => new Shot
+        {
+            Name = name,
+            Setup = (ctx, m) =>
+            {
+                m.Get<GameScreen>(ScreenIds.Game).StartLevel(ctx.Games.FindModule(PlumberModule.Id), levelIndex);
+                m.PushImmediate(ScreenIds.Game);
+            },
+            AfterLayout = (ctx, m) =>
+            {
+                var game = m.Get<GameScreen>(ScreenIds.Game);
+                game.Board.Refit();
+                game.Board.PreparePreview(state);
+                game.Board.SnapVisuals();
+                if (win) game.ShowWin(animate: false);
+            },
+        };
 
         [MenuItem("Resolver Master/Make Previews")]
         public static void MakePreviews() => Make();
@@ -90,12 +141,13 @@ namespace ResolverMaster.Editor
                     report.Append($"\n== {device.Width}x{device.Height} ({device.Name}) safe area x {device.Safe.x}..{device.Safe.xMax}, y {device.Safe.y}..{device.Safe.yMax} " +
                                   $"-> margins top {device.Height - device.Safe.yMax} px, bottom {device.Safe.y} px, left {device.Safe.x} px, right {device.Width - device.Safe.xMax} px\n");
                     foreach (var lang in LanguageCodes.All)
-                    foreach (var screenId in ScreensToShoot)
+                    foreach (var shot in Shots)
                     {
-                        string file = $"{OutDir}/{screenId}_{LanguageCodes.ToCode(lang)}_{device.Width}x{device.Height}.png";
-                        var issues = Shoot(scene, style, icons, device, lang, screenId, file, out string margins);
+                        string file = $"{OutDir}/{shot.Name}_{LanguageCodes.ToCode(lang)}_{device.Width}x{device.Height}.png";
+                        var issues = Shoot(scene, style, icons, device, lang, shot, file, out string margins, out string board);
                         files.Add(file);
                         report.Append($"  {Path.GetFileName(file)}: {margins}; {(issues.Count == 0 ? "no issues" : issues.Count + " issue(s)")}\n");
+                        if (board != null) report.Append("    board: ").Append(board).Append('\n');
                         foreach (var i in issues) report.Append("    - ").Append(i).Append('\n');
                     }
                 }
@@ -109,7 +161,7 @@ namespace ResolverMaster.Editor
             return files;
         }
 
-        static List<string> Shoot(Scene scene, UiKitStyle style, IconLibrary icons, Device device, Language lang, string screenId, string file, out string margins)
+        static List<string> Shoot(Scene scene, UiKitStyle style, IconLibrary icons, Device device, Language lang, Shot shot, string file, out string margins, out string board)
         {
             int w = device.Width, h = device.Height;
             var rt = new RenderTexture(w, h, 24, RenderTextureFormat.ARGB32) { antiAliasing = 1 };
@@ -145,18 +197,21 @@ namespace ResolverMaster.Editor
                     Games = GameRegistry.Discover(),
                     Style = style,
                     Icons = icons,
+                    Puzzle = AssetDatabase.LoadAssetAtPath<PuzzleConfig>(ConfigAssets.PuzzleConfigPath) ?? ScriptableObject.CreateInstance<PuzzleConfig>(),
                 };
                 ctx.Data.settings.language = LanguageCodes.ToCode(lang);
                 var manager = AppUi.Build(ctx, root);
-                if (screenId != ScreenIds.Home) manager.PushImmediate(screenId);
+                shot.Setup?.Invoke(ctx, manager);
                 var safeRect = new Rect(device.Safe.x, device.Safe.y, device.Safe.width, device.Safe.height);
                 foreach (var sa in root.GetComponentsInChildren<SafeArea>(true)) sa.Apply(safeRect, new Vector2(w, h));
 
-                for (int pass = 0; pass < 3; pass++)
+                Relayout(root);
+                if (shot.AfterLayout != null)
                 {
-                    Canvas.ForceUpdateCanvases();
-                    LayoutRebuilder.ForceRebuildLayoutImmediate(root);
+                    shot.AfterLayout(ctx, manager);
+                    Relayout(root);
                 }
+                board = MeasureBoard(manager, device);
                 cam.Render();   // first render requests the font glyphs
                 Canvas.ForceUpdateCanvases();
                 cam.Render();
@@ -179,6 +234,28 @@ namespace ResolverMaster.Editor
                 rt.Release();
                 Object.DestroyImmediate(rt);
             }
+        }
+
+        static void Relayout(RectTransform root)
+        {
+            for (int pass = 0; pass < 3; pass++)
+            {
+                Canvas.ForceUpdateCanvases();
+                LayoutRebuilder.ForceRebuildLayoutImmediate(root);
+            }
+        }
+
+        /// <summary>Game screen only: cell size and the gaps between the grid and the screen edges / the two bars.</summary>
+        static string MeasureBoard(ScreenManager manager, Device d)
+        {
+            var game = manager.Top as GameScreen;
+            if (game == null || game.Board == null || game.Board.GridColumns == 0) return null;
+            var grid = PixelRect(game.Board.GridRect, d);
+            var top = PixelRect(game.TopBarRect, d);
+            var bottom = PixelRect(game.BottomBarRect, d);
+            float cell = grid.width / game.Board.GridColumns;
+            return $"{game.Board.GridColumns}x{game.Board.GridColumns} cells of {cell:0.0} px, grid {Fmt(grid)}; gap to screen left {grid.xMin:0} / right {d.Width - grid.xMax:0} px, " +
+                   $"to safe area left {grid.xMin - d.Safe.x:0} / right {d.Safe.xMax - grid.xMax:0} px; gap to top bar {top.yMin - grid.yMax:0} px, to bottom bar {grid.yMin - bottom.yMax:0} px";
         }
 
         static void TintOutsideSafeArea(Texture2D tex, RectInt safe)
@@ -211,6 +288,9 @@ namespace ResolverMaster.Editor
             var screen = new Rect(0, 0, device.Width, device.Height);
             var safe = new Rect(device.Safe.x, device.Safe.y, device.Safe.width, device.Safe.height);
             var visible = root.GetComponentsInChildren<Graphic>(false).Where(g => IsVisible(g)).ToList();
+            // a visible popup covers the rest on purpose: measure only the popup
+            var overlay = root.GetComponentsInChildren<ModalOverlay>(false).FirstOrDefault();
+            if (overlay != null) visible = visible.Where(g => g.transform.IsChildOf(overlay.transform)).ToList();
             var leaves = visible.Where(g => !visible.Any(o => o != g && o.transform.IsChildOf(g.transform)))
                 .Select(g => new Item { Graphic = g, Rect = PixelRect(g.rectTransform, device), Path = PathOf(g.transform, root) })
                 .ToList();
@@ -268,6 +348,7 @@ namespace ResolverMaster.Editor
         {
             if (!g.enabled || !g.gameObject.activeInHierarchy || g.color.a <= 0.01f) return false;
             if (g is Image img && img.sprite == null && IsScreenBackground(g)) return false;
+            if (g.GetComponent<ModalOverlay>() != null) return false;   // the dim layer itself
             if (g is Text txt && string.IsNullOrEmpty(txt.text)) return false;
             foreach (var cg in g.GetComponentsInParent<CanvasGroup>())
                 if (cg.alpha <= 0.01f) return false;

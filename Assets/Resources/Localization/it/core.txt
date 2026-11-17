@@ -20,3 +20,12 @@ common.off = No
 
 language.it = Italiano
 language.en = English
+
+levels.chapter = Capitolo {0}
+game.level = Livello {0}
+game.moves = Mosse {0} · min {1}
+win.title = Livello completato!
+win.moves = Mosse: {0}   Minimo: {1}
+win.retry = Ripeti
+win.next = Avanti
+win.levels = Livelli

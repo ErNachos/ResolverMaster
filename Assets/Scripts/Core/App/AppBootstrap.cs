@@ -1,5 +1,6 @@
 using ResolverMaster.Core.Games;
 using ResolverMaster.Core.Localization;
+using ResolverMaster.Core.Puzzle;
 using ResolverMaster.Core.Save;
 using ResolverMaster.Core.UI;
 using UnityEngine;
@@ -41,6 +42,7 @@ namespace ResolverMaster.Core.App
                 Games = GameRegistry.Discover(),
                 Style = style,
                 Icons = icons,
+                Puzzle = PuzzleConfig.LoadOrDefault(),
             };
 
             if (EventSystem.current == null)

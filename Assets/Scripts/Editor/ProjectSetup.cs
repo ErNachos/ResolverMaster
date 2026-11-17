@@ -90,6 +90,7 @@ namespace ResolverMaster.Editor
             ApplyProjectSettings();
             UiKitGenerator.RegenerateSprites();
             UiKitAssets.EnsureAssets();
+            ConfigAssets.EnsureAll();
             MainSceneBuilder.Build();
             AssetDatabase.SaveAssets();
             Debug.Log("ProjectSetup: Apply All done.");

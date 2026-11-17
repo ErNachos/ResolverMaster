@@ -1,5 +1,6 @@
 using ResolverMaster.Core.Games;
 using ResolverMaster.Core.Localization;
+using ResolverMaster.Core.Puzzle;
 using ResolverMaster.Core.Save;
 using ResolverMaster.Core.UI;
 
@@ -15,6 +16,7 @@ namespace ResolverMaster.Core.App
         public GameRegistry Games;
         public UiKitStyle Style;
         public IconLibrary Icons;
+        public PuzzleConfig Puzzle;
         public UiFactory Ui;
         public ScreenManager Screens;
 

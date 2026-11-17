@@ -1,0 +1,104 @@
+{
+    "levels": [
+        {
+            "number": 1,
+            "tier": "c1-1",
+            "seed": 2611001,
+            "width": 3,
+            "height": 3,
+            "minMoves": 1,
+            "path": 3,
+            "cells": "C1 E3 C0/C3 C2 I1/I2 S0 I0"
+        },
+        {
+            "number": 2,
+            "tier": "c1-2",
+            "seed": 2611002,
+            "width": 3,
+            "height": 3,
+            "minMoves": 2,
+            "path": 3,
+            "cells": "E2 I3 C3/I3 C3 C1/C0 I2 S3"
+        },
+        {
+            "number": 3,
+            "tier": "c1-3",
+            "seed": 2611003,
+            "width": 3,
+            "height": 3,
+            "minMoves": 3,
+            "path": 3,
+            "cells": "C1 S2 I3/E2 I2 C0/C1 C3 I1"
+        },
+        {
+            "number": 4,
+            "tier": "c1-4",
+            "seed": 2611004,
+            "width": 4,
+            "height": 4,
+            "minMoves": 3,
+            "path": 4,
+            "cells": "I3 I3 C3 C0/I0 C1 C3 I1/C3 I3 E3 I3/C3 I3 S3 C3"
+        },
+        {
+            "number": 5,
+            "tier": "c1-4",
+            "seed": 2611005,
+            "width": 4,
+            "height": 4,
+            "minMoves": 3,
+            "path": 6,
+            "cells": "I3 C2 I1 I3/C1 I3 C0 I3/C3 C2 I0 I2/C0 E0 S0 I2"
+        },
+        {
+            "number": 6,
+            "tier": "c1-5",
+            "seed": 2611006,
+            "width": 4,
+            "height": 4,
+            "minMoves": 5,
+            "path": 5,
+            "cells": "C0 I2 I0 C1/C3 S3 C3 E0/I0 C1 C2 C1/C3 I2 I3 I2"
+        },
+        {
+            "number": 7,
+            "tier": "c1-5",
+            "seed": 2611007,
+            "width": 4,
+            "height": 4,
+            "minMoves": 6,
+            "path": 7,
+            "cells": "I2 I2 I2 I0/C3 E1 C0 S2/C0 C0 C3 I1/I0 C3 I3 C2"
+        },
+        {
+            "number": 8,
+            "tier": "c1-6",
+            "seed": 2611008,
+            "width": 5,
+            "height": 5,
+            "minMoves": 7,
+            "path": 11,
+            "cells": "C0 I0 C2 I1 C1/I3 C2 C2 C3 I2/T0 E0 C0 T0 C0/C1 I1 S3 I2 I0/C3 I0 I2 C3 I1"
+        },
+        {
+            "number": 9,
+            "tier": "c1-7",
+            "seed": 2611009,
+            "width": 5,
+            "height": 5,
+            "minMoves": 8,
+            "path": 9,
+            "cells": "C0 I0 I3 I2 C2/S0 C3 C1 I3 I1/I0 C0 C1 C0 T0/T3 C3 C2 C0 C0/I0 I1 C2 E0 I3"
+        },
+        {
+            "number": 10,
+            "tier": "c1-8",
+            "seed": 2611010,
+            "width": 5,
+            "height": 5,
+            "minMoves": 9,
+            "path": 10,
+            "cells": "T1 I3 C3 I1 I3/C1 C2 I3 I0 I0/C1 C3 I3 I3 C2/S0 I3 T3 C0 C2/I3 I3 E0 T1 C2"
+        }
+    ]
+}

@@ -12,7 +12,8 @@ namespace ResolverMaster.Core.UI.Screens
         public RectTransform TopBar;
         public RectTransform Body;
 
-        public static ScreenLayout Create<T>(AppServices ctx, Transform parent, string name) where T : UiScreen
+        /// <param name="bodyColumn">False: the body is a plain stretched rect (the game screen places its own areas).</param>
+        public static ScreenLayout Create<T>(AppServices ctx, Transform parent, string name, bool bodyColumn = true) where T : UiScreen
         {
             var ui = ctx.Ui;
             var s = ctx.Style;
@@ -34,7 +35,7 @@ namespace ResolverMaster.Core.UI.Screens
 
             layout.Body = ui.Rect("Body", safe);
             UiFactory.Stretch(layout.Body, 0, 0, 0, s.topBarHeight);
-            ui.Column(layout.Body, s.spacing, new RectOffset((int)s.screenPadding, (int)s.screenPadding, 8, (int)s.screenPadding));
+            if (bodyColumn) ui.Column(layout.Body, s.spacing, new RectOffset((int)s.screenPadding, (int)s.screenPadding, 8, (int)s.screenPadding));
             return layout;
         }
 

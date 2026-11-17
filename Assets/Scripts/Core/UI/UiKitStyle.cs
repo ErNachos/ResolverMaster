@@ -52,6 +52,21 @@ namespace ResolverMaster.Core.UI
         public float rowIconSize = 64;
         public float badgeHeight = 64;
 
+        [Header("Puzzle screens (level choice, game, win panel)")]
+        public float bottomBarHeight = 208;
+        public float gameButtonSize = 144;
+        public float gameIconSize = 80;
+        public float gameButtonGap = 72;
+        public int levelColumns = 5;
+        public Vector2 levelButtonSize = new Vector2(176, 208);
+        public float levelGridSpacing = 24;
+        public float levelStarSize = 40;
+        public float winPanelWidth = 900;
+        public float winStarSize = 150;
+        public Color starOn = Hex(0xFFC23D);
+        public Color starOff = Hex(0xD5DCE8);
+        public Color dim = new Color(0.07f, 0.1f, 0.18f, 0.55f);
+
         [Header("Text sizes")]
         public int titleSize = 84;
         public int headerSize = 60;
@@ -63,6 +78,10 @@ namespace ResolverMaster.Core.UI
         public float screenFade = 0.18f;
         public float buttonPress = 0.08f;
         public float messageFade = 0.25f;
+        public float winPanelFade = 0.2f;
+        /// <summary>Each earned star pops in (scale 0 -> 1.15 -> 1) in this time, one after the other.</summary>
+        public float starPop = 0.28f;
+        public float starStagger = 0.16f;
 
         [Header("Fonts (Assets/Art/Fonts)")]
         public Font fontRegular;

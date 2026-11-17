@@ -33,6 +33,8 @@ namespace ResolverMaster.Core.App
             manager.Register(HomeScreen.Create(ctx, root));
             manager.Register(ModeSelectScreen.Create(ctx, root));
             manager.Register(SettingsScreen.Create(ctx, root));
+            manager.Register(LevelSelectScreen.Create(ctx, root));
+            manager.Register(GameScreen.Create(ctx, root));
             manager.ShowRoot(ScreenIds.Home);
             return manager;
         }

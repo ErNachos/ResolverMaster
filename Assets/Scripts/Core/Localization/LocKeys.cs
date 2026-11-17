@@ -25,6 +25,19 @@ namespace ResolverMaster.Core.Localization
         public const string CommonOn = "common.on";
         public const string CommonOff = "common.off";
 
+        /// <summary>"Chapter {0}".</summary>
+        public const string LevelsChapter = "levels.chapter";
+        /// <summary>"Level {0}".</summary>
+        public const string GameLevel = "game.level";
+        /// <summary>"Moves {0} · min {1}".</summary>
+        public const string GameMoves = "game.moves";
+        public const string WinTitle = "win.title";
+        /// <summary>"Moves: {0}   Minimum: {1}".</summary>
+        public const string WinMoves = "win.moves";
+        public const string WinRetry = "win.retry";
+        public const string WinNext = "win.next";
+        public const string WinLevels = "win.levels";
+
         /// <summary>Language display name key: "language.it", "language.en".</summary>
         public static string LanguageName(Language language) => "language." + LanguageCodes.ToCode(language);
     }

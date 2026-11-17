@@ -2,7 +2,8 @@
     "name": "ResolverMaster.Games",
     "rootNamespace": "ResolverMaster.Games",
     "references": [
-        "ResolverMaster.Core"
+        "ResolverMaster.Core",
+        "UnityEngine.UI"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
