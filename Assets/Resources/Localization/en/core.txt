@@ -1,0 +1,22 @@
+# Resolver Master - Core texts (English). Format: key = value. Keys are listed in Scripts/Core/Localization/LocKeys.cs
+app.title = Resolver Master
+home.choose = Pick a puzzle
+game.status.coming_soon = Coming soon
+game.status.available = Play
+
+mode.title = Choose a mode
+mode.story = Story
+mode.story.desc = Levels in chapters, up to 3 stars
+mode.challenge = Challenge
+mode.challenge.desc = Ever harder levels, limited moves
+mode.placeholder = This mode is coming in a future update.
+
+settings.title = Settings
+settings.language = Language
+settings.sound = Sound
+settings.vibration = Vibration
+common.on = On
+common.off = Off
+
+language.it = Italiano
+language.en = English

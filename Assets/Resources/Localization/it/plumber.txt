@@ -1,0 +1,2 @@
+# Plumber minigame texts (Italian)
+game.plumber.name = Idraulico

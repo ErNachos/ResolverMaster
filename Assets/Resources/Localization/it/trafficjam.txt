@@ -1,0 +1,2 @@
+# Traffic jam minigame texts (Italian)
+game.trafficjam.name = Traffic jam

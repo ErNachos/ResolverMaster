@@ -1,0 +1,4 @@
+<linker>
+  <!-- Minigames are discovered by reflection (GameRegistry): keep every module type in the build. -->
+  <assembly fullname="ResolverMaster.Games" preserve="all" />
+</linker>

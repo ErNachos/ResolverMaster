@@ -1,0 +1,2 @@
+# Plumber minigame texts (English)
+game.plumber.name = Plumber

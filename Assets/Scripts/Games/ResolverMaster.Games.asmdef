@@ -1,0 +1,16 @@
+{
+    "name": "ResolverMaster.Games",
+    "rootNamespace": "ResolverMaster.Games",
+    "references": [
+        "ResolverMaster.Core"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

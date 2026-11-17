@@ -1,0 +1,22 @@
+# Resolver Master - Core texts (Italian). Format: key = value. Keys are listed in Scripts/Core/Localization/LocKeys.cs
+app.title = Resolver Master
+home.choose = Scegli un rompicapo
+game.status.coming_soon = Prossimamente
+game.status.available = Gioca
+
+mode.title = Scegli la modalità
+mode.story = Storia
+mode.story.desc = Livelli in capitoli, fino a 3 stelle
+mode.challenge = Challenge
+mode.challenge.desc = Livelli sempre più difficili, mosse contate
+mode.placeholder = Questa modalità arriverà in un prossimo aggiornamento.
+
+settings.title = Impostazioni
+settings.language = Lingua
+settings.sound = Suono
+settings.vibration = Vibrazione
+common.on = Sì
+common.off = No
+
+language.it = Italiano
+language.en = English

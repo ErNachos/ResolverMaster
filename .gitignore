@@ -1,0 +1,39 @@
+# Unity
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Ll]ogs/
+[Uu]ser[Ss]ettings/
+[Mm]emory[Cc]aptures/
+[Bb]uilds/
+Previews/
+*_BurstDebugInformation_DoNotShip/
+sysinfo.txt
+crashlytics-build.properties
+*.csproj
+*.sln
+*.slnx
+*.suo
+*.user
+*.pidb
+*.pdb
+*.mdb
+*.unitypackage
+*.apk
+*.aab
+*.apk.sym
+# IDE / OS / tools
+.vs/
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+__pycache__/
+Tools/Art/.cache/
+unity_*.log
+# Signing secrets: never in the repository (the keystore lives outside the project)
+*.keystore
+*.jks
+*.p12
+*.pepk
+keystore.properties
