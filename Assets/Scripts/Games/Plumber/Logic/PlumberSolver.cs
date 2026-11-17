@@ -11,6 +11,8 @@ namespace ResolverMaster.Games.Plumber
         public int PathLength;
         /// <summary>T pieces among those pipe cells.</summary>
         public int TeesOnPath;
+        /// <summary>Bridges with water in both channels in the optimal solution found (ErNa-006).</summary>
+        public int BridgesCrossed;
         /// <summary>Why the level is not solvable (null when solvable).</summary>
         public string Reason;
         /// <summary>Wet pipe cells of the solution, in water order (propagation step, then cell index).</summary>
@@ -24,6 +26,8 @@ namespace ResolverMaster.Games.Plumber
     }
 
     /// <summary>
+    /// Bridges (ErNa-006) are two separate nodes (<see cref="PipeNodes"/>), each wet straight through or dry, never turned;
+    /// locked pieces and crosses keep their orientation.
     /// Exact minimum-taps solver for the ErNa-003 rules (no leaks, colors apart, every sink fed by its own color).
     /// A solution is a set of wet cells W with orientations such that every opening of a cell in W faces a cell of W opening back
     /// (W is a closed pipe network), each connected part of W holds one color, and each part with a sink also holds a source.
@@ -45,6 +49,8 @@ namespace ResolverMaster.Games.Plumber
         {
             /// <summary>T pieces may not join the water network (chapter 1 check: the T must never be needed).</summary>
             public bool ForbidTees;
+            /// <summary>Every bridge is solved as a cross, which mixes (ErNa-006: a level "needs" its bridge when it is then unsolvable).</summary>
+            public bool BridgesAsCrosses;
             public int MaxExpansions = DefaultMaxExpansions;
         }
 
@@ -70,37 +76,60 @@ namespace ResolverMaster.Games.Plumber
         {
             options ??= new Options();
             var result = new PlumberSolution();
+            if (options.BridgesAsCrosses)
+            {
+                grid = grid.Clone();
+                for (int c = 0; c < grid.CellCount; c++)
+                    if (grid.Pieces[c].Kind == PieceKind.Bridge) grid.Pieces[c].Kind = PieceKind.Cross;
+            }
             var topo = grid.Topology;
             int n = grid.CellCount;
             int dirs = topo.DirectionCount;
             if (n > MaxCells) return Fail(result, $"grid larger than {MaxCells} cells");
+            // the search runs on the nodes of PipeNodes: one per cell, plus the east-west channel of every bridge
+            int nodes = PipeNodes.Count(grid);
 
             var s = new Search
             {
-                N = n,
+                N = nodes,
                 Dirs = dirs,
-                Nb = new int[n * dirs],
+                Nb = new int[nodes * dirs],
                 Opp = new int[dirs],
-                OptMask = new int[n][],
-                OptCost = new int[n][],
-                Mask = new int[n],
-                Color = new int[n],
-                Chosen = new int[n],
-                IsSource = new bool[n],
+                OptMask = new int[nodes][],
+                OptCost = new int[nodes][],
+                Mask = new int[nodes],
+                Color = new int[nodes],
+                Chosen = new int[nodes],
+                IsSource = new bool[nodes],
                 MaxExpansions = options.MaxExpansions,
-                Req = new int[n],
-                Forb = new int[n],
-                DemandColor = new int[n],
+                Req = new int[nodes],
+                Forb = new int[nodes],
+                DemandColor = new int[nodes],
             };
             for (int d = 0; d < dirs; d++) s.Opp[d] = topo.Opposite(d);
             int sources = 0, sinks = 0;
-            for (int c = 0; c < n; c++)
+            for (int c = 0; c < nodes; c++)
             {
-                for (int d = 0; d < dirs; d++) s.Nb[c * dirs + d] = topo.Neighbor(c, d);
-                var piece = grid.Pieces[c];
                 s.Mask[c] = -1;
                 s.Chosen[c] = -1;
                 s.Color[c] = -1;
+                // a bridge channel only links to the neighbours on its own axis; the unused upper nodes link to nothing
+                int channel = PipeNodes.Openings(grid, c);
+                bool bridgeNode = grid.Pieces[PipeNodes.CellOf(grid, c)].Kind == PieceKind.Bridge;
+                for (int d = 0; d < dirs; d++)
+                    s.Nb[c * dirs + d] = c >= n && !bridgeNode ? -1 : bridgeNode && (channel & (1 << d)) == 0 ? -1 : PipeNodes.Neighbor(grid, c, d);
+                if (bridgeNode)
+                {
+                    s.OptMask[c] = new[] { channel };   // a bridge never turns: each channel is wet straight through, or dry
+                    s.OptCost[c] = new[] { 0 };
+                    continue;
+                }
+                if (c >= n)
+                {
+                    s.OptMask[c] = s.OptCost[c] = System.Array.Empty<int>();
+                    continue;
+                }
+                var piece = grid.Pieces[c];
                 if (piece.Kind == PieceKind.Source || piece.Kind == PieceKind.Sink)
                 {
                     s.Mask[c] = grid.Openings(c);
@@ -113,10 +142,10 @@ namespace ResolverMaster.Games.Plumber
                 }
                 var masks = new List<int>();
                 var costs = new List<int>();
-                bool allowed = PieceShapes.IsRotatableKind(piece.Kind) && !(options.ForbidTees && piece.Kind == PieceKind.Tee);
+                bool allowed = PieceShapes.IsPipeKind(piece.Kind) && !(options.ForbidTees && piece.Kind == PieceKind.Tee);
                 if (allowed)
                 {
-                    int choices = piece.Locked ? 1 : topo.RotationSteps;
+                    int choices = piece.IsRotatable ? topo.RotationSteps : 1;   // locked pieces, crosses: as they are
                     int baseMask = PieceShapes.BaseMask(piece.Kind);
                     for (int k = 0; k < choices; k++)
                     {
@@ -173,7 +202,7 @@ namespace ResolverMaster.Games.Plumber
             var taps = new int[n];
             for (int c = 0; c < n; c++)
             {
-                if (s.Chosen[c] < 0) continue;
+                if (s.Chosen[c] < 0 || grid.Pieces[c].Kind == PieceKind.Bridge) continue;
                 taps[c] = s.OptCost[c][s.Chosen[c]];
                 solved.Rotate(c, taps[c]);
                 result.MinMoves += taps[c];
@@ -181,7 +210,10 @@ namespace ResolverMaster.Games.Plumber
             var water = WaterFlow.Compute(solved);
             var order = new List<int>();
             for (int c = 0; c < n; c++)
-                if (s.Chosen[c] >= 0) order.Add(c);
+            {
+                if (s.Chosen[c] >= 0 || s.Chosen[n + c] >= 0) order.Add(c);
+                if (s.Chosen[c] >= 0 && s.Chosen[n + c] >= 0) result.BridgesCrossed++;
+            }
             order.Sort((a, b) => water.Step[a] != water.Step[b] ? water.Step[a].CompareTo(water.Step[b]) : a.CompareTo(b));
             foreach (int c in order)
             {

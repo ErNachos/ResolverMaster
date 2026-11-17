@@ -7,7 +7,8 @@ namespace ResolverMaster.Games.Plumber
     /// <summary>
     /// One stretch of pipe inside a cell that the water runs along (ErNa-005, continuous water):
     /// an arm from the centre of the cell to one of its openings (straight, T, cross, source, sink: two arms make a straight line),
-    /// or the quarter arc of a curve between its two openings. Both ends are nodes of the <see cref="WaterTiming"/> graph.
+    /// or the quarter arc of a curve between its two openings, or (ErNa-006) one channel of a bridge, straight from side to side
+    /// without a centre (<see cref="Through"/>). Both ends are nodes of the <see cref="WaterTiming"/> graph.
     /// </summary>
     public readonly struct WaterPart
     {
@@ -18,8 +19,11 @@ namespace ResolverMaster.Games.Plumber
         public readonly int DirA;
         public readonly int DirB;
         public readonly int NodeA, NodeB;
-        /// <summary>In cells: an arm 0.5, a curve a quarter of a circle of radius 0.5 (pi/4).</summary>
+        /// <summary>In cells: an arm 0.5, a curve a quarter of a circle of radius 0.5 (pi/4), a bridge channel 1.</summary>
         public readonly float Length;
+
+        /// <summary>A bridge channel: straight from opening <see cref="DirA"/> to the opposite one <see cref="DirB"/>.</summary>
+        public bool Through => !Arc && DirA >= 0;
 
         public WaterPart(int cell, bool arc, int dirA, int dirB, int nodeA, int nodeB, float length)
         {
@@ -83,6 +87,7 @@ namespace ResolverMaster.Games.Plumber
     public sealed class WaterTiming
     {
         public const float ArmLength = 0.5f;
+        public const float ThroughLength = 1f;
         public static readonly float ArcLength = (float)(Math.PI / 4.0);
 
         const float Unreached = float.PositiveInfinity;
@@ -173,6 +178,14 @@ namespace ResolverMaster.Games.Plumber
                 var kind = grid.Pieces[c].Kind;
                 if (kind == PieceKind.Empty) continue;
                 int open = grid.Openings(c);
+                if (kind == PieceKind.Bridge)
+                {
+                    // two separate channels, no shared centre: the flows never meet
+                    const int up = SquareTopology.Up, down = SquareTopology.Down, left = SquareTopology.Left, right = SquareTopology.Right;
+                    t._parts[c].Add(new WaterPart(c, false, up, down, t._port[c * 4 + up], t._port[c * 4 + down], ThroughLength));
+                    t._parts[c].Add(new WaterPart(c, false, left, right, t._port[c * 4 + left], t._port[c * 4 + right], ThroughLength));
+                    continue;
+                }
                 if (kind == PieceKind.Curve)
                 {
                     int a = -1, b = -1;

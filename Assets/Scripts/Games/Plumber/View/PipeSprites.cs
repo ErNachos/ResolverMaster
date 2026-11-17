@@ -27,12 +27,19 @@ namespace ResolverMaster.Games.Plumber.View
         public Sprite Drop { get; private set; }
         /// <summary>Soft black ellipse fading to transparent (shadow under the fountain drawings).</summary>
         public Sprite Shadow { get; private set; }
+        /// <summary>
+        /// ErNa-006: the upper pipe of a bridge (north-south, whole, with a flange on each side of the lower pipe) and the soft shadow it
+        /// casts on the lower one. Drawn above the water of the lower pipe; the lower pipe is <see cref="Get"/>(Bridge), east-west.
+        /// </summary>
+        public Sprite BridgeTop { get; private set; }
+        /// <summary>ErNa-006: dark plate with 4 bolts drawn under a locked piece (not tinted).</summary>
+        public Sprite LockPlate { get; private set; }
 
         public Sprite Get(PieceKind kind) => _pieces.TryGetValue(kind, out var s) ? s : null;
 
         public static PipeSprites For(PlumberConfig cfg)
         {
-            string key = string.Join("|", cfg.spriteSize, cfg.PipeWidth, cfg.pipeOutline, cfg.pipeShading, cfg.tileMargin);
+            string key = string.Join("|", cfg.spriteSize, cfg.PipeWidth, cfg.pipeOutline, cfg.pipeShading, cfg.tileMargin, cfg.bridgeShadowAlpha, cfg.lockPlateColor, cfg.lockBoltColor);
             if (s_cache.TryGetValue(key, out var cached) && cached.IsAlive) return cached;
             var sprites = new PipeSprites();
             sprites.Generate(cfg);
@@ -41,7 +48,7 @@ namespace ResolverMaster.Games.Plumber.View
         }
 
         /// <summary>False after the textures were destroyed (e.g. editor domain/scene changes): regenerate.</summary>
-        bool IsAlive => Tile != null && Disk != null && Drop != null && Shadow != null && _pieces.Count > 0 && AllAlive();
+        bool IsAlive => Tile != null && Disk != null && Drop != null && Shadow != null && BridgeTop != null && LockPlate != null && _pieces.Count > 0 && AllAlive();
 
         bool AllAlive()
         {
@@ -71,6 +78,8 @@ namespace ResolverMaster.Games.Plumber.View
                 // source and sink: only the stub from the centre to the opening (the drawing covers the centre)
                 [PieceKind.Source] = p => Seg(p, c, up) - w,
                 [PieceKind.Sink] = p => Seg(p, c, up) - w,
+                // bridge: the lower pipe, east-west (the upper one is BridgeTop)
+                [PieceKind.Bridge] = p => Mathf.Min(Seg(p, c, left), Seg(p, c, right)) - w,
             };
             foreach (var kv in shapes)
                 _pieces[kv.Key] = MakePipe("pipe_" + kv.Key.ToString().ToLowerInvariant(), size, kv.Value, w, cfg.pipeOutline, cfg.pipeShading);
@@ -93,6 +102,94 @@ namespace ResolverMaster.Games.Plumber.View
                 return Mathf.Min(circle, cone);
             }, (d, px) => Mathf.Lerp(Ink, 1f, Mathf.Clamp01((-d - 0.08f) / px + 0.5f)));
             Shadow = MakeShadow("pipe_shadow", size / 2);
+            BridgeTop = MakeBridgeTop("pipe_bridge_top", size, w, cfg.pipeOutline, cfg.pipeShading, cfg.bridgeShadowAlpha);
+            LockPlate = MakeLockPlate("pipe_lock_plate", size, cfg.tileMargin, cfg.lockPlateColor, cfg.lockBoltColor);
+        }
+
+        /// <summary>
+        /// The upper pipe of a bridge: north-south, a bit wider than a normal pipe, with a flange where it passes over each side of the
+        /// lower pipe, over a soft shadow on the lower pipe (black, partly transparent: the grey tint of the pipes does not change it).
+        /// </summary>
+        static Sprite MakeBridgeTop(string name, int size, float w, float outline, float shading, float shadowAlpha)
+        {
+            var tex = NewTexture(name, size);
+            var px = new Color32[size * size];
+            float pixel = 1f / size;
+            float wt = w * 1.08f;                       // the upper pipe
+            float fx = wt + 0.075f, fy = 0.042f;        // flange half sizes
+            float fc = w + fy + 0.012f;                 // flange centre, just outside the lower pipe
+            var c = new Vector2(0.5f, 0.5f);
+            for (int y = 0; y < size; y++)
+            for (int x = 0; x < size; x++)
+            {
+                var p = new Vector2((x + 0.5f) * pixel, (y + 0.5f) * pixel);
+                float d = Mathf.Min(Seg(p, new Vector2(0.5f, -0.05f), new Vector2(0.5f, 1.05f)) - wt, Mathf.Min(Box(p, new Vector2(0.5f, 0.5f + fc), fx, fy), Box(p, new Vector2(0.5f, 0.5f - fc), fx, fy)));
+                float aPipe = Mathf.Clamp01(0.5f - d / pixel);
+                float depth = Mathf.Clamp01((-d - outline) / Mathf.Max(0.001f, wt - outline));
+                float body = shading > 0f ? Mathf.Lerp(1f - shading, 1f, Mathf.Sqrt(depth)) : 1f;
+                float grey = Mathf.Lerp(Ink, body, Mathf.Clamp01((-d - outline) / pixel + 0.5f));
+                // shadow on the lower pipe, fading away from the upper one
+                float aShadow = 0f;
+                float side = Mathf.Abs(p.x - c.x) - fx;
+                if (Mathf.Abs(p.y - c.y) < w && side > -pixel) aShadow = shadowAlpha * Mathf.Clamp01(1f - side / 0.2f);
+                float a = aPipe + aShadow * (1f - aPipe);
+                if (a <= 0f)
+                {
+                    px[y * size + x] = new Color32(255, 255, 255, 0);
+                    continue;
+                }
+                float g = grey * aPipe / a;   // the shadow is black
+                byte gb = (byte)Mathf.RoundToInt(Mathf.Clamp01(g) * 255);
+                px[y * size + x] = new Color32(gb, gb, gb, (byte)Mathf.RoundToInt(a * 255));
+            }
+            return Finish(tex, px, name);
+        }
+
+        /// <summary>A dark rounded plate as big as the tile, a light rim and 4 bolts in the corners (locked pieces, ErNa-006).</summary>
+        static Sprite MakeLockPlate(string name, int size, float margin, Color plate, Color bolt)
+        {
+            var tex = NewTexture(name, size);
+            var px = new Color32[size * size];
+            float pixel = 1f / size, half = 0.5f - margin - 0.015f, r = 0.12f, b = 0.105f;
+            for (int y = 0; y < size; y++)
+            for (int x = 0; x < size; x++)
+            {
+                var p = new Vector2((x + 0.5f) * pixel, (y + 0.5f) * pixel);
+                float d = RoundBox(p, half, r);
+                float a = Mathf.Clamp01(0.5f - d / pixel);
+                if (a <= 0f)
+                {
+                    px[y * size + x] = new Color32(0, 0, 0, 0);
+                    continue;
+                }
+                // black outline, plate, slightly lighter towards the top-left
+                var col = Color.Lerp(plate * 0.75f, plate * 1.12f, (p.x + p.y) / 2f);
+                col = Color.Lerp(Color.black, col, Mathf.Clamp01((-d - 0.012f) / pixel + 0.5f));
+                // bolts: a disk with a dark rim and a slot
+                foreach (var bc in new[] { new Vector2(b + margin, b + margin), new Vector2(1 - b - margin, b + margin), new Vector2(b + margin, 1 - b - margin), new Vector2(1 - b - margin, 1 - b - margin) })
+                {
+                    float bd = (p - bc).magnitude - 0.042f;
+                    if (bd > pixel) continue;
+                    var bcol = Color.Lerp(bolt * 0.55f, bolt, Mathf.Clamp01((-bd - 0.01f) / pixel + 0.5f));
+                    if (Mathf.Abs((p - bc).x + (p - bc).y) < 0.008f && bd < -0.012f) bcol = bolt * 0.5f;   // the slot
+                    col = Color.Lerp(col, bcol, Mathf.Clamp01(0.5f - bd / pixel));
+                }
+                col.a = a;
+                px[y * size + x] = col;
+            }
+            return Finish(tex, px, name);
+        }
+
+        static float Box(Vector2 p, Vector2 centre, float hx, float hy)
+        {
+            float qx = Mathf.Abs(p.x - centre.x) - hx, qy = Mathf.Abs(p.y - centre.y) - hy;
+            return new Vector2(Mathf.Max(qx, 0), Mathf.Max(qy, 0)).magnitude + Mathf.Min(Mathf.Max(qx, qy), 0);
+        }
+
+        static float RoundBox(Vector2 p, float half, float r)
+        {
+            float qx = Mathf.Abs(p.x - 0.5f) - (half - r), qy = Mathf.Abs(p.y - 0.5f) - (half - r);
+            return new Vector2(Mathf.Max(qx, 0), Mathf.Max(qy, 0)).magnitude + Mathf.Min(Mathf.Max(qx, qy), 0) - r;
         }
 
         /// <summary>Body: thin black outline, flat inside, or (shading &gt; 0) lighter in the middle and darker towards both edges.</summary>

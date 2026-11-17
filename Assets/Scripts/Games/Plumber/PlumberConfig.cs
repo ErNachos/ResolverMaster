@@ -18,7 +18,7 @@ namespace ResolverMaster.Games.Plumber
         public const string ResourcesPath = "Games/Plumber/PlumberConfig";
 
         [Header("Colors")]
-        /// <summary>Multiplies the theme slab of a locked cell (future chapters).</summary>
+        /// <summary>Multiplies the theme slab of a locked cell (ErNa-006: the lock plate is drawn on it).</summary>
         public Color lockedTileColor = new Color32(0xC8, 0xC2, 0xB8, 0xFF);
         /// <summary>Every pipe is this grey (the black outline is drawn in the sprite); the water runs inside it.</summary>
         public Color pipeEmpty = new Color32(0xC2, 0xC6, 0xCF, 0xFF);
@@ -40,6 +40,9 @@ namespace ResolverMaster.Games.Plumber
         public float minWaterLightnessGap = 10f;
         /// <summary>Validator: smallest color difference (CIE76 delta E) between a water color and any UI, theme or chapter color.</summary>
         public float minUiWaterDeltaE = 20f;
+        /// <summary>ErNa-006: plate under a locked piece (dark, visible on every terrain) and its 4 bolts.</summary>
+        public Color lockPlateColor = new Color32(0x3E, 0x42, 0x4C, 0xFF);
+        public Color lockBoltColor = new Color32(0xD3, 0xD6, 0xDC, 0xFF);
         /// <summary>Failure highlight (mixed colors, wrong or dry fountain).</summary>
         public Color errorColor = new Color32(0xE5, 0x48, 0x4D, 0xFF);
 
@@ -56,6 +59,8 @@ namespace ResolverMaster.Games.Plumber
         /// <summary>The water inside a pipe: fraction of the inner width of the pipe.</summary>
         [Range(0.3f, 1f)] public float waterWidth = 0.78f;
         [Range(0f, 0.2f)] public float tileMargin = 0.035f;
+        /// <summary>ErNa-006: how dark the shadow of the upper pipe of a bridge is on the lower one.</summary>
+        [Range(0f, 1f)] public float bridgeShadowAlpha = 0.45f;
         /// <summary>Side of a source or fountain drawing (it never rotates; the pipe stub under it shows the opening).</summary>
         [Range(0.3f, 1f)] public float endpointSize = 0.78f;
         /// <summary>The drawing is moved up by this: its base sits on the pipe, so the stub enters from under the object.</summary>
@@ -103,6 +108,10 @@ namespace ResolverMaster.Games.Plumber
 
         [Header("Animation (seconds)")]
         public float rotateDuration = 0.12f;
+        /// <summary>ErNa-006: a tap on a piece that cannot turn (cross, bridge, locked) shakes it: seconds, width (fraction of a cell), swings.</summary>
+        public float shakeDuration = 0.28f;
+        [Range(0f, 0.3f)] public float shakeAmplitude = 0.06f;
+        public int shakeCycles = 3;
         /// <summary>A fountain fills up gradually once the water reaches it.</summary>
         public float fountainFill = 0.45f;
         /// <summary>Water splashing out of the fountains at the end of a successful opening.</summary>

@@ -123,14 +123,18 @@ namespace ResolverMaster.Games.Plumber.View
             var fill = _ui.Image("Fill", halo.transform, _sprites.Disk, _cfg.WaterColor(0));
             fill.gameObject.AddComponent<Decoration>();
             UiFactory.Place(fill.rectTransform, 0.5f, 0.5f, Vector2.zero, Vector2.zero);
+            var plate = _ui.Image("LockPlate", tile.transform, _sprites.LockPlate, Color.white);
+            plate.gameObject.AddComponent<Decoration>();   // under the pipe on purpose
+            UiFactory.Stretch(plate.rectTransform);
+            plate.gameObject.SetActive(false);
             var pipe = _ui.Image("Pipe", tile.transform, null, _cfg.pipeEmpty);
             UiFactory.Stretch(pipe.rectTransform);
-            var waterGo = _ui.Rect("Water", tile.transform).gameObject;
-            waterGo.AddComponent<CanvasRenderer>();   // added first: the Graphic needs it to be drawn
-            var water = waterGo.AddComponent<WaterGraphic>();
-            water.raycastTarget = false;
-            UiFactory.Stretch(water.rectTransform);
-            water.gameObject.AddComponent<Decoration>();   // runs inside the pipe on purpose
+            var water = NewWater("Water", tile.transform);
+            var pipeTop = _ui.Image("PipeTop", tile.transform, _sprites.BridgeTop, _cfg.pipeEmpty);
+            pipeTop.gameObject.AddComponent<Decoration>();   // the upper pipe of a bridge, over the lower one on purpose
+            UiFactory.Stretch(pipeTop.rectTransform);
+            pipeTop.gameObject.SetActive(false);
+            var waterTop = NewWater("WaterTop", tile.transform);
             var shadow = _ui.Image("Shadow", tile.transform, _sprites.Shadow, new Color(0, 0, 0, _cfg.shadowAlpha));
             shadow.gameObject.AddComponent<Decoration>();
             var srt = shadow.rectTransform;
@@ -150,6 +154,9 @@ namespace ResolverMaster.Games.Plumber.View
             view.Tile = tile;
             view.Pipe = pipe;
             view.Water = water;
+            view.Plate = plate;
+            view.PipeTop = pipeTop;
+            view.WaterTop = waterTop;
             view.Halo = halo;
             view.Fill = fill;
             view.Shadow = shadow;
@@ -158,6 +165,20 @@ namespace ResolverMaster.Games.Plumber.View
             view.Tapped = OnTap;
             return view;
         }
+
+        WaterGraphic NewWater(string name, Transform parent)
+        {
+            var go = _ui.Rect(name, parent).gameObject;
+            go.AddComponent<CanvasRenderer>();   // added first: the Graphic needs it to be drawn
+            var water = go.AddComponent<WaterGraphic>();
+            water.raycastTarget = false;
+            UiFactory.Stretch(water.rectTransform);
+            go.AddComponent<Decoration>();   // runs inside the pipe on purpose
+            return water;
+        }
+
+        /// <summary>Visual quarter turns of a cell: a bridge is always drawn north-south over east-west (ErNa-006).</summary>
+        int ViewSteps(PipeGrid grid, int cell) => grid.Pieces[cell].Kind == PieceKind.Bridge ? 0 : grid.Pieces[cell].Rotation;
 
         static void SetAnchors(RectTransform rt, float halfSize, float lift)
         {
@@ -173,7 +194,13 @@ namespace ResolverMaster.Games.Plumber.View
             if (request.Mode != GameMode.Story) throw new NotSupportedException("Plumber Challenge comes in a later Update");
             var levels = _module.StoryLevels;
             if (levels.Count == 0) throw new InvalidOperationException("no Plumber Story levels");
-            _puzzle.Load(levels[Mathf.Clamp(request.Index, 0, levels.Count - 1)]);
+            LoadLevel(levels[Mathf.Clamp(request.Index, 0, levels.Count - 1)]);
+        }
+
+        /// <summary>Plays any level (Story, Challenge, or a hand-made one for the previews).</summary>
+        public void LoadLevel(PlumberLevel level)
+        {
+            _puzzle.Load(level);
             _water = null;
             _timing = null;
             BuildCells();
@@ -214,8 +241,13 @@ namespace ResolverMaster.Games.Plumber.View
                 v.TileColor = piece.Locked ? _cfg.lockedTileColor : Color.white;
                 v.Pipe.sprite = _sprites.Get(piece.Kind);
                 v.Pipe.enabled = piece.Kind != PieceKind.Empty;
+                v.Plate.gameObject.SetActive(piece.Locked && piece.Kind != PieceKind.Empty);
+                v.PipeTop.gameObject.SetActive(piece.Kind == PieceKind.Bridge);
+                v.StopShake();
                 v.Water.SetWidth(waterWidth);
                 v.Water.Clear();
+                v.WaterTop.SetWidth(waterWidth);
+                v.WaterTop.Clear();
                 v.Halo.gameObject.SetActive(piece.Kind == PieceKind.Sink);
                 v.Halo.color = _cfg.SinkHaloColor(piece.Color);
 
@@ -292,7 +324,11 @@ namespace ResolverMaster.Games.Plumber.View
         {
             var grid = _puzzle.Grid;
             if (grid == null) return;
-            for (int c = 0; c < _views.Count; c++) _views[c].SnapRotation(grid.Pieces[c].Rotation);
+            for (int c = 0; c < _views.Count; c++)
+            {
+                _views[c].SnapRotation(ViewSteps(grid, c));
+                _views[c].StopShake();
+            }
             if ((_phase == Phase.Flowing || _phase == Phase.Spraying || _phase == Phase.Won) && _water != null && _water.Success)
             {
                 ShowFlow(float.MaxValue);
@@ -304,7 +340,7 @@ namespace ResolverMaster.Games.Plumber.View
             {
                 _puzzle.Restart();
                 _phase = Phase.Playing;
-                for (int c = 0; c < _views.Count; c++) _views[c].SnapRotation(grid.Pieces[c].Rotation);
+                for (int c = 0; c < _views.Count; c++) _views[c].SnapRotation(ViewSteps(grid, c));
             }
             if (_phase == Phase.Playing) ShowDry();
         }
@@ -334,7 +370,7 @@ namespace ResolverMaster.Games.Plumber.View
                     }
                     break;
             }
-            for (int c = 0; c < _views.Count; c++) _views[c].SnapRotation(_puzzle.Grid.Pieces[c].Rotation);
+            for (int c = 0; c < _views.Count; c++) _views[c].SnapRotation(ViewSteps(_puzzle.Grid, c));
             ShowDry();
             if (state == BoardPreview.ActionFlowing)
             {
@@ -375,7 +411,13 @@ namespace ResolverMaster.Games.Plumber.View
 
         void OnTap(int cell)
         {
-            if (_phase != Phase.Playing || !_puzzle.ApplyMove(cell)) return;
+            if (_phase != Phase.Playing) return;
+            if (!_puzzle.ApplyMove(cell))
+            {
+                // a cross, a bridge or a locked piece: a shake, not a move (ErNa-006)
+                if (_puzzle.Grid.Pieces[cell].IsPipe) _views[cell].StartShake();
+                return;
+            }
             _views[cell].AddSteps(1);
             RaiseChanged();
         }
@@ -384,7 +426,7 @@ namespace ResolverMaster.Games.Plumber.View
         public override void RunMainAction()
         {
             if (_phase != Phase.Playing || _puzzle.Grid == null) return;
-            for (int c = 0; c < _views.Count; c++) _views[c].SnapRotation(_puzzle.Grid.Pieces[c].Rotation);
+            for (int c = 0; c < _views.Count; c++) _views[c].SnapRotation(ViewSteps(_puzzle.Grid, c));
             OpenWater();
             RaiseChanged();
         }
@@ -416,11 +458,18 @@ namespace ResolverMaster.Games.Plumber.View
             {
                 var wg = _views[c].Water;
                 wg.Clear();
+                _views[c].WaterTop.Clear();
                 foreach (var p in _timing.Parts(c))
                 {
                     var ca = ColorOf(p.NodeA);
                     var cb = ColorOf(p.NodeB);
-                    if (p.Arc) wg.AddArc(p.DirA, p.DirB, _timing.NodeDistance(p.NodeA), _timing.NodeDistance(p.NodeB), ca, cb);
+                    if (p.Through)
+                    {
+                        // a bridge: the north-south water runs above the upper pipe, the east-west one under it
+                        var target = PieceShapes.IsVertical(p.DirA) ? _views[c].WaterTop : wg;
+                        target.AddThrough(p.DirA, p.DirB, _timing.NodeDistance(p.NodeA), _timing.NodeDistance(p.NodeB), ca, cb);
+                    }
+                    else if (p.Arc) wg.AddArc(p.DirA, p.DirB, _timing.NodeDistance(p.NodeA), _timing.NodeDistance(p.NodeB), ca, cb);
                     else
                     {
                         wg.AddArm(p.DirB, _timing.NodeDistance(p.NodeA), _timing.NodeDistance(p.NodeB), ca, cb);
@@ -442,7 +491,11 @@ namespace ResolverMaster.Games.Plumber.View
         {
             if (_puzzle.Grid == null) return;
             float dt = Time.unscaledDeltaTime;
-            foreach (var v in _views) v.TickRotation(dt, _cfg.rotateDuration);
+            foreach (var v in _views)
+            {
+                v.TickRotation(dt, _cfg.rotateDuration);
+                v.TickShake(dt, _cfg.shakeDuration, _cfg.shakeAmplitude, _cfg.shakeCycles);
+            }
             switch (_phase)
             {
                 case Phase.Flowing:
@@ -506,6 +559,7 @@ namespace ResolverMaster.Games.Plumber.View
             {
                 var v = _views[c];
                 v.Water.SetFront(-1f);
+                v.WaterTop.SetFront(-1f);
                 v.Tile.color = v.TileColor;
                 v.Fill.rectTransform.sizeDelta = Vector2.zero;
                 v.Fill.gameObject.SetActive(false);
@@ -520,7 +574,11 @@ namespace ResolverMaster.Games.Plumber.View
             if (_timing == null) return;
             seconds = Mathf.Min(seconds, _flowEnd);
             float front = _water.Success ? _motion.DistanceAt(seconds) : Mathf.Min(_motion.DistanceAt(seconds), _timing.StopDistance);
-            foreach (var v in _views) v.Water.SetFront(front);
+            foreach (var v in _views)
+            {
+                v.Water.SetFront(front);
+                v.WaterTop.SetFront(front);
+            }
             foreach (int s in _sinks)
             {
                 var v = _views[s];

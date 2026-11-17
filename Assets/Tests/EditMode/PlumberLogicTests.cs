@@ -332,6 +332,75 @@ namespace ResolverMaster.Tests
             Assert.IsTrue(WaterFlow.Compute(g).Success);
         }
 
+        // ErNa-006
+        [Test]
+        public void Bridge_TwoColorsCrossWithoutMixing_ACrossInItsPlaceMixes()
+        {
+            //     v          blue from the top runs down through the bridge into the blue fountain below;
+            // o>  B  <o      orange runs east-west through the same bridge into the orange fountain
+            //     ^
+            var grid = PlumberLevelCodec.Parse(". S2 ./S1@1 B0 E3@1/. E0 .");
+            var water = WaterFlow.Compute(grid);
+            Assert.IsTrue(water.Success, string.Join(", ", water.Problems));
+            const int bridge = 4;
+            Assert.AreEqual(0, water.NodeColor[bridge], "north-south channel: blue");
+            Assert.AreEqual(1, water.NodeColor[grid.CellCount + bridge], "east-west channel: orange");
+            Assert.AreEqual(0, water.Color[7], "the blue fountain gets blue");
+
+            // the solver uses both channels; solved as a cross the level is impossible (the bridge is needed)
+            var sol = PlumberSolver.Solve(grid);
+            Assert.IsTrue(sol.Solvable);
+            Assert.AreEqual(0, sol.MinMoves);
+            Assert.AreEqual(1, sol.BridgesCrossed);
+            Assert.IsFalse(PlumberSolver.Solve(grid, new PlumberSolver.Options { BridgesAsCrosses = true }).Solvable);
+
+            // a cross mixes the two colors
+            var cross = WaterFlow.Compute(PlumberLevelCodec.Parse(". S2 ./S1@1 X0 E3@1/. E0 ."));
+            Assert.IsFalse(cross.Success);
+            Assert.AreEqual(WaterProblemKind.ColorMix, cross.FirstProblem.Kind);
+
+            // the timing: the two channels are separate parts that never share a node
+            var t = WaterTiming.Compute(grid, water);
+            var parts = t.Parts(bridge);
+            Assert.AreEqual(2, parts.Count);
+            Assert.IsTrue(parts.All(p => p.Through));
+            Assert.AreNotEqual(t.NodeColor(parts[0].NodeA), t.NodeColor(parts[1].NodeA));
+            Assert.AreEqual(t.EndDistance, t.StopDistance, 1e-5f);
+
+            // a bridge never leaks sideways when only one channel is used, and a single channel cannot turn
+            Assert.IsTrue(WaterFlow.Compute(PlumberLevelCodec.Parse("S2/B0/E0")).Success);
+            Assert.IsFalse(PlumberSolver.Solve(PlumberLevelCodec.Parse("S1 B0/. E0")).Solvable, "water entering from the west leaves to the east only");
+        }
+
+        // ErNa-006
+        [Test]
+        public void Taps_CrossBridgeAndLockedPieces_NeverCountAsMoves_OldLevelsStillLoad()
+        {
+            var puzzle = new PlumberPuzzle();
+            puzzle.Load(new PlumberLevel { minMoves = 1, cells = "S1 I0 E3/X0 B0 C1#" });
+            foreach (int cell in new[] { 3, 4, 5 })
+            {
+                int rotation = puzzle.Grid.Pieces[cell].Rotation;
+                Assert.IsFalse(puzzle.ApplyMove(cell), $"cell {cell} ({puzzle.Grid.Pieces[cell].Kind})");
+                Assert.AreEqual(rotation, puzzle.Grid.Pieces[cell].Rotation);
+            }
+            Assert.AreEqual(0, puzzle.MovesMade);
+            Assert.IsFalse(puzzle.CanUndo);
+            Assert.IsTrue(puzzle.ApplyMove(1), "a normal straight still turns");
+            Assert.AreEqual(1, puzzle.MovesMade);
+            Assert.IsTrue(puzzle.Grid.Pieces[5].Locked);
+            Assert.AreEqual(PieceKind.Bridge, puzzle.Grid.Pieces[4].Kind);
+
+            // the format round trip keeps bridges and locks; an ErNa-005 level (no bridges, no locks) reads the same as before
+            const string withNew = "S1 I0 E3/X0 B0 C1#";
+            Assert.AreEqual(withNew, PlumberLevelCodec.Format(PlumberLevelCodec.Parse(withNew)));
+            const string old = "S1 I1 C2/I0 C1 I0/E1 I0 C3";
+            var oldGrid = PlumberLevelCodec.Parse(old);
+            Assert.AreEqual(old, PlumberLevelCodec.Format(oldGrid));
+            Assert.IsFalse(oldGrid.Pieces.Any(p => p.Locked || p.Kind == PieceKind.Bridge));
+            Assert.AreEqual(1, PlumberSolver.Solve(oldGrid).MinMoves);
+        }
+
         /// <summary>Cheapest successful opening over every rotation of every rotatable piece (small grids only).</summary>
         static int Exhaustive(PipeGrid start)
         {

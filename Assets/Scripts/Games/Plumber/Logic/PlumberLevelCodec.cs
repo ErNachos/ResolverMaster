@@ -6,9 +6,9 @@ namespace ResolverMaster.Games.Plumber
     /// <summary>
     /// Text form of a plumber grid, readable in the level files, the docs and the tests.
     /// Rows from top to bottom separated by '/', cells separated by spaces. A cell is <c>&lt;kind&gt;&lt;rotation&gt;[#][@color]</c>:
-    /// kind <c>I</c> straight, <c>C</c> curve, <c>T</c> tee, <c>X</c> cross, <c>S</c> source, <c>E</c> end (sink), <c>.</c> empty;
+    /// kind <c>I</c> straight, <c>C</c> curve, <c>T</c> tee, <c>X</c> cross, <c>B</c> bridge (ErNa-006), <c>S</c> source, <c>E</c> end (sink), <c>.</c> empty;
     /// rotation 0..3 = clockwise taps from the base shape (I0 vertical, C0 up+right, T0 up+right+down, S0/E0 opening up);
-    /// <c>#</c> = locked; <c>@n</c> = water color n (default 0). Example: <c>"S1 I1 E3"</c>.
+    /// <c>#</c> = locked (ErNa-006: never turns); <c>@n</c> = water color n (default 0). Example: <c>"S1 I1 E3"</c>.
     /// </summary>
     public static class PlumberLevelCodec
     {
@@ -47,6 +47,7 @@ namespace ResolverMaster.Games.Plumber
                 case 'X': piece.Kind = PieceKind.Cross; break;
                 case 'S': piece.Kind = PieceKind.Source; break;
                 case 'E': piece.Kind = PieceKind.Sink; break;
+                case 'B': piece.Kind = PieceKind.Bridge; break;
                 default: throw new FormatException($"cell ({x},{y}) '{token}': unknown kind '{token[0]}'");
             }
             int i = 1;
@@ -104,6 +105,7 @@ namespace ResolverMaster.Games.Plumber
                 case PieceKind.Cross: return 'X';
                 case PieceKind.Source: return 'S';
                 case PieceKind.Sink: return 'E';
+                case PieceKind.Bridge: return 'B';
                 default: return '.';
             }
         }

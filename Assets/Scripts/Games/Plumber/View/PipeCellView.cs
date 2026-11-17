@@ -17,6 +17,11 @@ namespace ResolverMaster.Games.Plumber.View
         public Image Tile;
         public Image Pipe;
         public WaterGraphic Water;
+        /// <summary>ErNa-006, bridges only: the upper pipe (north-south) and its water, above the lower pipe and its water.</summary>
+        public Image PipeTop;
+        public WaterGraphic WaterTop;
+        /// <summary>ErNa-006, locked pieces only: the dark plate with 4 bolts under the pipe.</summary>
+        public Image Plate;
         public Image Halo;
         /// <summary>Sink only: the water filling the fountain (a disk that grows on the halo).</summary>
         public Image Fill;
@@ -32,6 +37,7 @@ namespace ResolverMaster.Games.Plumber.View
 
         int _steps;
         float _angle;
+        float _shake = -1f;
 
         float TargetAngle => -90f * _steps;   // clockwise on screen
         public bool IsRotating => _angle != TargetAngle;
@@ -61,6 +67,28 @@ namespace ResolverMaster.Games.Plumber.View
         }
 
         void Apply() => Pipe.rectTransform.localRotation = Quaternion.Euler(0, 0, _angle);
+
+        /// <summary>A tap on a piece that cannot turn: a short shake of the whole cell (ErNa-006, <see cref="ResolverMaster.Core.UI.ShakeMotion"/>).</summary>
+        public void StartShake() => _shake = 0f;
+
+        public void StopShake()
+        {
+            _shake = -1f;
+            ((RectTransform)transform).anchoredPosition = Vector2.zero;
+        }
+
+        public void TickShake(float dt, float duration, float amplitude, int cycles)
+        {
+            if (_shake < 0f) return;
+            _shake += dt;
+            var rt = (RectTransform)transform;
+            if (_shake >= duration)
+            {
+                StopShake();
+                return;
+            }
+            rt.anchoredPosition = new Vector2(ResolverMaster.Core.UI.ShakeMotion.Offset(_shake, duration, amplitude * rt.rect.width, cycles), 0f);
+        }
 
         public void OnPointerClick(PointerEventData eventData) => Tapped?.Invoke(Index);
     }

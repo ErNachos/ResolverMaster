@@ -43,9 +43,11 @@ namespace ResolverMaster.Games.Plumber
     /// <summary>Result of opening the water: for every cell the propagation step (-1 = dry) and the water color, plus every problem.</summary>
     public sealed class WaterState
     {
-        /// <summary>0 at the sources, +1 per cell crossed (used for the cell-by-cell animation).</summary>
+        /// <summary>0 at the sources, +1 per cell crossed (used for the cell-by-cell animation). A bridge: its first wet channel.</summary>
         public int[] Step;
         public int[] Color;
+        /// <summary>Per <see cref="PipeNodes"/> node (ErNa-006): both channels of a bridge, each with its own step and color.</summary>
+        public int[] NodeStep, NodeColor;
         /// <summary>Every problem, ordered by step (then kind, then cell): <see cref="FirstProblem"/> is the one the player sees.</summary>
         public readonly List<WaterProblem> Problems = new List<WaterProblem>();
         /// <summary>Highest step reached by the water.</summary>
@@ -62,63 +64,73 @@ namespace ResolverMaster.Games.Plumber
 
     /// <summary>
     /// Opening the water (ErNa-003 rules): water starts from every source at the same time and spreads breadth-first into every neighbor
-    /// whose opening faces back. The attempt succeeds only when no wet opening leads to the edge or to a non-matching side, no two colors
+    /// whose opening faces back (a bridge carries two separate flows, <see cref="PipeNodes"/>). The attempt succeeds only when no wet opening leads to the edge or to a non-matching side, no two colors
     /// touch, and every sink receives water of its own color. Cells the water never reaches do not count.
     /// </summary>
     public static class WaterFlow
     {
         public static WaterState Compute(PipeGrid grid)
         {
-            int n = grid.CellCount;
+            int n = grid.CellCount, nodes = PipeNodes.Count(grid);
             var topo = grid.Topology;
-            var state = new WaterState { Step = new int[n], Color = new int[n] };
-            for (int i = 0; i < n; i++)
+            var state = new WaterState { Step = new int[n], Color = new int[n], NodeStep = new int[nodes], NodeColor = new int[nodes] };
+            for (int i = 0; i < nodes; i++)
             {
-                state.Step[i] = -1;
-                state.Color[i] = -1;
+                state.NodeStep[i] = -1;
+                state.NodeColor[i] = -1;
             }
             var queue = new Queue<int>();
             for (int i = 0; i < n; i++)
             {
                 if (grid.Pieces[i].Kind != PieceKind.Source) continue;
-                state.Step[i] = 0;
-                state.Color[i] = grid.Pieces[i].Color;
+                state.NodeStep[i] = 0;
+                state.NodeColor[i] = grid.Pieces[i].Color;
                 queue.Enqueue(i);
             }
             var mixes = new HashSet<long>();
             while (queue.Count > 0)
             {
-                int cell = queue.Dequeue();
-                int step = state.Step[cell];
-                int color = state.Color[cell];
+                int node = queue.Dequeue();
+                int cell = PipeNodes.CellOf(grid, node);
+                int step = state.NodeStep[node];
+                int color = state.NodeColor[node];
                 if (step > state.LastStep) state.LastStep = step;
-                int open = grid.Openings(cell);
+                int open = PipeNodes.Openings(grid, node);
                 for (int d = 0; d < topo.DirectionCount; d++)
                 {
                     if ((open & (1 << d)) == 0) continue;
-                    int next = topo.Neighbor(cell, d);
-                    if (next < 0 || (grid.Openings(next) & (1 << topo.Opposite(d))) == 0)
+                    int next = PipeNodes.Neighbor(grid, node, d);
+                    if (next < 0 || (PipeNodes.Openings(grid, next) & (1 << topo.Opposite(d))) == 0)
                     {
                         state.Problems.Add(new WaterProblem(WaterProblemKind.Leak, cell, d, -1, step));
                         continue;
                     }
-                    if (state.Step[next] >= 0)
+                    int nextCell = PipeNodes.CellOf(grid, next);
+                    if (state.NodeStep[next] >= 0)
                     {
-                        if (state.Color[next] != color)
+                        if (state.NodeColor[next] != color)
                         {
-                            long key = cell < next ? ((long)cell << 32) | (uint)next : ((long)next << 32) | (uint)cell;
+                            long key = node < next ? ((long)node << 32) | (uint)next : ((long)next << 32) | (uint)node;
                             if (mixes.Add(key))
-                                state.Problems.Add(new WaterProblem(WaterProblemKind.ColorMix, cell, -1, next, System.Math.Max(step, state.Step[next])));
+                                state.Problems.Add(new WaterProblem(WaterProblemKind.ColorMix, cell, -1, nextCell, System.Math.Max(step, state.NodeStep[next])));
                         }
                         continue;
                     }
-                    state.Step[next] = step + 1;
-                    state.Color[next] = color;
-                    var piece = grid.Pieces[next];
+                    state.NodeStep[next] = step + 1;
+                    state.NodeColor[next] = color;
+                    var piece = grid.Pieces[nextCell];
                     if (piece.Kind == PieceKind.Sink && piece.Color != color)
-                        state.Problems.Add(new WaterProblem(WaterProblemKind.WrongColor, next, -1, cell, step + 1));
+                        state.Problems.Add(new WaterProblem(WaterProblemKind.WrongColor, nextCell, -1, cell, step + 1));
                     queue.Enqueue(next);
                 }
+            }
+            // per cell: the node itself, or the first wet channel of a bridge
+            for (int i = 0; i < n; i++)
+            {
+                int a = state.NodeStep[i], b = state.NodeStep[n + i];
+                bool useB = b >= 0 && (a < 0 || b < a);
+                state.Step[i] = useB ? b : a;
+                state.Color[i] = useB ? state.NodeColor[n + i] : state.NodeColor[i];
             }
             for (int i = 0; i < n; i++)
                 if (grid.Pieces[i].Kind == PieceKind.Sink && state.Step[i] < 0)

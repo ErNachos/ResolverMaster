@@ -106,6 +106,37 @@ namespace ResolverMaster.Editor
             GameShot("game_open_ok", 26, BoardPreview.ActionSuccess, win: false),
             GameShot("game_open_leak", 9, BoardPreview.ActionFailure, win: false),
             GameShot("game_win", 0, BoardPreview.Solved, win: true),
+            // ErNa-006: a hand-made level with a bridge (orange east-west, blue north-south), a decoy cross and locked pieces
+            CustomShot("game_bridge", BridgeLevel, BoardPreview.Start),
+            CustomShot("game_bridge_flowing", BridgeLevel, BoardPreview.ActionFlowing),
+            CustomShot("game_bridge_ok", BridgeLevel, BoardPreview.ActionSuccess),
+        };
+
+        const string BridgeLevel = "C1 S2 C0 I0 C3/S1@1 B0 I0 I1# E3@1/T0 I1 C2 X0 I0/C3 E0 I1 C1# T2/I0 C0 C1 I1 C2/C2 T1 I0 C0 X0/C1 I1 C3 T3 C0";
+
+        /// <summary>A game shot on a hand-made level (cells in the PlumberLevelCodec form), with the theme of chapter 3.</summary>
+        static Shot CustomShot(string name, string cells, BoardPreview state) => new Shot
+        {
+            Name = name,
+            Setup = (ctx, m) =>
+            {
+                var game = m.Get<GameScreen>(ScreenIds.Game);
+                game.StartLevel(ctx.Games.FindModule(PlumberModule.Id), 18);
+                var grid = PlumberLevelCodec.Parse(cells);
+                var sol = PlumberSolver.Solve(grid);
+                ((ResolverMaster.Games.Plumber.View.PlumberBoardView)game.Board).LoadLevel(new PlumberLevel
+                {
+                    number = 19, chapter = 3, seed = 1, width = grid.Width, height = grid.Height, minMoves = sol.MinMoves, path = sol.PathLength, cells = cells,
+                });
+                m.PushImmediate(ScreenIds.Game);
+            },
+            AfterLayout = (ctx, m) =>
+            {
+                var game = m.Get<GameScreen>(ScreenIds.Game);
+                game.Board.Refit();
+                game.Board.SnapVisuals();
+                game.Board.PreparePreview(state);
+            },
         };
 
         /// <summary>The level grid of a chapter (its theme backdrop), with the sample progress.</summary>

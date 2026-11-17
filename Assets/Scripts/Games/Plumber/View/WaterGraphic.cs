@@ -74,6 +74,16 @@ namespace ResolverMaster.Games.Plumber.View
             });
         }
 
+        /// <summary>ErNa-006: one channel of a bridge, straight from side <paramref name="dirA"/> to the opposite side <paramref name="dirB"/>.</summary>
+        public void AddThrough(int dirA, int dirB, float distA, float distB, Color colA, Color colB)
+        {
+            _strokes.Add(new Stroke
+            {
+                A = Edge(dirA), B = Edge(dirB), Length = WaterTiming.ThroughLength,
+                DistA = distA, DistB = distB, ColA = colA, ColB = colB,
+            });
+        }
+
         /// <summary>Quarter arc of a curve from side <paramref name="dirA"/> to side <paramref name="dirB"/>, around their shared corner.</summary>
         public void AddArc(int dirA, int dirB, float distA, float distB, Color colA, Color colB)
         {
