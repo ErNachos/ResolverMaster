@@ -3,6 +3,7 @@ using NUnit.Framework;
 using ResolverMaster.Core.Ads;
 using ResolverMaster.Core.Challenge;
 using ResolverMaster.Core.Puzzle;
+using ResolverMaster.Core.Save;
 using ResolverMaster.Games.Plumber;
 
 namespace ResolverMaster.Tests
@@ -86,6 +87,81 @@ namespace ResolverMaster.Tests
             Assert.AreEqual(3, ChallengeRules.MaxMoves(2, steps - 1, steps, s), "never less than +1");
             ChallengeRules.StepFor(source.Table, 10000, out int step);
             Assert.AreEqual(steps - 1, step);
+        }
+
+        [Test]
+        public void Run_MaxBlocksTurns_ThreeUndosTakeTheMoveBack_LostOnError_StarsAndRecord_SaveAndResumeIdentical()
+        {
+            var source = new PlumberChallenge(PlumberDifficulty.Challenge(), new ChallengeSettings(), 4000);
+            var run = ChallengeRunState.Start("plumber", 4242);
+            run.SetLevel(ChallengeRules.Generate(source, run.runSeed, 1, 0));
+            var level = PlumberChallenge.ToLevel(new ChallengeLevel { number = 1, data = run.levelData, minMoves = run.minMoves, seed = run.levelSeed });
+            var puzzle = new PlumberPuzzle { MoveLimit = run.maxMoves };
+            puzzle.Load(level);
+
+            // tap the first rotatable piece until the maximum: then pieces no longer turn
+            int cell = System.Array.FindIndex(puzzle.Grid.Pieces, p => p.IsRotatable);
+            for (int i = 0; i < run.maxMoves; i++)
+            {
+                Assert.IsTrue(run.CanMove);
+                Assert.IsTrue(puzzle.ApplyMove(cell));
+                run.OnMove(cell);
+            }
+            Assert.IsFalse(run.CanMove);
+            Assert.IsFalse(puzzle.ApplyMove(cell), "at the maximum the pieces do not turn");
+            Assert.AreEqual(run.maxMoves, puzzle.MovesMade);
+
+            // save in the middle of the level and resume: the same level, the same rotations, the same counters
+            run.rotations = Rotations(puzzle.Grid);
+            var data = new SaveData();
+            data.challenge.SetRun(run);
+            var loaded = SaveSerializer.FromJson(SaveSerializer.ToJson(data)).challenge.ActiveRun("plumber");
+            Assert.IsNotNull(loaded);
+            Assert.AreEqual(run.levelData, loaded.levelData);
+            Assert.AreEqual(run.maxMoves, loaded.maxMoves);
+            Assert.AreEqual(run.moves, loaded.moves);
+            CollectionAssert.AreEqual(run.undoHistory, loaded.undoHistory);
+            var resumed = new PlumberPuzzle { MoveLimit = loaded.maxMoves };
+            resumed.Load(PlumberChallenge.ToLevel(new ChallengeLevel { number = loaded.level, data = loaded.levelData, minMoves = loaded.minMoves }));
+            Assert.IsTrue(resumed.Replay(loaded.undoHistory));
+            Assert.AreEqual(loaded.rotations, Rotations(resumed.Grid));
+            Assert.AreEqual(loaded.moves, resumed.MovesMade);
+
+            // 3 undos per run, each takes the move back
+            for (int i = 0; i < ChallengeRunState.UndosPerRun; i++)
+            {
+                int movesBefore = run.moves;
+                Assert.IsTrue(run.TryUndo(out int undone));
+                Assert.AreEqual(cell, undone);
+                Assert.AreEqual(movesBefore - 1, run.moves);
+            }
+            Assert.IsFalse(run.TryUndo(out _), "no fourth undo in the run");
+            Assert.IsTrue(run.CanMove, "undoing frees moves again");
+
+            // stars add up, the next level comes; an error of the water ends the run; the record keeps the best (stars, then levels)
+            run.OnSolved(3);
+            run.OnSolved(2);
+            Assert.AreEqual(5, run.stars);
+            Assert.AreEqual(2, run.levelsCleared);
+            Assert.AreEqual(3, run.level);
+            Assert.IsFalse(run.HasLevel);
+            run.OnFailed();
+            Assert.IsTrue(run.over);
+            Assert.IsFalse(run.CanMove);
+            var block = new ChallengeBlock();
+            Assert.IsTrue(block.SubmitScore("plumber", run.stars, run.levelsCleared), "first record");
+            Assert.IsFalse(block.SubmitScore("plumber", 5, 1), "same stars, fewer levels: not better");
+            Assert.IsTrue(block.SubmitScore("plumber", 5, 3), "same stars, more levels: better");
+            Assert.IsFalse(block.SubmitScore("plumber", 4, 9));
+            Assert.AreEqual(5, block.Record("plumber").stars);
+            Assert.AreEqual(3, block.Record("plumber").levels);
+        }
+
+        static string Rotations(PipeGrid grid)
+        {
+            var chars = new char[grid.CellCount];
+            for (int c = 0; c < chars.Length; c++) chars[c] = (char)('0' + grid.Pieces[c].Rotation);
+            return new string(chars);
         }
 
         [Test]

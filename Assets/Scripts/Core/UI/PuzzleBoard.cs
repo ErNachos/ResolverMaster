@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using ResolverMaster.Core.Puzzle;
 using ResolverMaster.Core.UI.Themes;
 using UnityEngine;
@@ -42,6 +43,24 @@ namespace ResolverMaster.Core.UI
 
         /// <summary>Show a short message (localization key) on the game screen, e.g. why an attempt failed.</summary>
         public event Action<string> MessageRequested;
+
+        /// <summary>ErNa-007: an attempt failed and its effect has finished (raised only when <see cref="RestartOnFailure"/> is false).</summary>
+        public event Action Failed;
+
+        /// <summary>Story: a failed attempt restarts the level. Challenge (ErNa-007): it does not; the board stops and raises <see cref="Failed"/>.</summary>
+        public bool RestartOnFailure { get; set; } = true;
+
+        /// <summary>ErNa-007, Challenge: moves allowed on this level (0 = no limit). Set before or after <see cref="Load"/>.</summary>
+        public virtual void SetMoveLimit(int limit) { }
+
+        /// <summary>ErNa-007, Challenge save: the moves on the undo stack (oldest first) as integers in the game's format.</summary>
+        public virtual IReadOnlyList<int> MoveHistory => Array.Empty<int>();
+
+        /// <summary>ErNa-007, Challenge save: the state of the pieces in the game's format (e.g. one rotation digit per cell).</summary>
+        public virtual string CaptureState() => "";
+
+        /// <summary>ErNa-007, resume: applies the saved moves to the freshly loaded level. False if they do not fit it.</summary>
+        public virtual bool RestoreMoves(IReadOnlyList<int> history) => history == null || history.Count == 0;
 
         public abstract IPuzzleSession Session { get; }
 
@@ -90,5 +109,6 @@ namespace ResolverMaster.Core.UI
         protected void RaiseChanged() => Changed?.Invoke();
         protected void RaiseCompleted() => Completed?.Invoke();
         protected void RaiseMessage(string key) => MessageRequested?.Invoke(key);
+        protected void RaiseFailed() => Failed?.Invoke();
     }
 }

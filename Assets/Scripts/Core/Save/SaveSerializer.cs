@@ -30,6 +30,8 @@ namespace ResolverMaster.Core.Save
             if (data.home == null) data.home = new HomeBlock();
             if (data.home.selectedGame == null) data.home.selectedGame = "";
             data.progress.Sanitize();
+            if (data.challenge == null) data.challenge = new ResolverMaster.Core.Challenge.ChallengeBlock();
+            data.challenge.Sanitize();
             Migrate(data);
             return data;
         }

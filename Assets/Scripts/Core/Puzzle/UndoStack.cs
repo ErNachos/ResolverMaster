@@ -9,6 +9,9 @@ namespace ResolverMaster.Core.Puzzle
 
         public int Count => _items.Count;
 
+        /// <summary>Oldest first.</summary>
+        public IReadOnlyList<T> Items => _items;
+
         public void Push(T item) => _items.Add(item);
 
         public bool TryPop(out T item)

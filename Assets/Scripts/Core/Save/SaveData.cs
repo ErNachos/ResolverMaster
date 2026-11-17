@@ -18,6 +18,8 @@ namespace ResolverMaster.Core.Save
         public ProgressBlock progress = new ProgressBlock();
         /// <summary>Home state (ErNa-004). Missing in older files: first card.</summary>
         public HomeBlock home = new HomeBlock();
+        /// <summary>Challenge runs in progress and records (ErNa-007). Missing in older files: none.</summary>
+        public ResolverMaster.Core.Challenge.ChallengeBlock challenge = new ResolverMaster.Core.Challenge.ChallengeBlock();
     }
 
     /// <summary>Home: the id (<c>GameInfo.Id</c>) of the last card chosen, shown again at start-up. Empty = first card.</summary>

@@ -108,6 +108,50 @@ namespace ResolverMaster.Editor
             GameShot("game_open_ok", 26, BoardPreview.ActionSuccess, win: false),
             GameShot("game_open_leak", 9, BoardPreview.ActionFailure, win: false),
             GameShot("game_win", 0, BoardPreview.Solved, win: true),
+            // ErNa-007: the Challenge (2 moves left: red counter; pause; end of the run with a new record), mode choice with a run
+            // in progress, confirmation of a new run, Home with the record on the card
+            ChallengeShot("challenge_game", 2, null),
+            ChallengeShot("challenge_pause", 3, (ctx, g) => g.ShowPauseForPreview()),
+            ChallengeShot("challenge_over", 3, (ctx, g) =>
+            {
+                var over = ctx.Data.challenge.ActiveRun(PlumberModule.Id);
+                over.stars = 41;
+                over.levelsCleared = 17;
+                ctx.Data.challenge.SubmitScore(PlumberModule.Id, over.stars, over.levelsCleared);
+                g.ShowRunOver(over, newRecord: true);
+            }),
+            new Shot
+            {
+                Name = "mode_select_run",
+                Setup = (ctx, m) =>
+                {
+                    SampleRun(ctx, 5);
+                    m.Get<ModeSelectScreen>(ScreenIds.ModeSelect).SetGame(ctx.Games.Find(PlumberModule.Id));
+                    m.PushImmediate(ScreenIds.ModeSelect);
+                },
+            },
+            new Shot
+            {
+                Name = "mode_confirm_new_run",
+                Setup = (ctx, m) =>
+                {
+                    SampleRun(ctx, 5);
+                    m.Get<ModeSelectScreen>(ScreenIds.ModeSelect).SetGame(ctx.Games.Find(PlumberModule.Id));
+                    m.PushImmediate(ScreenIds.ModeSelect);
+                },
+                AfterLayout = (ctx, m) => m.Get<ModeSelectScreen>(ScreenIds.ModeSelect).ShowConfirmForPreview(),
+            },
+            new Shot
+            {
+                Name = "home_challenge",
+                Setup = (ctx, m) => SampleRun(ctx, 5),
+                AfterLayout = (ctx, m) =>
+                {
+                    var home = m.Get<HomeScreen>(ScreenIds.Home);
+                    home.OnShow();
+                    home.ShowCard(Math.Max(0, ctx.Games.Games.ToList().FindIndex(g => g.Id == PlumberModule.Id)));
+                },
+            },
             // ErNa-007: two pieces fixed by the light bulb (glowing outline), and the test rewarded ad (the wait is over)
             new Shot
             {
@@ -181,6 +225,41 @@ namespace ResolverMaster.Editor
                 game.Board.Refit();
                 game.Board.SnapVisuals();
                 game.Board.PreparePreview(state);
+            },
+        };
+
+        /// <summary>A sample Challenge run (fixed seed) at level 23 with a record of 28 stars; <paramref name="movesLeft"/> before the maximum.</summary>
+        static ResolverMaster.Core.Challenge.ChallengeRunState SampleRun(AppServices ctx, int movesLeft)
+        {
+            var module = ctx.Games.FindModule(PlumberModule.Id);
+            var run = ResolverMaster.Core.Challenge.ChallengeRunState.Start(PlumberModule.Id, 4242);
+            run.SetLevel(ResolverMaster.Core.Challenge.ChallengeRules.Generate(module.Challenge, run.runSeed, 23, 0));
+            run.stars = 52;
+            run.levelsCleared = 22;
+            run.undosLeft = 2;
+            var grid = PlumberLevelCodec.Parse(run.levelData);
+            int cell = Array.FindIndex(grid.Pieces, p => p.IsRotatable);
+            for (int i = 0; i < run.maxMoves - movesLeft; i++) run.OnMove(cell);
+            ctx.Data.challenge.SetRun(run);
+            ctx.Data.challenge.SubmitScore(PlumberModule.Id, 28, 12);
+            return run;
+        }
+
+        static Shot ChallengeShot(string name, int movesLeft, Action<AppServices, GameScreen> after) => new Shot
+        {
+            Name = name,
+            Setup = (ctx, m) =>
+            {
+                var run = SampleRun(ctx, movesLeft);
+                m.Get<GameScreen>(ScreenIds.Game).StartChallenge(ctx.Games.FindModule(PlumberModule.Id), run);
+                m.PushImmediate(ScreenIds.Game);
+            },
+            AfterLayout = (ctx, m) =>
+            {
+                var game = m.Get<GameScreen>(ScreenIds.Game);
+                game.Board.Refit();
+                game.Board.SnapVisuals();
+                after?.Invoke(ctx, game);
             },
         };
 

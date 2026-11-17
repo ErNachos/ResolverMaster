@@ -1,5 +1,6 @@
 using System.Collections;
 using ResolverMaster.Core.App;
+using ResolverMaster.Core.Challenge;
 using ResolverMaster.Core.Games;
 using ResolverMaster.Core.Localization;
 using UnityEngine;
@@ -9,8 +10,8 @@ namespace ResolverMaster.Core.UI.Screens
 {
     /// <summary>
     /// Story / Challenge choice for the selected minigame: the illustration of the game on top, then one cream Gemini window per mode
-    /// (round icon, name, description). Story opens the chapter list (if the game has Story levels); Challenge still shows a
-    /// placeholder message.
+    /// (round icon, name, description). Story opens the chapter list (if the game has Story levels); Challenge (ErNa-007) resumes the
+    /// run in progress or starts one (placeholder for games without a Challenge); under it the run or the record, and "New run".
     /// </summary>
     public sealed class ModeSelectScreen : UiScreen
     {
@@ -23,6 +24,11 @@ namespace ResolverMaster.Core.UI.Screens
         Image _gameArt, _gameIcon;
         CanvasGroup _message;
         Coroutine _messageFade;
+        // ErNa-007: the run in progress or the record, "New run" (with a confirmation)
+        GameObject _challengeInfoRow;
+        TMPro.TextMeshProUGUI _challengeInfo;
+        Button _newRun;
+        DialogPanel _confirm;
 
         public GameInfo Game { get; private set; }
 
@@ -50,7 +56,15 @@ namespace ResolverMaster.Core.UI.Screens
             UiFactory.Layout(chooseBadge, preferredHeight: 84);
 
             CreateModeCard(ctx, layout.Body, "story", true, LocKeys.ModeStory, LocKeys.ModeStoryDesc).onClick.AddListener(screen.OpenStory);
-            CreateModeCard(ctx, layout.Body, "icon_bolt", false, LocKeys.ModeChallenge, LocKeys.ModeChallengeDesc).onClick.AddListener(screen.ShowPlaceholder);
+            CreateModeCard(ctx, layout.Body, "icon_bolt", false, LocKeys.ModeChallenge, LocKeys.ModeChallengeDesc).onClick.AddListener(screen.OpenChallenge);
+
+            screen._challengeInfo = ScreenLayout.Badge(ctx, layout.Body, "ChallengeInfo", null, s.smallSize, out var infoPill);
+            UiFactory.Layout(infoPill, preferredHeight: 84);
+            screen._challengeInfoRow = infoPill.gameObject;
+            screen._newRun = ui.SecondaryButton("NewRun", layout.Body, LocKeys.ChallengeNewRun, out _);
+            UiFactory.Layout(screen._newRun, preferredHeight: s.buttonHeight);
+            screen._newRun.onClick.AddListener(screen.AskNewRun);
+            screen._confirm = new DialogPanel(ctx, layout.Root, "ConfirmNewRun", LocKeys.ChallengeNewRun, 1, LocKeys.CommonNo, LocKeys.CommonYes);
 
             // placeholder message, hidden until a mode is tapped
             var msg = ui.Panel("Message", layout.Body);
@@ -100,12 +114,63 @@ namespace ResolverMaster.Core.UI.Screens
             _gameArt.gameObject.SetActive(art != null);
             _gameIcon.sprite = _ctx.Icons.Get(game.IconName);
             _gameIcon.gameObject.SetActive(art == null);
+            RefreshChallenge();
         }
 
         public override void OnShow()
         {
             if (_messageFade != null) StopCoroutine(_messageFade);
             _message.alpha = 0f;
+            _confirm.Hide();
+            RefreshChallenge();
+        }
+
+        /// <summary>Under the Challenge card: the run in progress (and "New run") or the record; nothing for games without a Challenge.</summary>
+        void RefreshChallenge()
+        {
+            var module = Game != null ? _ctx.Games.FindModule(Game.Id) : null;
+            bool has = ChallengeLauncher.HasChallenge(module);
+            var run = has ? ChallengeLauncher.ActiveRun(_ctx, module) : null;
+            var record = has ? _ctx.Data.challenge.Record(module.Info.Id) : null;
+            if (run != null) _challengeInfo.text = string.Format(_ctx.Loc.Get(LocKeys.ModeChallengeRun), run.level, run.stars);
+            else if (record != null) _challengeInfo.text = string.Format(_ctx.Loc.Get(LocKeys.ChallengeRecord), record.stars, record.levels);
+            _challengeInfoRow.SetActive(run != null || record != null);
+            _newRun.gameObject.SetActive(run != null);
+        }
+
+        /// <summary>Challenge: resumes the run in progress, or starts one; the placeholder for games without a Challenge.</summary>
+        void OpenChallenge()
+        {
+            var module = Game != null ? _ctx.Games.FindModule(Game.Id) : null;
+            if (!ChallengeLauncher.HasChallenge(module))
+            {
+                ShowPlaceholder();
+                return;
+            }
+            ChallengeLauncher.Open(_ctx, module, forceNew: false);
+        }
+
+        /// <summary>One active run per game: a new one replaces it, after a confirmation.</summary>
+        void AskNewRun()
+        {
+            var module = Game != null ? _ctx.Games.FindModule(Game.Id) : null;
+            if (!ChallengeLauncher.HasChallenge(module)) return;
+            _confirm.SetLine(0, _ctx.Loc.Get(LocKeys.ChallengeConfirmNew));
+            _confirm.Show(() =>
+            {
+                _confirm.Hide();
+                ChallengeLauncher.Open(_ctx, module, forceNew: true);
+            }, () => _confirm.Hide());
+        }
+
+        /// <summary>Previews: the confirmation of a new run.</summary>
+        public void ShowConfirmForPreview() => AskNewRun();
+
+        public override bool HandleBack()
+        {
+            if (!_confirm.Visible) return false;
+            _confirm.Hide();
+            return true;
         }
 
         /// <summary>Story: the chapter list when the minigame has saved Story levels, otherwise the placeholder message.</summary>

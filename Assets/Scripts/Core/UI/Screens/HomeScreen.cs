@@ -25,6 +25,10 @@ namespace ResolverMaster.Core.UI.Screens
             public CanvasGroup Group;
             public Decoration Peek;
             public Button Button;
+            // ErNa-007: Challenge access and record on the card (games with a Challenge only)
+            public Button Challenge;
+            public LocalizedText ChallengeLabel;
+            public TMPro.TextMeshProUGUI Record;
         }
 
         AppServices _ctx;
@@ -91,6 +95,7 @@ namespace ResolverMaster.Core.UI.Screens
                 screen._dots.Add(dot);
             }
             screen._carousel.JumpTo(HomeSelection.IndexOf(games, ctx.Data.home.selectedGame));
+            screen.RefreshChallenge();
             screen.Refit();
             return screen;
         }
@@ -120,8 +125,8 @@ namespace ResolverMaster.Core.UI.Screens
             {
                 var img = ui.Image("Illustration", art.transform, sprite, soon ? s.disabledTint : Color.white);
                 img.preserveAspect = true;
-                // inside the inner frame line of the window (a "coming soon" card keeps the bottom free for its badge)
-                UiFactory.Stretch(img.rectTransform, 40, soon ? 210 : 44, 40, 40);
+                // inside the inner frame line of the window (a "coming soon" card, or one with a Challenge, keeps the bottom free)
+                UiFactory.Stretch(img.rectTransform, 40, soon || HasChallenge(game) ? 210 : 44, 40, 40);
             }
             else
             {
@@ -135,6 +140,23 @@ namespace ResolverMaster.Core.UI.Screens
             UiFactory.Stretch(name.rectTransform, inset, s.cardDepth + 8, inset, 0);
             name.rectTransform.anchorMax = new Vector2(1, 0);
             name.rectTransform.offsetMax = new Vector2(-inset, s.cardDepth + s.homeCardNameHeight);
+
+            if (!soon && HasChallenge(game))
+            {
+                // ErNa-007: the Challenge record (trophy + stars) and the Challenge button ("Resume" when a run is in progress)
+                var pill = ui.Image("Record", art.transform, s.circleSprite, s.surface);
+                UiFactory.Place(pill.rectTransform, 0.5f, 0, new Vector2(220, 104), new Vector2(-170, 68));
+                var trophy = ui.Icon("Trophy", pill.transform, "icon_trophy", 76);
+                UiFactory.Place(trophy.rectTransform, 0, 0.5f, new Vector2(76, 76), new Vector2(22, 2));
+                c.Record = ui.Label("Stars", pill.transform, null, s.bodySize, s.text, TextAnchor.MiddleCenter, bold: true);
+                UiFactory.Stretch(c.Record.rectTransform, 22 + 76 + 6, 4, 18, 4);
+                UiFactory.AutoSize(c.Record, s.smallSize);
+                c.Challenge = ui.PrimaryButton("Challenge", art.transform, LocKeys.HomeChallenge, out var label);
+                UiFactory.Place((RectTransform)c.Challenge.transform, 0.5f, 0, new Vector2(320, s.buttonHeight), new Vector2(120, 52));
+                c.ChallengeLabel = label.GetComponent<LocalizedText>();
+                UiFactory.AutoSize(label, s.smallSize);
+                c.Challenge.onClick.AddListener(() => OpenChallenge(index));
+            }
 
             if (soon)
             {
@@ -191,6 +213,32 @@ namespace ResolverMaster.Core.UI.Screens
         {
             if (index != _carousel.Target) _carousel.MoveTo(index);
             else Play();
+        }
+
+        bool HasChallenge(GameInfo game) => ChallengeLauncher.HasChallenge(_ctx.Games.FindModule(game.Id));
+
+        /// <summary>The Challenge button of a card: the centred card opens its Challenge, a side card first comes to the centre.</summary>
+        void OpenChallenge(int index)
+        {
+            if (index != _carousel.Target || !_carousel.Resting)
+            {
+                _carousel.MoveTo(index);
+                return;
+            }
+            ChallengeLauncher.Open(_ctx, _ctx.Games.FindModule(_cards[index].Game.Id), forceNew: false);
+        }
+
+        /// <summary>Record and "Resume" of every card with a Challenge (after a run they change).</summary>
+        void RefreshChallenge()
+        {
+            foreach (var c in _cards)
+            {
+                if (c.Challenge == null) continue;
+                var record = _ctx.Data.challenge.Record(c.Game.Id);
+                c.Record.text = (record?.stars ?? 0).ToString();
+                bool running = _ctx.Data.challenge.ActiveRun(c.Game.Id) != null;
+                c.ChallengeLabel.Bind(_ctx.Loc, running ? LocKeys.HomeChallengeResume : LocKeys.HomeChallenge);
+            }
         }
 
         void Play()
@@ -269,7 +317,11 @@ namespace ResolverMaster.Core.UI.Screens
             _ctx.Save();
         }
 
-        public override void OnShow() => Refit();
+        public override void OnShow()
+        {
+            RefreshChallenge();
+            Refit();
+        }
 
         void Update()
         {

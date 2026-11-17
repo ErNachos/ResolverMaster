@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using ResolverMaster.Core.Ads;
 using ResolverMaster.Core.App;
+using ResolverMaster.Core.Challenge;
 using ResolverMaster.Core.Games;
 using ResolverMaster.Core.Localization;
 using ResolverMaster.Core.Puzzle;
@@ -15,6 +16,9 @@ namespace ResolverMaster.Core.UI.Screens
     /// minimum), the puzzle area between the top bar and the optional main action button chosen by the game (constant margins; short
     /// messages appear in place of the button), bottom bar (undo, restart, help - disabled for now) and the win panel.
     /// The puzzle itself is a <see cref="PuzzleBoard"/> created once per minigame by its <see cref="MinigameModule"/>.
+    /// ErNa-007, Challenge mode (<see cref="StartChallenge"/>): moves made / minimum / maximum (the counter turns red with 2 moves
+    /// left), pieces stop turning at the maximum, 3 undos per run (the undo takes the move back), no restart and no light bulb, a
+    /// failure ends the run (end panel), Back opens the pause; the run is saved at every move and at every level change.
     /// </summary>
     public sealed class GameScreen : UiScreen
     {
@@ -34,6 +38,13 @@ namespace ResolverMaster.Core.UI.Screens
         TextMeshProUGUI _toastText;
         float _toastTime = -1f;
         bool _lastBusy, _lastAds;
+        GameMode _mode = GameMode.Story;
+        ChallengeRunState _run;
+        readonly Dictionary<string, ChallengeQueue> _queues = new Dictionary<string, ChallengeQueue>();
+        DialogPanel _pause, _end;
+        Image _undoBadge;
+        TextMeshProUGUI _undoCount;
+        bool _lastNewRecord;
 
         public MinigameModule Module { get; private set; }
         public PuzzleBoard Board { get; private set; }
@@ -48,6 +59,11 @@ namespace ResolverMaster.Core.UI.Screens
         /// <summary>The short message shown in place of the main action, null when hidden.</summary>
         public RectTransform MessageRect => _toast.gameObject.activeSelf ? (RectTransform)_toast.transform : null;
         public bool WinVisible => _win.Visible;
+        public GameMode Mode => _mode;
+        /// <summary>The Challenge run being played (null in Story).</summary>
+        public ChallengeRunState Run => _run;
+        public bool PauseVisible => _pause.Visible;
+        public bool EndVisible => _end.Visible;
 
         public static GameScreen Create(AppServices ctx, Transform parent)
         {
@@ -87,7 +103,14 @@ namespace ResolverMaster.Core.UI.Screens
             screen._undo = screen.BarButton("Undo", "icon_undo", -dx);
             screen._restart = screen.BarButton("Restart", "icon_restart", 0);
             screen._help = screen.BarButton("Help", "icon_help", dx);
-            screen._undo.onClick.AddListener(() => { if (screen.Board != null && !screen.Board.IsBusy) screen.Board.Undo(); });
+            screen._undo.onClick.AddListener(screen.UndoPressed);
+            // Challenge: undos left in the run, a small badge on the undo button
+            screen._undoBadge = ui.Image("UndoBadge", screen._undo.transform, s.circleSprite, s.primary);
+            UiFactory.Place(screen._undoBadge.rectTransform, 1, 1, new Vector2(64, 64), new Vector2(-8, -8));
+            screen._undoBadge.gameObject.AddComponent<Decoration>();   // on the corner of the button on purpose
+            screen._undoCount = ui.Title("Count", screen._undoBadge.transform, null, s.smallSize);
+            UiFactory.Stretch(screen._undoCount.rectTransform, 0, 4, 0, 0);
+            screen._undoBadge.gameObject.SetActive(false);
             screen._restart.onClick.AddListener(() => { if (screen.Board != null && !screen.Board.IsBusy) screen.Board.Restart(); });
             screen._help.onClick.AddListener(screen.RequestHint);   // ErNa-007: the light bulb (rewarded ad, then a hint)
 
@@ -116,6 +139,9 @@ namespace ResolverMaster.Core.UI.Screens
             toast.gameObject.SetActive(false);
 
             screen._win = new WinPanel(ctx, layout.Root, screen.Retry, screen.Next);
+            // ErNa-007: Challenge pause and end of the run (room left for "Continue", ErNa-008)
+            screen._pause = new DialogPanel(ctx, layout.Root, "Pause", LocKeys.ChallengePause, 1, LocKeys.ChallengeHome, LocKeys.ChallengeResume);
+            screen._end = new DialogPanel(ctx, layout.Root, "RunOver", LocKeys.ChallengeOver, 3, LocKeys.ChallengeHome, LocKeys.ChallengeNewRun, extraHeight: 110);
             return screen;
         }
 
@@ -127,17 +153,39 @@ namespace ResolverMaster.Core.UI.Screens
             return b;
         }
 
+        void UseModule(MinigameModule module)
+        {
+            if (Module == module) return;
+            if (Board != null) Board.gameObject.SetActive(false);
+            Module = module;
+            Board = GetBoard(module);
+            Board.gameObject.SetActive(true);
+            SetupMainAction();
+        }
+
+        /// <summary>Story or Challenge: the buttons each mode has (Challenge: no restart, no light bulb, undos left on the undo button).</summary>
+        void SetMode(GameMode mode)
+        {
+            _mode = mode;
+            bool challenge = mode == GameMode.Challenge;
+            _restart.gameObject.SetActive(!challenge);
+            _help.gameObject.SetActive(!challenge);
+            _undoBadge.gameObject.SetActive(challenge);
+            Board.RestartOnFailure = !challenge;
+            if (!challenge)
+            {
+                _run = null;
+                Board.SetMoveLimit(0);
+            }
+            _pause.Hide();
+            _end.Hide();
+        }
+
         /// <summary>Loads Story level <paramref name="index"/> (0-based, whole Story) of <paramref name="module"/>; creates its board the first time.</summary>
         public void StartLevel(MinigameModule module, int index)
         {
-            if (Module != module)
-            {
-                if (Board != null) Board.gameObject.SetActive(false);
-                Module = module;
-                Board = GetBoard(module);
-                Board.gameObject.SetActive(true);
-                SetupMainAction();
-            }
+            UseModule(module);
+            SetMode(GameMode.Story);
             LevelIndex = index;
             _win.Hide();
             HideMessage();
@@ -153,8 +201,14 @@ namespace ResolverMaster.Core.UI.Screens
             if (_boards.TryGetValue(module.Info.Id, out var board)) return board;
             board = module.CreateBoard(_ctx, _area);
             if (board == null) throw new System.InvalidOperationException($"minigame '{module.Info.Id}' has no board");
-            board.Changed += () => { if (board == Board) Refresh(); };
+            board.Changed += () =>
+            {
+                if (board != Board) return;
+                if (_mode == GameMode.Challenge) SyncRun();
+                Refresh();
+            };
             board.Completed += () => { if (board == Board) OnCompleted(); };
+            board.Failed += () => { if (board == Board && _mode == GameMode.Challenge) OnRunLost(); };
             board.MessageRequested += key => { if (board == Board) ShowMessage(_ctx.Loc.Get(key)); };
             _boards[module.Info.Id] = board;
             return board;
@@ -184,10 +238,25 @@ namespace ResolverMaster.Core.UI.Screens
         {
             if (Board == null) return;
             var session = Board.Session;
-            _title.text = string.Format(_ctx.Loc.Get(LocKeys.GameLevel), LevelIndex + 1);
-            _moves.text = string.Format(_ctx.Loc.Get(LocKeys.GameMoves), session.MovesMade, session.MinMoves);
             bool busy = Board.IsBusy;
             bool playing = !session.IsSolved && !busy;
+            if (_mode == GameMode.Challenge && _run != null)
+            {
+                _title.text = string.Format(_ctx.Loc.Get(LocKeys.ChallengeLevel), _run.level);
+                _moves.text = string.Format(_ctx.Loc.Get(LocKeys.GameMovesMax), session.MovesMade, session.MinMoves, _run.maxMoves);
+                // 2 moves left or fewer: the counter turns red (never a water color)
+                _moves.color = _run.maxMoves - session.MovesMade <= 2 ? _ctx.Style.offMark : _ctx.Style.text;
+                _undoCount.text = _run.undosLeft.ToString();
+                playing &= !_run.over;
+                UiFactory.SetInteractable(_undo, playing && session.CanUndo && _run.undosLeft > 0);
+                UiFactory.SetInteractable(_action, playing);
+                _lastBusy = busy;
+                _lastAds = _ctx.Ads != null && _ctx.Ads.IsAvailable;
+                return;
+            }
+            _moves.color = _ctx.Style.text;
+            _title.text = string.Format(_ctx.Loc.Get(LocKeys.GameLevel), LevelIndex + 1);
+            _moves.text = string.Format(_ctx.Loc.Get(LocKeys.GameMoves), session.MovesMade, session.MinMoves);
             UiFactory.SetInteractable(_undo, playing && session.CanUndo);
             UiFactory.SetInteractable(_restart, playing && session.MovesMade > 0);
             UiFactory.SetInteractable(_action, playing);
@@ -231,6 +300,18 @@ namespace ResolverMaster.Core.UI.Screens
         public void ShowWin(bool animate)
         {
             var session = Board.Session;
+            if (_mode == GameMode.Challenge && _run != null)
+            {
+                // Challenge: the stars add to the run, the next level comes (saved now: closing the app here keeps the progress)
+                int earned = StarRating.Compute(session.MovesMade, session.MinMoves, _ctx.Puzzle.stars);
+                int moves = session.MovesMade, min = session.MinMoves;
+                _run.OnSolved(earned);
+                _ctx.Save();
+                QueueFor(Module).Prefetch(_run.level);
+                Refresh();
+                _win.Show(earned, moves, min, true, animate, showRetry: false);
+                return;
+            }
             int stars = StarRating.Compute(session.MovesMade, session.MinMoves, _ctx.Puzzle.stars, Board.HintUsed);
             if (_ctx.Data.progress.SetBest(StoryProgress.Mode, Level, stars)) _ctx.Save();
             Refresh();
@@ -240,6 +321,125 @@ namespace ResolverMaster.Core.UI.Screens
         /// <summary>The next numbered level exists and is unlocked (the next chapter only once this one is complete).</summary>
         bool HasNext() =>
             LevelIndex + 1 < Module.StoryLevelCount && StoryProgress.IsLevelUnlocked(_ctx.Data.progress, Module.Story, LevelIndex + 1);
+
+        // ------------------------------------------------------------------ Challenge (ErNa-007)
+
+        ChallengeQueue QueueFor(MinigameModule module)
+        {
+            if (!_queues.TryGetValue(module.Info.Id, out var q)) _queues[module.Info.Id] = q = new ChallengeQueue(module.Challenge);
+            return q;
+        }
+
+        /// <summary>Plays <paramref name="run"/> of <paramref name="module"/> from where it was saved (its level, moves and undos).</summary>
+        public void StartChallenge(MinigameModule module, ChallengeRunState run)
+        {
+            UseModule(module);
+            SetMode(GameMode.Challenge);
+            _run = run;
+            QueueFor(module).Reset(run.runSeed, run.changes);
+            LoadChallengeLevel(resume: true);
+        }
+
+        /// <summary>The current level of the run (generated and saved first if new), with its saved moves when resuming.</summary>
+        void LoadChallengeLevel(bool resume)
+        {
+            var queue = QueueFor(Module);
+            if (!_run.HasLevel)
+            {
+                _run.SetLevel(queue.Get(_run.level));
+                _ctx.Save();
+            }
+            queue.Prefetch(_run.level);   // this level and the next 2, off the main thread
+            _win.Hide();
+            HideMessage();
+            var themes = _ctx.Themes != null ? _ctx.Themes.Catalog.Themes : null;
+            var theme = themes != null && themes.Count > 0 ? themes[Mathf.Max(0, _run.step) % themes.Count] : null;   // a new look every step
+            _layout.SetTheme(theme);
+            Board.Theme = theme;
+            Board.SetMoveLimit(_run.maxMoves);
+            var history = new List<int>(_run.undoHistory);
+            Board.Load(new LevelRequest(GameMode.Challenge, _run.level - 1, _run.levelSeed, _run.levelData, _run.minMoves));
+            if (resume && history.Count > 0 && !Board.RestoreMoves(history))
+                Debug.LogWarning("GameScreen: the saved Challenge moves do not fit the level; the level starts again.");
+            SyncRun();
+            Refresh();
+        }
+
+        /// <summary>The run follows the board (moves, undo stack, rotations) and is saved: at every move, undo and level load.</summary>
+        void SyncRun()
+        {
+            if (_run == null || _run.over || Board == null) return;
+            _run.moves = Board.Session.MovesMade;
+            _run.undoHistory.Clear();
+            _run.undoHistory.AddRange(Board.MoveHistory);
+            _run.rotations = Board.CaptureState();
+            _ctx.Save();
+        }
+
+        void UndoPressed()
+        {
+            if (Board == null || Board.IsBusy) return;
+            if (_mode == GameMode.Challenge)
+            {
+                if (_run == null || !_run.TryUndo(out _)) return;   // 3 per run; the move goes off the counter
+            }
+            Board.Undo();
+            Refresh();
+        }
+
+        /// <summary>A failed opening ends the run: the score goes to the record, the run is removed, the end panel opens.</summary>
+        void OnRunLost()
+        {
+            if (_run == null || _run.over) return;
+            _run.OnFailed();
+            var block = _ctx.Data.challenge;
+            _lastNewRecord = block.SubmitScore(Module.Info.Id, _run.stars, _run.levelsCleared);
+            block.EndRun(Module.Info.Id);
+            _ctx.Save();
+            ShowRunOver(_run, _lastNewRecord);
+        }
+
+        /// <summary>End of the run: stars, levels cleared, record (highlighted when new), New run / Home.</summary>
+        public void ShowRunOver(ChallengeRunState run, bool newRecord)
+        {
+            var loc = _ctx.Loc;
+            var record = _ctx.Data.challenge.Record(Module.Info.Id);
+            _end.SetLine(0, string.Format(loc.Get(LocKeys.ChallengeStars), run.stars));
+            _end.SetLine(1, string.Format(loc.Get(LocKeys.ChallengeLevels), run.levelsCleared));
+            _end.SetLine(2, newRecord ? loc.Get(LocKeys.ChallengeNewRecord)
+                : string.Format(loc.Get(LocKeys.ChallengeRecord), record?.stars ?? 0, record?.levels ?? 0), newRecord ? _ctx.Style.primary : (Color?)null);
+            Refresh();
+            _end.Show(() => ChallengeLauncher.Open(_ctx, Module, forceNew: true), GoHome);
+        }
+
+        void ShowPause()
+        {
+            if (_run != null) _pause.SetLine(0, string.Format(_ctx.Loc.Get(LocKeys.ChallengeSummary), _run.level, _run.stars));
+            _pause.Show(() => _pause.Hide(), GoHome);
+        }
+
+        /// <summary>Back to Home (the run is already saved).</summary>
+        void GoHome()
+        {
+            _pause.Hide();
+            _end.Hide();
+            _ctx.Save();
+            _ctx.Screens.ShowRoot(ScreenIds.Home);
+        }
+
+        /// <summary>Challenge: Back opens (or closes) the pause; after the end of the run it goes Home.</summary>
+        public override bool HandleBack()
+        {
+            if (_ctx.TestAds != null && _ctx.TestAds.Showing) return true;   // the ad answers with its own buttons
+            if (_mode != GameMode.Challenge) return false;
+            if (_end.Visible) GoHome();
+            else if (_pause.Visible) _pause.Hide();
+            else ShowPause();
+            return true;
+        }
+
+        /// <summary>Previews: the pause panel.</summary>
+        public void ShowPauseForPreview() => ShowPause();
 
         void Retry()
         {
@@ -251,6 +451,11 @@ namespace ResolverMaster.Core.UI.Screens
 
         void Next()
         {
+            if (_mode == GameMode.Challenge)
+            {
+                LoadChallengeLevel(resume: false);
+                return;
+            }
             if (!HasNext())
             {
                 _ctx.Screens.Back();
@@ -294,6 +499,7 @@ namespace ResolverMaster.Core.UI.Screens
             readonly Image[] _stars = new Image[StarRating.MaxStars];
             readonly TextMeshProUGUI _moves;
             readonly LocalizedText _nextLabel;
+            readonly Button _retry;
             int _earned;
             float _time = -1f;
 
@@ -347,7 +553,8 @@ namespace ResolverMaster.Core.UI.Screens
                 buttons.offsetMin = new Vector2(pad, bottomPad);
                 buttons.offsetMax = new Vector2(-pad, bottomPad + s.buttonHeight);
                 ui.Row(buttons, 32);
-                ui.SecondaryButton("Retry", buttons, LocKeys.WinRetry, out _).onClick.AddListener(() => retry());
+                _retry = ui.SecondaryButton("Retry", buttons, LocKeys.WinRetry, out _);
+                _retry.onClick.AddListener(() => retry());
                 ui.PrimaryButton("Next", buttons, LocKeys.WinNext, out var nextText).onClick.AddListener(() => next());
                 _nextLabel = nextText.GetComponent<LocalizedText>();
 
@@ -363,8 +570,9 @@ namespace ResolverMaster.Core.UI.Screens
                 rt.offsetMax = new Vector2(-sidePad, -top);
             }
 
-            public void Show(int stars, int moves, int minMoves, bool hasNext, bool animate)
+            public void Show(int stars, int moves, int minMoves, bool hasNext, bool animate, bool showRetry = true)
             {
+                _retry.gameObject.SetActive(showRetry);
                 var s = _ctx.Style;
                 _earned = stars;
                 _moves.text = string.Format(_ctx.Loc.Get(LocKeys.WinMoves), moves, minMoves);

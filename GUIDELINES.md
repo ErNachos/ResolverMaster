@@ -37,10 +37,17 @@
 - Scrittura sicura: prima `save.json.tmp`, poi `File.Replace`.
 - Nuovo campo = nuovo campo con valore predefinito, senza cambiare versione. Aumenta `SaveData.CurrentVersion` solo se i dati vecchi vanno convertiti, e aggiungi il passo in `SaveSerializer.Migrate`.
 - Gli id dei giochi (`GameInfo.Id`) non si cambiano mai dopo l'uscita: sono le chiavi dei blocchi di salvataggio.
+- Blocco `challenge` (ErNa-007): run in corso (`runs`, una per gioco) e record (`records`: stelle, poi livelli).
 
 ## 7. Casualità con seed
 - Ogni generatore (livelli Challenge, ecc.) riceve un **seed** esplicito e usa un proprio **`SeededRandom(seed)`** del Core (PCG32, solo aritmetica intera: stesso risultato su ogni piattaforma); mai `UnityEngine.Random` né `System.Random` nella logica. Stesso seed = stesso livello (riproducibile nei test e nei report dei bug).
 - I livelli della Storia si generano **una volta** nell'Editor e si salvano come dati; il telefono non li rigenera. Il validatore avvisa se il generatore non riproduce più un livello dal suo seed.
+
+## 7a. Pubblicità con premio e Challenge (Core, ErNa-007)
+- **Annunci**: solo tramite `IRewardedAdService` (`AppServices.Ads`). La versione si sceglie **solo** in `RewardedAds.Create` (oggi: prova nell'Editor e nelle build di sviluppo, nessun annuncio in rilascio; AdMob andrà lì). Ogni pulsante che usa un annuncio si abilita con `RewardedAds.CanOffer`. Parametri: `AdConfig.asset`.
+- **Lampadina** (aiuto della Storia): la board espone `CanHint`, `ApplyHint`, `HintUsed`; con un aiuto usato al massimo `StarRules.maxStarsWithHint` (2) stelle. I pezzi fissati sono `Pinned` nel `CellLockSet`, non sono mosse e sopravvivono ai reset (non a un nuovo caricamento: `PuzzleBase.OnFreshLoad`).
+- **Challenge**: un gioco fornisce solo `IChallengeSource` (tabella a gradini, margini, generatore con risolutore esatto) da `MinigameModule.Challenge`. Il Core fa seed del livello (`ChallengeRules.LevelSeed`: hash di seed della run, livello, cambi), gradini, massimo (minimo + margine dal 60% al 10%, mai sotto +1), scorta in background (`ChallengeQueue`), run (`ChallengeRunState`), salvataggio, schermate (`GameScreen.StartChallenge`, `ChallengeLauncher`). Limite del generatore in **tentativi**, mai in tempo; poi seed + 1.
+- Una sola run attiva per gioco; salvataggio a ogni mossa e a ogni cambio di livello; la run salva anche il livello generato (una nuova versione del generatore non cambia una run in corso).
 
 ## 7b. Rompicapi
 - Ogni gioco implementa le sue regole su `PuzzleBase<TLevel, TMove>` (carica, mossa, vittoria, annulla, ricomincia; mosse fatte = mosse sulla pila di annullamento) e la sua board su `PuzzleBoard`. Schermate, contatori, stelle e salvataggio sono del Core.
@@ -123,5 +130,6 @@
 - ErNa-002: basi dei rompicapi nel Core (§7b), `SeededRandom` al posto di `System.Random` (§7), file di parametri `PuzzleConfig`/`PlumberConfig` (§4), livelli Storia generati e salvati, popup con `ModalOverlay`, `SnapVisuals` per le anteprime.
 - ErNa-004: stile cartoon del UI kit (sprite con contorno e profondità, `PressableButton`, niente blu/arancione), Home a schede (`CardCarousel`, blocco `home` del salvataggio), librerie di sprite generiche, fonti e arrivi disegnati scelti dal seed (`ArtVariants`), nuovi controlli e misure (§9, §10, §11).
 - ErNa-005: interfaccia di Gemini e TextMesh Pro (§9), pulsanti premuti/disattivati, temi dei capitoli nel Core (§4, §7b), griglie rettangolari (§7b), acqua continua con tempi nella logica (§7b), nuovi controlli e misure (§10, §11).
+- ErNa-007: pubblicità con premio e lampadina, Challenge generica nel Core (§7a), blocco `challenge` del salvataggio (§6), `DialogPanel` (pausa, fine run, conferme).
 - ErNa-006: 4 colori dell'acqua con controlli di palette e daltonismo (§9, §10, §11), ponte (due nodi, `PipeNodes`), croce e ponte non contano mosse, elementi bloccati nel Core (§7b), griglia 7x9 con cornice compatta, liste scorrevoli (§9), 9 capitoli e 6 temi nuovi.
 - ErNa-003: capitoli da 9 livelli, sblocco e id stabili nel Core (§7b); pulsante d'azione opzionale e messaggi brevi nella schermata di gioco (§7b); `Decoration` (§9); nuove regole e controlli dell'Idraulico (§10, `docs/idraulico-regole.md`); anteprime aggiornate (§11).

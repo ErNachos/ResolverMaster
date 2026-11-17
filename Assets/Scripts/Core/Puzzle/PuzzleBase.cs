@@ -34,6 +34,9 @@ namespace ResolverMaster.Core.Puzzle
         public bool IsSolved { get; private set; }
         public bool CanUndo => _undo.Count > 0;
 
+        /// <summary>ErNa-007, Challenge: moves are refused once this many are made (0 = no limit). Undo still works.</summary>
+        public int MoveLimit { get; set; }
+
         public void Load(TLevel level)
         {
             Level = level;
@@ -47,7 +50,7 @@ namespace ResolverMaster.Core.Puzzle
         /// <summary>Moves are refused once the puzzle is solved (the win panel takes over).</summary>
         public bool ApplyMove(TMove move)
         {
-            if (!IsLoaded || IsSolved || !TryApply(move)) return false;
+            if (!IsLoaded || IsSolved || (MoveLimit > 0 && MovesMade >= MoveLimit) || !TryApply(move)) return false;
             _undo.Push(move);
             IsSolved = CheckSolved();
             return true;
@@ -58,6 +61,18 @@ namespace ResolverMaster.Core.Puzzle
             if (!_undo.TryPop(out move)) return false;
             Revert(move);
             IsSolved = CheckSolved();
+            return true;
+        }
+
+        /// <summary>The moves on the undo stack, oldest first (Challenge save, ErNa-007).</summary>
+        public System.Collections.Generic.IReadOnlyList<TMove> History => _undo.Items;
+
+        /// <summary>Restarts and applies <paramref name="moves"/> in order (a saved play resumed). False if one is refused.</summary>
+        public bool Replay(System.Collections.Generic.IEnumerable<TMove> moves)
+        {
+            Restart();
+            foreach (var m in moves)
+                if (!ApplyMove(m)) return false;
             return true;
         }
 

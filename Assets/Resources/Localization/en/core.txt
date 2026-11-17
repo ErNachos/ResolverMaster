@@ -50,3 +50,23 @@ ad.test.wait = Wait {0} s…
 ad.test.ready = End of the ad
 ad.test.watched = Watched
 ad.test.closed = Close
+
+# Challenge (ErNa-007)
+challenge.level = Challenge · Level {0}
+game.moves.max = Moves {0} · min {1} · max {2}
+challenge.pause = Paused
+challenge.summary = Level {0} · {1} stars
+challenge.resume = Resume
+challenge.home = Home
+challenge.over = Run over
+challenge.stars = Stars: {0}
+challenge.levels = Levels cleared: {0}
+challenge.record = Record: {0} stars · {1} levels
+challenge.new_record = New record!
+challenge.new_run = New run
+challenge.confirm_new = The run in progress will be lost.
+common.yes = Yes
+common.no = No
+mode.challenge.run = In progress: level {0} · {1} stars
+home.challenge = Challenge
+home.challenge.resume = Resume

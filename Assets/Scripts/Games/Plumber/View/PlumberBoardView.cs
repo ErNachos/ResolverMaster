@@ -24,7 +24,7 @@ namespace ResolverMaster.Games.Plumber.View
     /// </summary>
     public sealed class PlumberBoardView : PuzzleBoard
     {
-        enum Phase { Playing, Flowing, Spraying, Won, FailEffect, FailPause }
+        enum Phase { Playing, Flowing, Spraying, Won, FailEffect, FailPause, Lost }
 
         const int SplashDrops = 5;
 
@@ -63,7 +63,7 @@ namespace ResolverMaster.Games.Plumber.View
         public override bool CanHint => _phase == Phase.Playing && _puzzle.Grid != null && !_puzzle.IsSolved && _puzzle.TryFindHint(out _, out _);
         public override bool HintUsed => _puzzle.HintUsed;
         /// <summary>The water is running (or its failure effect): taps, undo, restart and the main action wait.</summary>
-        public override bool IsBusy => _phase != Phase.Playing && _phase != Phase.Won;
+        public override bool IsBusy => _phase != Phase.Playing && _phase != Phase.Won && _phase != Phase.Lost;
         public int PooledCells => _pool.Created;
         /// <summary>The fountain drawings of the loaded level (previews measure them).</summary>
         public IEnumerable<RectTransform> EndpointRects
@@ -197,9 +197,44 @@ namespace ResolverMaster.Games.Plumber.View
 
         // ------------------------------------------------------------------ PuzzleBoard
 
+        public override void SetMoveLimit(int limit) => _puzzle.MoveLimit = Mathf.Max(0, limit);
+
+        public override IReadOnlyList<int> MoveHistory => _puzzle.History;
+
+        /// <summary>One rotation digit (0-3) per cell, in reading order.</summary>
+        public override string CaptureState()
+        {
+            var grid = _puzzle.Grid;
+            if (grid == null) return "";
+            var chars = new char[grid.CellCount];
+            for (int c = 0; c < chars.Length; c++) chars[c] = (char)('0' + grid.Pieces[c].Rotation);
+            return new string(chars);
+        }
+
+        public override bool RestoreMoves(IReadOnlyList<int> history)
+        {
+            if (history == null || history.Count == 0) return true;
+            bool ok = _puzzle.Replay(history);
+            if (!ok) _puzzle.Restart();
+            _phase = Phase.Playing;
+            SnapVisuals();
+            RaiseChanged();
+            return ok;
+        }
+
         public override void Load(LevelRequest request)
         {
-            if (request.Mode != GameMode.Story) throw new NotSupportedException("Plumber Challenge comes in a later Update");
+            if (request.Mode == GameMode.Challenge)
+            {
+                // ErNa-007: a generated level (cells in the codec form, exact minimum from the generator)
+                var grid = PlumberLevelCodec.Parse(request.Data);
+                LoadLevel(new PlumberLevel
+                {
+                    number = request.Index + 1, chapter = 0, index = request.Index, seed = request.Seed,
+                    width = grid.Width, height = grid.Height, minMoves = request.MinMoves, cells = request.Data,
+                });
+                return;
+            }
             var levels = _module.StoryLevels;
             if (levels.Count == 0) throw new InvalidOperationException("no Plumber Story levels");
             LoadLevel(levels[Mathf.Clamp(request.Index, 0, levels.Count - 1)]);
@@ -354,8 +389,17 @@ namespace ResolverMaster.Games.Plumber.View
                 _phase = Phase.Won;
                 return;
             }
+            if (_phase == Phase.Lost) return;
             if (_phase != Phase.Playing && _phase != Phase.Won)
             {
+                if (!RestartOnFailure)
+                {
+                    // Challenge: a failure being shown jumps to its end (lost)
+                    EndFailEffect();
+                    _phase = Phase.Lost;
+                    RaiseFailed();
+                    return;
+                }
                 _puzzle.Restart();
                 _phase = Phase.Playing;
                 for (int c = 0; c < _views.Count; c++) _views[c].SnapRotation(ViewSteps(grid, c));
@@ -554,6 +598,14 @@ namespace ResolverMaster.Games.Plumber.View
                     _clock += dt;
                     if (_clock >= _cfg.failPause)
                     {
+                        if (!RestartOnFailure)
+                        {
+                            // Challenge: the run is lost, the board stays as it is under the end panel
+                            _phase = Phase.Lost;
+                            RaiseChanged();
+                            RaiseFailed();
+                            break;
+                        }
                         _puzzle.Restart();
                         _phase = Phase.Playing;
                         SnapVisuals();

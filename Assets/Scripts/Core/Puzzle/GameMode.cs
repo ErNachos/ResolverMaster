@@ -21,12 +21,17 @@ namespace ResolverMaster.Core.Puzzle
         public readonly GameMode Mode;
         public readonly int Index;
         public readonly int Seed;
+        /// <summary>Challenge (ErNa-007): the generated level in the game's format and its exact minimum.</summary>
+        public readonly string Data;
+        public readonly int MinMoves;
 
-        public LevelRequest(GameMode mode, int index, int seed = 0)
+        public LevelRequest(GameMode mode, int index, int seed = 0, string data = null, int minMoves = 0)
         {
             Mode = mode;
             Index = index;
             Seed = seed;
+            Data = data;
+            MinMoves = minMoves;
         }
     }
 }

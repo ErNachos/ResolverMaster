@@ -52,6 +52,34 @@ namespace ResolverMaster.Core.Localization
         public const string AdTestWatched = "ad.test.watched";
         public const string AdTestClosed = "ad.test.closed";
 
+        // ErNa-007: Challenge
+        /// <summary>"Challenge · Level {0}".</summary>
+        public const string ChallengeLevel = "challenge.level";
+        /// <summary>"Moves {0} · min {1} · max {2}".</summary>
+        public const string GameMovesMax = "game.moves.max";
+        public const string ChallengePause = "challenge.pause";
+        /// <summary>"Level {0} · {1} stars" (pause).</summary>
+        public const string ChallengeSummary = "challenge.summary";
+        public const string ChallengeResume = "challenge.resume";
+        public const string ChallengeHome = "challenge.home";
+        public const string ChallengeOver = "challenge.over";
+        /// <summary>"Stars: {0}".</summary>
+        public const string ChallengeStars = "challenge.stars";
+        /// <summary>"Levels cleared: {0}".</summary>
+        public const string ChallengeLevels = "challenge.levels";
+        /// <summary>"Record: {0} stars · {1} levels".</summary>
+        public const string ChallengeRecord = "challenge.record";
+        public const string ChallengeNewRecord = "challenge.new_record";
+        public const string ChallengeNewRun = "challenge.new_run";
+        public const string ChallengeConfirmNew = "challenge.confirm_new";
+        public const string CommonYes = "common.yes";
+        public const string CommonNo = "common.no";
+        /// <summary>"Run in progress: level {0} · {1} stars" (mode choice).</summary>
+        public const string ModeChallengeRun = "mode.challenge.run";
+        /// <summary>Home card: "Challenge" / "Resume".</summary>
+        public const string HomeChallenge = "home.challenge";
+        public const string HomeChallengeResume = "home.challenge.resume";
+
         /// <summary>Language display name key: "language.it", "language.en".</summary>
         public static string LanguageName(Language language) => "language." + LanguageCodes.ToCode(language);
     }

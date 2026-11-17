@@ -16,6 +16,27 @@
 - Scorta: `ChallengeQueue` prepara il livello corrente e i 2 successivi con `Task.Run` (fuori dal thread principale); la sorgente dell'Idraulico (`PlumberChallenge`) è pura e legge solo dati copiati.
 - `Resolver Master/Idraulico/Prova Challenge` scrive i primi 50 livelli di un seed (gradino, griglia, fonti, minimo, massimo, tempo) in `docs/idraulico-challenge.md` e nel log, più i tempi medi di tutti i 16 gradini (livelli 1–70).
 - "Numero di cambi": il prompt lo nomina senza descriverlo. L'ho trattato come il contatore delle volte in cui il livello corrente viene sostituito (es. un futuro "cambia livello" o il salvavita dell'ErNa-008): entra nel seed ed è salvato; oggi resta 0.
+- **Parte D — la run** (Core: `ChallengeRun.cs`, `ChallengeLauncher`, `DialogPanel`, `GameScreen` in modalità Challenge): seed della run casuale (`Environment.TickCount` + `Guid`, solo il seed della run; i livelli ne seguono in modo deterministico). Il livello generato si salva nella run (dati, minimo, massimo): una run ripresa non dipende dalla versione del generatore.
+- Salvataggio a ogni mossa, annullamento e cambio di livello: seed, livello, cambi, livello generato, rotazioni (una cifra per cella), mosse, storico degli annullamenti, annullamenti rimasti, salvavita usato, stelle, livelli superati. Ripresa = ricarica il livello e rigioca lo storico (`PuzzleBase.Replay`); il test controlla che rotazioni e contatori siano identici.
+- Nella Challenge: niente Ricomincia (sarebbe un annullamento illimitato) e niente lampadina; il pulsante Annulla ha un badge con gli annullamenti rimasti. Indietro (pulsante o tasto) = pausa; dopo la fine della run = Home. Un livello vinto mostra il pannello di vittoria con solo "Avanti"; i livelli cambiano tema a ogni gradino.
+- Errore dell'acqua nella Challenge: effetto e messaggio come nella Storia, poi la board si ferma (`PuzzleBoard.RestartOnFailure = false`, evento `Failed`) e compare la fine della run. Il punteggio entra nel record (stelle, a parità livelli), la run viene tolta dal salvataggio.
+- Contatore rosso (`UiKitStyle.offMark`) quando mancano 2 mosse o meno: non è un colore dell'acqua.
+- Home: sulla scheda dell'Idraulico la coppa con il record (stelle) e il pulsante "Challenge" / "Riprendi"; l'illustrazione si accorcia per lasciare spazio (come per "Prossimamente"). Scelta della modalità: Challenge riprende o inizia; sotto, la run in corso o il record, e "Nuova run" con conferma.
+- Tasto Indietro con l'annuncio di prova aperto: ignorato (si risponde con i pulsanti dell'annuncio).
 
 ## Problemi aperti
-- Il tasto Indietro di Android con il pannello dell'annuncio aperto agisce sulla schermata sotto (il pannello resta aperto).
+- "Numero di cambi" e "salvavita usato" sono nel salvataggio ma oggi non cambiano mai (0 / no): li userà "Continua" dell'ErNa-008.
+- AdMob non è integrato: nelle build di rilascio non ci sono annunci e la lampadina resta disattivata (voluto).
+- Le icone della Challenge (fulmine, coppa) sono quelle di Gemini già presenti; nessuna icona nuova.
+
+## Riepilogo finale
+**Fatto**
+- A: annunci con premio nel Core (interfaccia, versione di prova con pannello, scelta in un solo punto, pulsanti disattivati senza annuncio).
+- B: lampadina nella Storia (pezzo più vicino a una fonte, fissato con contorno luminoso, non è una mossa, massimo 2 stelle, sopravvive al reset, nascosta nella Challenge).
+- C: generazione della Challenge deterministica (Core generico + Idraulico), 16 gradini, massimo = minimo + margine, scorta in background, menu Prova Challenge.
+- D: la run completa (contatori, massimo, 3 annullamenti, perdita all'errore, punteggio e record, fine run, pausa, salvataggio a ogni mossa, una run per gioco con conferma, accesso dalla Home e dalla scelta della modalità).
+- Test 31/31 (5 nuovi), validatore OK con 0 errori e 0 avvisi, 0 warning, 176 anteprime senza problemi. Commit A, B, C, D su GitHub.
+
+**Tempi di generazione per gradino** (seed 20261117, livelli 1–70, ms medi / massimi): ch-1 0,0/0,1 · ch-2 0,1/0,1 · ch-3 0,1/0,1 · ch-4 0,0/0,1 · ch-5 0,2/0,3 · ch-6 0,8/3,2 · ch-7 0,5/0,9 · ch-8 0,6/1,2 · ch-9 0,3/0,6 · ch-10 0,3/1,1 · ch-11 0,5/1,8 · ch-12 0,1/0,3 · ch-13 1,3/3,1 · ch-14 0,7/1,7 · ch-15 0,6/1,2 · ch-16 0,9/1,4.
+
+**Da provare sul telefono**: annuncio di prova e lampadina; Challenge (contatore, blocco al massimo, annullamenti, perdita, fine run, record); chiusura e riapertura dell'app a metà livello; pausa con il tasto Indietro; "Nuova run" con conferma; scheda della Home.

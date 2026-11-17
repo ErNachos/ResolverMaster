@@ -243,3 +243,26 @@
 **Problemi aperti / prossimi passi**
 - Con deuteranopia/protanopia arancione e giallo si distinguono soprattutto per luminosità (ΔE 17 simulato): accettabile, ma senza simboli (scelta dell'utente) resta il caso più debole.
 - Il livello 80 (22 mosse) è più lungo del livello 81 (21).
+
+## Update ErNa-007 — Pubblicità con premio (di prova), lampadina e Challenge (2026-11-17)
+
+**Fatto** (dettagli e scelte in `Prompt/Note-ErNa-007.md`)
+- **Nota**: `Prompt/Update-ErNa-008.md` è identico a `Update-ErNa-007.md` (anche il titolo): l'ErNa-007 è stato eseguito una sola volta, nessun ErNa-008 inventato. Come per l'ErNa-006, batchmode sulla copia `Logs/BatchCopy/` perché l'Editor era aperto.
+- **A — annunci con premio (Core)**: `IRewardedAdService`, versione di prova (`TestAdPanel`: "Annuncio di prova", 1,5 s di attesa, Guardato / Chiudi), nessun annuncio in rilascio; un solo punto di scelta (`RewardedAds.Create`); pulsanti disattivati senza annuncio (`RewardedAds.CanOffer`). `AdConfig.asset`.
+- **B — lampadina (Storia)**: annuncio → il risolutore riparte dallo stato attuale e sistema il pezzo del percorso più vicino a una fonte, con l'animazione; il pezzo resta fissato (contorno bianco luminoso), non conta come mossa, non si annulla, sopravvive al reset per errore; al massimo 2 stelle. Disattivata se tutto è già giusto o senza annuncio; nascosta nella Challenge.
+- **C — Challenge, generazione (Core + Idraulico)**: seed del livello = hash(seed della run, livello, cambi); PCG32 del Core; limite in tentativi, poi seed + 1; 16 gradini (3x4 con 1 fonte → 7x9 con 4 fonti, gradini di 3 e poi di 5 livelli, dente di sega a ogni novità); massimo = minimo + margine dal 60% al 10% (almeno +1); scorta dei prossimi 2 livelli fuori dal thread principale; menu *Idraulico > Prova Challenge* (`docs/idraulico-challenge.md`).
+- **D — Challenge, la run**: corsa infinita con seed casuale; mosse / minimo / massimo sempre visibili (rosso a 2 mosse dal massimo); al massimo i pezzi non ruotano; si perde al primo errore dell'acqua; 3 annullamenti per run (badge sul pulsante) che tolgono la mossa; punteggio = stelle (a parità, livelli); record in locale; fine run (stelle, livelli, record evidenziato, Nuova run, Home, spazio per "Continua"); pausa (Riprendi / Home) anche con il tasto Indietro; salvataggio a ogni mossa e a ogni livello (blocco `challenge`); una run per gioco, "Nuova run" con conferma; scheda della Home con record e pulsante Challenge / Riprendi. Struttura generica nel Core.
+- **Test**: 5 nuovi (annunci e pulsanti disattivati; lampadina; generazione deterministica anche su un altro thread, massimo ≥ minimo + 1, ultimo gradino; regole della run, record, salvataggio e ripresa identici).
+
+**Risultati**
+- Compilazione: 0 errori, 0 warning. Test: 31/31 verdi. Validatore: OK (8 controlli, 0 errori, 0 warning).
+- Generazione della Challenge per gradino (livelli 1–70 del seed 20261117): media 0,0–1,3 ms, massimo 3,2 ms (tabella in `docs/idraulico-challenge.md`).
+- Anteprime: 176 immagini, nessun problema misurato (nuove: annuncio di prova, lampadina, Challenge, pausa, fine run, scelta modalità con run in corso, conferma, Home con record).
+
+**Da provare a mano sul telefono**
+- Lampadina: annuncio di prova (attesa, Guardato / Chiudi), pezzo che ruota e si illumina, stelle massime 2, reset dopo un errore.
+- Challenge: contatore rosso, blocco al massimo (scossa), 3 annullamenti, perdita all'errore, fine run e record; chiudere l'app a metà livello e riaprire (riprende identica); pausa con il tasto Indietro; "Nuova run" con conferma; scheda della Home.
+
+**Problemi aperti / prossimi passi**
+- "Numero di cambi" e "salvavita usato" sono salvati ma oggi restano 0 / no: serviranno con "Continua" (ErNa-008).
+- AdMob non integrato: in una build di rilascio la lampadina resta disattivata.
