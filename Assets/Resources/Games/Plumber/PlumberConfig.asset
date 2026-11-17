@@ -18,22 +18,43 @@ MonoBehaviour:
   pipeEmpty: {r: 0.63529414, g: 0.6745098, b: 0.74509805, a: 1}
   waterColors:
   - {r: 0.18431373, g: 0.54509807, b: 0.9372549, a: 1}
+  - {r: 1, g: 0.5411765, b: 0.12156863, a: 1}
+  sinkHaloColors:
+  - {r: 0.6117647, g: 0.78431374, b: 0.96862745, a: 1}
+  - {r: 1, g: 0.7882353, b: 0.5882353, a: 1}
+  errorColor: {r: 0.8980392, g: 0.28235295, b: 0.3019608, a: 1}
   pipeWidth: 0.3
   pipeOutline: 0.05
-  tankRadius: 0.3
-  sinkRingRadius: 0.28
-  sinkRingWidth: 0.11
+  tankRadius: 0.32
+  sinkRingRadius: 0.3
+  sinkRingWidth: 0.1
   tileMargin: 0.035
   tileRadius: 0.14
+  sinkHaloSize: 0.86
+  splashDropSize: 0.16
+  splashDistance: 0.55
   spriteSize: 256
   boardInset: 16
   rotateDuration: 0.12
-  waterStep: 0.06
-  sinkFill: 0.35
-  winPause: 0.3
+  waterStep: 0.07
+  sinkFill: 0.4
+  winPause: 0.35
+  failEffect: 1
+  failPause: 0.45
+  failBlinks: 3
   maxAttempts: 20000
   storySeedBase: 2611000
-  story:
+  chapters:
+  - nameKey: plumber.chapter1.name
+    icon: water_drop
+    color: {r: 0.18431373, g: 0.54509807, b: 0.9372549, a: 1}
+  - nameKey: plumber.chapter2.name
+    icon: fork
+    color: {r: 0.18039216, g: 0.72156864, b: 0.5411765, a: 1}
+  - nameKey: plumber.chapter3.name
+    icon: palette
+    color: {r: 1, g: 0.5411765, b: 0.12156863, a: 1}
+  storyDifficulty:
     tiers:
     - id: c1-1
       firstLevel: 1
@@ -54,6 +75,12 @@ MonoBehaviour:
       - key: crosses
         min: 0
         max: 0
+      - key: sinks
+        min: 1
+        max: 1
+      - key: colors
+        min: 1
+        max: 1
     - id: c1-2
       firstLevel: 2
       lastLevel: 2
@@ -73,6 +100,12 @@ MonoBehaviour:
       - key: crosses
         min: 0
         max: 0
+      - key: sinks
+        min: 1
+        max: 1
+      - key: colors
+        min: 1
+        max: 1
     - id: c1-3
       firstLevel: 3
       lastLevel: 3
@@ -92,9 +125,15 @@ MonoBehaviour:
       - key: crosses
         min: 0
         max: 0
+      - key: sinks
+        min: 1
+        max: 1
+      - key: colors
+        min: 1
+        max: 1
     - id: c1-4
       firstLevel: 4
-      lastLevel: 5
+      lastLevel: 4
       values:
       - key: size
         min: 4
@@ -111,9 +150,40 @@ MonoBehaviour:
       - key: crosses
         min: 0
         max: 0
+      - key: sinks
+        min: 1
+        max: 1
+      - key: colors
+        min: 1
+        max: 1
     - id: c1-5
+      firstLevel: 5
+      lastLevel: 5
+      values:
+      - key: size
+        min: 4
+        max: 4
+      - key: minMoves
+        min: 4
+        max: 5
+      - key: path
+        min: 5
+        max: 8
+      - key: tees
+        min: 0
+        max: 0
+      - key: crosses
+        min: 0
+        max: 0
+      - key: sinks
+        min: 1
+        max: 1
+      - key: colors
+        min: 1
+        max: 1
+    - id: c1-6
       firstLevel: 6
-      lastLevel: 7
+      lastLevel: 6
       values:
       - key: size
         min: 4
@@ -122,15 +192,46 @@ MonoBehaviour:
         min: 5
         max: 6
       - key: path
-        min: 5
+        min: 6
         max: 9
       - key: tees
         min: 0
-        max: 0
+        max: 1
       - key: crosses
         min: 0
         max: 0
-    - id: c1-6
+      - key: sinks
+        min: 1
+        max: 1
+      - key: colors
+        min: 1
+        max: 1
+    - id: c1-7
+      firstLevel: 7
+      lastLevel: 7
+      values:
+      - key: size
+        min: 5
+        max: 5
+      - key: minMoves
+        min: 6
+        max: 7
+      - key: path
+        min: 7
+        max: 12
+      - key: tees
+        min: 1
+        max: 1
+      - key: crosses
+        min: 0
+        max: 0
+      - key: sinks
+        min: 1
+        max: 1
+      - key: colors
+        min: 1
+        max: 1
+    - id: c1-8
       firstLevel: 8
       lastLevel: 8
       values:
@@ -141,17 +242,198 @@ MonoBehaviour:
         min: 7
         max: 8
       - key: path
+        min: 8
+        max: 13
+      - key: tees
+        min: 1
+        max: 2
+      - key: crosses
+        min: 0
+        max: 0
+      - key: sinks
+        min: 1
+        max: 1
+      - key: colors
+        min: 1
+        max: 1
+    - id: c1-9
+      firstLevel: 9
+      lastLevel: 9
+      values:
+      - key: size
+        min: 5
+        max: 5
+      - key: minMoves
+        min: 8
+        max: 10
+      - key: path
         min: 9
         max: 15
       - key: tees
         min: 1
-        max: 3
+        max: 2
       - key: crosses
         min: 0
         max: 0
-    - id: c1-7
-      firstLevel: 9
-      lastLevel: 9
+      - key: sinks
+        min: 1
+        max: 1
+      - key: colors
+        min: 1
+        max: 1
+    - id: c2-1
+      firstLevel: 10
+      lastLevel: 10
+      values:
+      - key: size
+        min: 4
+        max: 4
+      - key: minMoves
+        min: 2
+        max: 3
+      - key: path
+        min: 3
+        max: 6
+      - key: tees
+        min: 1
+        max: 1
+      - key: crosses
+        min: 0
+        max: 0
+      - key: sinks
+        min: 2
+        max: 2
+      - key: colors
+        min: 1
+        max: 1
+    - id: c2-2
+      firstLevel: 11
+      lastLevel: 11
+      values:
+      - key: size
+        min: 4
+        max: 4
+      - key: minMoves
+        min: 3
+        max: 4
+      - key: path
+        min: 4
+        max: 7
+      - key: tees
+        min: 1
+        max: 1
+      - key: crosses
+        min: 0
+        max: 0
+      - key: sinks
+        min: 2
+        max: 2
+      - key: colors
+        min: 1
+        max: 1
+    - id: c2-3
+      firstLevel: 12
+      lastLevel: 12
+      values:
+      - key: size
+        min: 4
+        max: 4
+      - key: minMoves
+        min: 4
+        max: 5
+      - key: path
+        min: 5
+        max: 8
+      - key: tees
+        min: 1
+        max: 1
+      - key: crosses
+        min: 0
+        max: 0
+      - key: sinks
+        min: 2
+        max: 2
+      - key: colors
+        min: 1
+        max: 1
+    - id: c2-4
+      firstLevel: 13
+      lastLevel: 13
+      values:
+      - key: size
+        min: 4
+        max: 4
+      - key: minMoves
+        min: 5
+        max: 6
+      - key: path
+        min: 6
+        max: 9
+      - key: tees
+        min: 1
+        max: 2
+      - key: crosses
+        min: 0
+        max: 0
+      - key: sinks
+        min: 2
+        max: 2
+      - key: colors
+        min: 1
+        max: 1
+    - id: c2-5
+      firstLevel: 14
+      lastLevel: 14
+      values:
+      - key: size
+        min: 5
+        max: 5
+      - key: minMoves
+        min: 6
+        max: 7
+      - key: path
+        min: 7
+        max: 11
+      - key: tees
+        min: 1
+        max: 2
+      - key: crosses
+        min: 0
+        max: 0
+      - key: sinks
+        min: 2
+        max: 2
+      - key: colors
+        min: 1
+        max: 1
+    - id: c2-6
+      firstLevel: 15
+      lastLevel: 15
+      values:
+      - key: size
+        min: 5
+        max: 5
+      - key: minMoves
+        min: 7
+        max: 8
+      - key: path
+        min: 8
+        max: 12
+      - key: tees
+        min: 1
+        max: 2
+      - key: crosses
+        min: 0
+        max: 0
+      - key: sinks
+        min: 2
+        max: 2
+      - key: colors
+        min: 1
+        max: 1
+    - id: c2-7
+      firstLevel: 16
+      lastLevel: 16
       values:
       - key: size
         min: 5
@@ -161,16 +443,22 @@ MonoBehaviour:
         max: 9
       - key: path
         min: 9
-        max: 15
+        max: 13
       - key: tees
         min: 1
-        max: 3
+        max: 2
       - key: crosses
         min: 0
         max: 0
-    - id: c1-8
-      firstLevel: 10
-      lastLevel: 10
+      - key: sinks
+        min: 2
+        max: 2
+      - key: colors
+        min: 1
+        max: 1
+    - id: c2-8
+      firstLevel: 17
+      lastLevel: 17
       values:
       - key: size
         min: 5
@@ -180,10 +468,266 @@ MonoBehaviour:
         max: 10
       - key: path
         min: 10
-        max: 15
+        max: 14
+      - key: tees
+        min: 1
+        max: 2
+      - key: crosses
+        min: 0
+        max: 0
+      - key: sinks
+        min: 2
+        max: 2
+      - key: colors
+        min: 1
+        max: 1
+    - id: c2-9
+      firstLevel: 18
+      lastLevel: 18
+      values:
+      - key: size
+        min: 5
+        max: 5
+      - key: minMoves
+        min: 10
+        max: 12
+      - key: path
+        min: 11
+        max: 16
       - key: tees
         min: 1
         max: 3
       - key: crosses
         min: 0
         max: 0
+      - key: sinks
+        min: 2
+        max: 2
+      - key: colors
+        min: 1
+        max: 1
+    - id: c3-1
+      firstLevel: 19
+      lastLevel: 19
+      values:
+      - key: size
+        min: 5
+        max: 5
+      - key: minMoves
+        min: 2
+        max: 3
+      - key: path
+        min: 2
+        max: 6
+      - key: tees
+        min: 0
+        max: 0
+      - key: crosses
+        min: 0
+        max: 0
+      - key: sinks
+        min: 2
+        max: 2
+      - key: colors
+        min: 2
+        max: 2
+    - id: c3-2
+      firstLevel: 20
+      lastLevel: 20
+      values:
+      - key: size
+        min: 5
+        max: 5
+      - key: minMoves
+        min: 3
+        max: 4
+      - key: path
+        min: 3
+        max: 7
+      - key: tees
+        min: 0
+        max: 0
+      - key: crosses
+        min: 0
+        max: 0
+      - key: sinks
+        min: 2
+        max: 2
+      - key: colors
+        min: 2
+        max: 2
+    - id: c3-3
+      firstLevel: 21
+      lastLevel: 21
+      values:
+      - key: size
+        min: 5
+        max: 5
+      - key: minMoves
+        min: 5
+        max: 6
+      - key: path
+        min: 6
+        max: 10
+      - key: tees
+        min: 0
+        max: 1
+      - key: crosses
+        min: 0
+        max: 0
+      - key: sinks
+        min: 2
+        max: 2
+      - key: colors
+        min: 2
+        max: 2
+    - id: c3-4
+      firstLevel: 22
+      lastLevel: 22
+      values:
+      - key: size
+        min: 5
+        max: 5
+      - key: minMoves
+        min: 6
+        max: 7
+      - key: path
+        min: 7
+        max: 11
+      - key: tees
+        min: 0
+        max: 1
+      - key: crosses
+        min: 0
+        max: 0
+      - key: sinks
+        min: 2
+        max: 2
+      - key: colors
+        min: 2
+        max: 2
+    - id: c3-5
+      firstLevel: 23
+      lastLevel: 23
+      values:
+      - key: size
+        min: 6
+        max: 6
+      - key: minMoves
+        min: 7
+        max: 8
+      - key: path
+        min: 8
+        max: 13
+      - key: tees
+        min: 0
+        max: 1
+      - key: crosses
+        min: 0
+        max: 0
+      - key: sinks
+        min: 2
+        max: 2
+      - key: colors
+        min: 2
+        max: 2
+    - id: c3-6
+      firstLevel: 24
+      lastLevel: 24
+      values:
+      - key: size
+        min: 6
+        max: 6
+      - key: minMoves
+        min: 8
+        max: 9
+      - key: path
+        min: 9
+        max: 14
+      - key: tees
+        min: 0
+        max: 1
+      - key: crosses
+        min: 0
+        max: 0
+      - key: sinks
+        min: 2
+        max: 2
+      - key: colors
+        min: 2
+        max: 2
+    - id: c3-7
+      firstLevel: 25
+      lastLevel: 25
+      values:
+      - key: size
+        min: 6
+        max: 6
+      - key: minMoves
+        min: 9
+        max: 10
+      - key: path
+        min: 10
+        max: 15
+      - key: tees
+        min: 1
+        max: 2
+      - key: crosses
+        min: 0
+        max: 0
+      - key: sinks
+        min: 2
+        max: 2
+      - key: colors
+        min: 2
+        max: 2
+    - id: c3-8
+      firstLevel: 26
+      lastLevel: 26
+      values:
+      - key: size
+        min: 6
+        max: 6
+      - key: minMoves
+        min: 10
+        max: 11
+      - key: path
+        min: 11
+        max: 16
+      - key: tees
+        min: 1
+        max: 2
+      - key: crosses
+        min: 0
+        max: 0
+      - key: sinks
+        min: 2
+        max: 2
+      - key: colors
+        min: 2
+        max: 2
+    - id: c3-9
+      firstLevel: 27
+      lastLevel: 27
+      values:
+      - key: size
+        min: 6
+        max: 6
+      - key: minMoves
+        min: 11
+        max: 13
+      - key: path
+        min: 12
+        max: 18
+      - key: tees
+        min: 1
+        max: 2
+      - key: crosses
+        min: 0
+        max: 0
+      - key: sinks
+        min: 2
+        max: 2
+      - key: colors
+        min: 2
+        max: 2

@@ -21,11 +21,12 @@ using Object = UnityEngine.Object;
 namespace ResolverMaster.Editor
 {
     /// <summary>
-    /// Menu Resolver Master > Make Previews: renders Home, Settings, level choice and game (start, partial water, win panel), in Italian
+    /// Menu Resolver Master > Make Previews: renders Home, Settings, chapter list, 3x3 level grid and game (the last level of each chapter
+    /// before the opening, a successful two-color opening, a failed opening at the leak effect, win panel), in Italian
     /// and English, at 1080x1920 (9:16) and 1080x2520 (9:21)
     /// into Previews/, with the area outside the simulated safe area tinted red, and measures the layout:
     /// safe-area margins, elements off screen or outside the safe area, clipped texts, overlapping elements; on the game screen also the
-    /// cell size and the gaps between the grid, the screen edges and the bars.
+    /// cell size and the gaps between the grid, the screen edges, the bars and the main action button.
     /// Report: Previews/previews_report.txt (also in the log). Batch: -executeMethod ResolverMaster.Editor.PreviewMaker.MakePreviewsBatch
     /// </summary>
     public static class PreviewMaker
@@ -71,20 +72,40 @@ namespace ResolverMaster.Editor
             new Shot { Name = ScreenIds.Settings, Setup = (ctx, m) => m.PushImmediate(ScreenIds.Settings) },
             new Shot
             {
+                Name = "chapters",
+                Setup = (ctx, m) =>
+                {
+                    SampleProgress(ctx);
+                    m.Get<ChapterSelectScreen>(ScreenIds.ChapterSelect).Open(ctx.Games.FindModule(PlumberModule.Id));
+                    m.PushImmediate(ScreenIds.ChapterSelect);
+                },
+            },
+            new Shot
+            {
                 Name = "levels",
                 Setup = (ctx, m) =>
                 {
-                    // sample progress: levels 1-3 solved with 3, 2 and 1 stars, level 4 unlocked, 5+ locked
-                    string mode = GameModeCodes.ToCode(GameMode.Story);
-                    for (int i = 0; i < 3; i++) ctx.Data.progress.SetBest(PlumberModule.Id, mode, i, 3 - i);
-                    m.Get<LevelSelectScreen>(ScreenIds.LevelSelect).Open(ctx.Games.FindModule(PlumberModule.Id));
+                    SampleProgress(ctx);
+                    m.Get<LevelSelectScreen>(ScreenIds.LevelSelect).Open(ctx.Games.FindModule(PlumberModule.Id), 2);
                     m.PushImmediate(ScreenIds.LevelSelect);
                 },
             },
-            GameShot("game_start", 0, BoardPreview.Start, win: false),
-            GameShot("game_partial", 7, BoardPreview.Partial, win: false),
+            // one level per chapter before the opening: the last (largest) of each, 5x5, 5x5 and 6x6
+            GameShot("game_c1", 8, BoardPreview.Start, win: false),
+            GameShot("game_c2", 17, BoardPreview.Start, win: false),
+            GameShot("game_c3", 26, BoardPreview.Start, win: false),
+            GameShot("game_open_ok", 26, BoardPreview.ActionSuccess, win: false),
+            GameShot("game_open_leak", 9, BoardPreview.ActionFailure, win: false),
             GameShot("game_win", 0, BoardPreview.Solved, win: true),
         };
+
+        /// <summary>Sample progress: chapter 1 complete with mixed stars, chapter 2 levels 10-12 solved (3, 2, 1 stars), chapter 3 locked.</summary>
+        static void SampleProgress(AppServices ctx)
+        {
+            var book = ctx.Games.FindModule(PlumberModule.Id).Story;
+            int[] stars = { 3, 3, 2, 3, 1, 2, 3, 3, 2, 3, 2, 1 };
+            for (int i = 0; i < stars.Length && i < book.LevelCount; i++) ctx.Data.progress.SetBest(StoryProgress.Mode, book.IdOf(i), stars[i]);
+        }
 
         static Shot GameShot(string name, int levelIndex, BoardPreview state, bool win) => new Shot
         {
@@ -98,8 +119,8 @@ namespace ResolverMaster.Editor
             {
                 var game = m.Get<GameScreen>(ScreenIds.Game);
                 game.Board.Refit();
-                game.Board.PreparePreview(state);
                 game.Board.SnapVisuals();
+                game.Board.PreparePreview(state);   // leaves the board frozen in the requested state (no time passes in edit mode)
                 if (win) game.ShowWin(animate: false);
             },
         };
@@ -254,8 +275,17 @@ namespace ResolverMaster.Editor
             var top = PixelRect(game.TopBarRect, d);
             var bottom = PixelRect(game.BottomBarRect, d);
             float cell = grid.width / game.Board.GridColumns;
-            return $"{game.Board.GridColumns}x{game.Board.GridColumns} cells of {cell:0.0} px, grid {Fmt(grid)}; gap to screen left {grid.xMin:0} / right {d.Width - grid.xMax:0} px, " +
-                   $"to safe area left {grid.xMin - d.Safe.x:0} / right {d.Safe.xMax - grid.xMax:0} px; gap to top bar {top.yMin - grid.yMax:0} px, to bottom bar {grid.yMin - bottom.yMax:0} px";
+            var sb = new StringBuilder($"{game.Board.GridColumns}x{game.Board.GridColumns} cells of {cell:0.0} px, grid {Fmt(grid)}; gap to screen left {grid.xMin:0} / right {d.Width - grid.xMax:0} px, " +
+                   $"to safe area left {grid.xMin - d.Safe.x:0} / right {d.Safe.xMax - grid.xMax:0} px; gap to top bar {top.yMin - grid.yMax:0} px, to bottom bar {grid.yMin - bottom.yMax:0} px");
+            // the main action button (or the message shown in its place) between the grid and the bottom bar
+            var slotRt = game.MainActionRect ?? game.MessageRect;
+            if (slotRt != null)
+            {
+                var slot = PixelRect(slotRt, d);
+                sb.Append($"; {(game.MainActionRect != null ? "main action" : "message")} {Fmt(slot)} ({slot.width:0}x{slot.height:0} px): " +
+                          $"{grid.yMin - slot.yMax:0} px below the grid, {slot.yMin - bottom.yMax:0} px above the bottom bar, centre offset {slot.center.x - grid.center.x:0} px from the grid centre");
+            }
+            return sb.ToString();
         }
 
         static void TintOutsideSafeArea(Texture2D tex, RectInt safe)
@@ -305,6 +335,7 @@ namespace ResolverMaster.Editor
                 if (mask != null && !Inside(PixelRect(mask.rectTransform, device), r))
                     issues.Add($"hidden by scroll list (scroll to see it): {it.Path}");
 
+                if (it.Graphic.GetComponentInParent<Decoration>() != null) continue;
                 if (it.Graphic is Text t && IsClipped(t)) issues.Add($"text clipped: {it.Path} \"{t.text.Replace('\n', ' ')}\"");
 
                 freeTop = Mathf.Min(freeTop, safe.yMax - r.yMax);
@@ -318,6 +349,7 @@ namespace ResolverMaster.Editor
                 // an Image without sprite draws a plain rectangle: almost always a missing icon
                 if (g is Image img && img.sprite == null && !IsScreenBackground(g))
                     issues.Add($"image without sprite (draws a plain rectangle): {PathOf(g.transform, root)}");
+                if (g.GetComponentInParent<Decoration>() != null) continue;   // transient effects overlap / leave the board on purpose
                 // every element must stay inside its container (nearest ancestor drawn with a sprite: card, button, badge, circle)
                 var container = g.transform.parent != null ? g.transform.parent.GetComponentsInParent<Image>(false).FirstOrDefault(p => p.sprite != null && IsVisible(p)) : null;
                 if (container != null && !Inside(PixelRect(container.rectTransform, device), PixelRect(g.rectTransform, device)))
@@ -325,7 +357,7 @@ namespace ResolverMaster.Editor
             }
 
             // overlaps: leaves (texts, icons) and buttons, ignoring parent/child pairs
-            var boxes = leaves.Concat(visible.Where(g => g.GetComponent<Selectable>() != null && !leaves.Any(l => l.Graphic == g))
+            var boxes = leaves.Where(l => l.Graphic.GetComponentInParent<Decoration>() == null).Concat(visible.Where(g => g.GetComponent<Selectable>() != null && !leaves.Any(l => l.Graphic == g))
                 .Select(g => new Item { Graphic = g, Rect = PixelRect(g.rectTransform, device), Path = PathOf(g.transform, root) })).ToList();
             for (int i = 0; i < boxes.Count; i++)
             for (int j = i + 1; j < boxes.Count; j++)

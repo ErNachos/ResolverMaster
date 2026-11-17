@@ -68,6 +68,9 @@ namespace ResolverMaster.Core.Puzzle
             IsSolved = CheckSolved();
         }
 
+        /// <summary>For games whose win comes from an action that is not a move (e.g. opening the water): re-reads <see cref="CheckSolved"/>.</summary>
+        protected void RefreshSolved() => IsSolved = CheckSolved();
+
         /// <summary>Resets the state to the level start (also used by <see cref="Restart"/>).</summary>
         protected abstract void OnLoad(TLevel level);
         protected abstract bool TryApply(TMove move);

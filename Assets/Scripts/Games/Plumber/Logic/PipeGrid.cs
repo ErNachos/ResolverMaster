@@ -58,6 +58,15 @@ namespace ResolverMaster.Games.Plumber
             return n;
         }
 
+        /// <summary>Number of distinct water colors used by sources and sinks.</summary>
+        public int ColorCount()
+        {
+            var seen = new HashSet<int>();
+            foreach (var p in Pieces)
+                if (p.Kind == PieceKind.Source || p.Kind == PieceKind.Sink) seen.Add(p.Color);
+            return seen.Count;
+        }
+
         /// <summary>Highest water color used by a source or sink (-1 if none).</summary>
         public int MaxColor()
         {

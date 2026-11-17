@@ -60,9 +60,9 @@ namespace ResolverMaster.Games.Plumber.View
             _pieces[PieceKind.Curve] = Make("pipe_curve", size, p => Mathf.Abs((p - Vector2.one).magnitude - 0.5f) - w, rim);
             _pieces[PieceKind.Tee] = Make("pipe_tee", size, p => Mathf.Min(Straight(p), Seg(p, c, right) - w), rim);
             _pieces[PieceKind.Cross] = Make("pipe_cross", size, p => Mathf.Min(Straight(p), Mathf.Min(Seg(p, c, right), Seg(p, c, left)) - w), rim);
+            // a round tank (the color symbol is drawn on it by the board) with its outlet
             _pieces[PieceKind.Source] = Make("pipe_source", size,
-                p => Mathf.Min(Seg(p, c, up) - w, (p - c).magnitude - cfg.tankRadius), rim,
-                p => Mathf.Abs((p - c).magnitude - cfg.tankRadius * 0.45f) < rim * 0.5f);   // inner ring: a tank, not a pipe
+                p => Mathf.Min(Seg(p, c, up) - w, (p - c).magnitude - cfg.tankRadius), rim);
             float ringR = cfg.sinkRingRadius, ringHalf = cfg.sinkRingWidth / 2f;
             _pieces[PieceKind.Sink] = Make("pipe_sink", size,
                 p => Mathf.Min(Seg(p, new Vector2(0.5f, 0.5f + ringR), up) - w, Mathf.Abs((p - c).magnitude - ringR) - ringHalf), rim);

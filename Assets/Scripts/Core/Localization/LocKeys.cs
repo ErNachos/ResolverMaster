@@ -25,8 +25,14 @@ namespace ResolverMaster.Core.Localization
         public const string CommonOn = "common.on";
         public const string CommonOff = "common.off";
 
+        /// <summary>"Story · Chapters" (chapter list subtitle).</summary>
+        public const string ChaptersSubtitle = "chapters.subtitle";
+        /// <summary>"{0}/{1}" stars of a chapter.</summary>
+        public const string ChaptersStars = "chapters.stars";
         /// <summary>"Chapter {0}".</summary>
         public const string LevelsChapter = "levels.chapter";
+        /// <summary>"Chapter {0} · stars {1}/{2}" (level grid subtitle).</summary>
+        public const string LevelsSubtitle = "levels.subtitle";
         /// <summary>"Level {0}".</summary>
         public const string GameLevel = "game.level";
         /// <summary>"Moves {0} · min {1}".</summary>

@@ -20,7 +20,7 @@
 - Eccezione accettata: il salvataggio usa `JsonUtility` (funziona anche in EditMode).
 
 ## 4. Parametri in un unico file per sistema
-- Regole comuni dei rompicapi (stelle): **`PuzzleConfig`** (`Assets/Resources/ResolverMaster/PuzzleConfig.asset`). Idraulico: **`PlumberConfig`** (`Assets/Resources/Games/Plumber/PlumberConfig.asset`: colori, spessori, durate, generatore, tabella di difficoltà). Gli asset mancanti si creano con *Setup > Ensure Config Assets* (valori predefiniti dalle classi; gli asset esistenti non vengono toccati).
+- Regole comuni dei rompicapi (stelle): **`PuzzleConfig`** (`Assets/Resources/ResolverMaster/PuzzleConfig.asset`). Idraulico: **`PlumberConfig`** (`Assets/Resources/Games/Plumber/PlumberConfig.asset`: colori dell'acqua e aloni degli arrivi, spessori, durate, generatore, capitoli, tabella di difficoltà). Gli asset mancanti si creano con *Setup > Ensure Config Assets* (valori predefiniti dalle classi; gli asset esistenti non vengono toccati).
 - UI: **`UiKitStyle`** (`Assets/Resources/ResolverMaster/UiKitStyle.asset`): colori, raggi, spessori, misure, dimensioni del testo, durate delle animazioni, font, sprite generati. Nessun colore o misura sparso nelle schermate.
 - Ogni sistema futuro (Storia, Challenge, ogni minigioco) avrà il suo unico file di parametri.
 
@@ -47,6 +47,17 @@
 - Stelle: 3 al minimo, 2 fino a minimo + max(30% arrotondato per difetto, 2), 1 altrimenti (`StarRules`).
 - Difficoltà: `DifficultyTable` di gradini (livelli coperti + intervalli min/max con chiavi scelte dal gioco). Ogni livello salvato deve rispettare il suo gradino (controllato dal validatore).
 - Mosse minime: calcolate da un risolutore esatto del gioco, mai stimate; il validatore le ricalcola.
+- **Capitoli (Core, `Core/Puzzle/Story.cs`)**:
+  - La Storia di ogni gioco è uno `StoryBook` di capitoli da **9 livelli** (`StoryBook.LevelsPerChapter`), numerati di seguito (1, 2, … 27).
+  - Ogni capitolo ha nome tradotto e tema (`ChapterTheme`: chiave, icona, colore) nel file di parametri del gioco.
+  - Sblocco (`StoryProgress`): il livello successivo si sblocca risolvendo il precedente; il capitolo successivo si sblocca finendo tutti i 9 livelli del precedente, con qualsiasi numero di stelle.
+  - Salvataggio per **id stabile** `LevelId` (gioco, capitolo, indice nel capitolo).
+  - Difficoltà a dente di sega: sale dentro il capitolo e riparte più bassa quando arriva la novità; i primi 2 livelli di un capitolo nuovo sono facili.
+- **Pulsante d'azione (Core, opzionale)**:
+  - Una board che lo vuole dichiara `MainAction` (chiave del testo + icona) e riceve `RunMainAction()`. Esempio: "Apri l'acqua" dell'Idraulico.
+  - Il pulsante sta sopra la barra in basso. Con `IsBusy` la board lo disattiva durante le animazioni, insieme ad annulla e ricomincia.
+  - I messaggi brevi (`MessageRequested(chiave)`) compaiono al posto del pulsante. Durate in `UiKitStyle` (`toastHold`, `toastFade`).
+- Una vittoria che non nasce da una mossa (es. aprire l'acqua) usa `PuzzleBase.RefreshSolved()`; l'azione non conta come mossa.
 
 ## 8. Pooling
 - Gli oggetti creati spesso durante il gioco (pezzi, celle, effetti) si riusano da un pool (`ComponentPool<T>` del Core); niente `Instantiate`/`Destroy` per mossa. Le schermate sono create una volta all'avvio e poi attivate/disattivate.
@@ -60,16 +71,26 @@
 - Un'Image a 9 fette con layout group sullo stesso oggetto riporta come altezza preferita la somma dei bordi dello sprite: fissa l'altezza con un `LayoutElement`.
 - Icone: Google Material Symbols (Apache 2.0) generate da `Tools/Art/make_icons.py` in `Assets/Art/Icons/` (maschere bianche colorate dalla UI). Per aggiungerne una: una riga in `ICONS`, rilancia lo script, poi *UI Kit > Rebuild Icon Library*.
 - I popup a tutto schermo (pannello di vittoria) stanno sotto un livello scuro con `ModalOverlay`: le misure delle anteprime considerano solo il popup.
+- Le grafiche disegnate apposta sopra altre (alone sotto un arrivo, schizzi, evidenziazioni) hanno il componente `Decoration`. Le misure non segnalano le loro sovrapposizioni né l'uscita dal contenitore; restano controllati la posizione sullo schermo e lo sprite.
 - Nessuna animazione deve dipendere da `Awake`/`Start`/coroutine per lo stato finale: ogni board offre `SnapVisuals()` (le anteprime girano in edit mode, dove `Update` non avanza).
 - Font: Fredoka (OFL), `Assets/Art/Fonts/`. Ogni nuovo asset di terze parti va in `docs/crediti.md` con la licenza.
 
 ## 10. Validatore
 - *Resolver Master > Validate*. Ogni classe che implementa `IValidationCheck` viene eseguita automaticamente: un gioco aggiunge i suoi controlli solo dichiarando una classe.
-- Controlli attuali: lingue (stesse chiavi in tutte le lingue, chiavi del codice presenti, righe malformate/duplicate), minigiochi (id, nome e icona validi), UI kit (stile, font, sprite, icone del Core), PuzzleConfig, Idraulico (ogni livello della Storia leggibile, risolvibile, non già risolto, mosse minime salvate = risolutore, valori nel gradino; avviso se il seed non lo riproduce più).
+- Controlli attuali:
+  - lingue: stesse chiavi in tutte le lingue, chiavi del codice presenti, righe malformate o duplicate;
+  - minigiochi: id, nome e icona validi;
+  - UI kit: stile, font, sprite, icone del Core;
+  - PuzzleConfig;
+  - Idraulico, sui parametri: colori e aloni, icone e nomi dei capitoli, chiavi di `PlumberKeys`;
+  - Idraulico, su ogni livello della Storia: leggibile e risolvibile con le regole ErNa-003; mosse minime salvate = risolutore; aprendo l'acqua all'inizio non è già risolto; valori nel gradino; ogni capitolo ha esattamente 9 livelli; nel capitolo 1 la soluzione non usa T e non ne ha bisogno; avviso se il seed non lo riproduce più.
 
 ## 11. Anteprime e misure
-- *Resolver Master > Make Previews*: Home, Impostazioni, Scelta livello, Gioco (livello 1 all'inizio, livello 8 con acqua parziale, pannello di vittoria), IT ed EN, a 1080x1920 (9:16) e 1080x2520 (9:21), in `Previews/` (ignorata da git). La zona fuori dalla safe area simulata è tinta di rosso.
-- `Previews/previews_report.txt` misura: margini della safe area, distanza minima del contenuto dai bordi sicuri, elementi fuori schermo o fuori safe area, testi tagliati, elementi sovrapposti, elementi che escono dal loro contenitore, Image senza sprite; nella schermata di gioco dimensione delle celle e distanza della griglia da bordi e barre.
+- *Resolver Master > Make Previews*, in IT ed EN, a 1080x1920 (9:16) e 1080x2520 (9:21), in `Previews/` (ignorata da git). La zona fuori dalla safe area simulata è tinta di rosso. Schermate:
+  - Home, Impostazioni, lista dei capitoli, griglia 3x3 del capitolo 2;
+  - Gioco: ultimo livello di ogni capitolo prima dell'apertura, apertura riuscita a due colori, apertura sbagliata per perdita nel momento dell'effetto, pannello di vittoria.
+- `Previews/previews_report.txt` misura: margini della safe area, distanza minima del contenuto dai bordi sicuri, elementi fuori schermo o fuori safe area, testi tagliati, elementi sovrapposti, elementi che escono dal loro contenitore, Image senza sprite.
+- Nella schermata di gioco misura anche: dimensione delle celle, distanza della griglia da bordi e barre, posizione del pulsante d'azione (o del messaggio) rispetto a griglia e barra in basso.
 - Safe area simulata: 9:16 nessun ritaglio; 9:21 120 px in alto (foro/notch) e 72 px in basso (barra dei gesti).
 - In Editor gli asset usati dalle anteprime si caricano **dopo** `NewScene(Single)`, che scarica gli asset non referenziati.
 
@@ -82,3 +103,4 @@
 ## Changelog
 - ErNa-001: prima stesura (scheletro del progetto).
 - ErNa-002: basi dei rompicapi nel Core (§7b), `SeededRandom` al posto di `System.Random` (§7), file di parametri `PuzzleConfig`/`PlumberConfig` (§4), livelli Storia generati e salvati, popup con `ModalOverlay`, `SnapVisuals` per le anteprime.
+- ErNa-003: capitoli da 9 livelli, sblocco e id stabili nel Core (§7b); pulsante d'azione opzionale e messaggi brevi nella schermata di gioco (§7b); `Decoration` (§9); nuove regole e controlli dell'Idraulico (§10, `docs/idraulico-regole.md`); anteprime aggiornate (§11).

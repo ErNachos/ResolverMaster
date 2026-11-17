@@ -14,7 +14,7 @@ namespace ResolverMaster.Core.Save
 
         public int version = CurrentVersion;
         public SettingsBlock settings = new SettingsBlock();
-        /// <summary>Stars per level, per minigame and mode (ErNa-002). Missing in older files: no progress.</summary>
+        /// <summary>Stars per level, per minigame, mode and chapter (ErNa-003). Missing in older files: no progress.</summary>
         public ProgressBlock progress = new ProgressBlock();
     }
 

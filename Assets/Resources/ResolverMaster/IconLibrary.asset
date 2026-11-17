@@ -17,6 +17,10 @@ MonoBehaviour:
     sprite: {fileID: 21300000, guid: b7ea459c021bde446b8069c7f7841ad9, type: 3}
   - name: challenge
     sprite: {fileID: 21300000, guid: 9c14f68b55939604baaa6391261c4f8c, type: 3}
+  - name: faucet
+    sprite: {fileID: 21300000, guid: 95da3b79726996041afc5355790df570, type: 3}
+  - name: fork
+    sprite: {fileID: 21300000, guid: 017c15588effb654cb00a7c02d5b4c51, type: 3}
   - name: game_plumber
     sprite: {fileID: 21300000, guid: dc4e9d9c012b28c4d93f590254379614, type: 3}
   - name: game_trafficjam
@@ -27,6 +31,8 @@ MonoBehaviour:
     sprite: {fileID: 21300000, guid: 3fa229fc7b7454f40adbec199194eb75, type: 3}
   - name: lock
     sprite: {fileID: 21300000, guid: b1f8bf642de508f4596ba08072e9caa2, type: 3}
+  - name: palette
+    sprite: {fileID: 21300000, guid: 3e1b10703c64ff54e8c5fcf3a77ff21a, type: 3}
   - name: restart
     sprite: {fileID: 21300000, guid: ee27613b8aac86b40aa9eda061d6965d, type: 3}
   - name: settings
@@ -41,3 +47,5 @@ MonoBehaviour:
     sprite: {fileID: 21300000, guid: 3f3d3f58775eb6e41b73c0d3e8448fd3, type: 3}
   - name: vibration
     sprite: {fileID: 21300000, guid: c07e23fe0decd0546a07cbf61fe7460f, type: 3}
+  - name: water_drop
+    sprite: {fileID: 21300000, guid: 6e961f6d84a49364a8622158636f0c27, type: 3}

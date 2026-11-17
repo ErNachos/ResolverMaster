@@ -8,7 +8,7 @@ using UnityEngine.UI;
 namespace ResolverMaster.Core.UI.Screens
 {
     /// <summary>
-    /// Story / Challenge choice for the selected minigame. Story opens the level choice (if the game has Story levels);
+    /// Story / Challenge choice for the selected minigame. Story opens the chapter list (if the game has Story levels);
     /// Challenge still shows a placeholder message.
     /// </summary>
     public sealed class ModeSelectScreen : UiScreen
@@ -97,7 +97,7 @@ namespace ResolverMaster.Core.UI.Screens
             _message.alpha = 0f;
         }
 
-        /// <summary>Story: level choice when the minigame has saved Story levels, otherwise the placeholder message.</summary>
+        /// <summary>Story: the chapter list when the minigame has saved Story levels, otherwise the placeholder message.</summary>
         void OpenStory()
         {
             var module = Game != null ? _ctx.Games.FindModule(Game.Id) : null;
@@ -106,8 +106,8 @@ namespace ResolverMaster.Core.UI.Screens
                 ShowPlaceholder();
                 return;
             }
-            _ctx.Screens.Get<LevelSelectScreen>(ScreenIds.LevelSelect).Open(module);
-            _ctx.Screens.Push(ScreenIds.LevelSelect);
+            _ctx.Screens.Get<ChapterSelectScreen>(ScreenIds.ChapterSelect).Open(module);
+            _ctx.Screens.Push(ScreenIds.ChapterSelect);
         }
 
         void ShowPlaceholder()

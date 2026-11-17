@@ -11,11 +11,23 @@ namespace ResolverMaster.Core.UI
         /// <summary>About half of the solution applied (partial progress visible).</summary>
         Partial,
         Solved,
+        /// <summary>Main action run on the solved board, at the end of its success animation (before the win panel).</summary>
+        ActionSuccess,
+        /// <summary>Main action run on an unsolved board, at the moment of its failure effect (message visible).</summary>
+        ActionFailure,
+    }
+
+    /// <summary>Optional big action button of the game screen (e.g. "Open the water"): text and icon chosen by the game.</summary>
+    public sealed class MainActionInfo
+    {
+        public string LabelKey;
+        public string IconName;
     }
 
     /// <summary>
     /// The game-specific part of the common game screen: draws the puzzle, takes the taps, runs the animations.
-    /// The Core <c>GameScreen</c> owns the bars, the counters and the win panel and talks to the board only through this class.
+    /// The Core <c>GameScreen</c> owns the bars, the counters, the optional main action button, the short messages and the win panel,
+    /// and talks to the board only through this class.
     /// </summary>
     public abstract class PuzzleBoard : MonoBehaviour
     {
@@ -25,12 +37,24 @@ namespace ResolverMaster.Core.UI
         /// <summary>The level is solved and the win effect has finished: show the win panel.</summary>
         public event Action Completed;
 
+        /// <summary>Show a short message (localization key) on the game screen, e.g. why an attempt failed.</summary>
+        public event Action<string> MessageRequested;
+
         public abstract IPuzzleSession Session { get; }
 
         /// <summary>The rect holding the cells (measured by the previews).</summary>
         public abstract RectTransform GridRect { get; }
 
         public abstract int GridColumns { get; }
+
+        /// <summary>Null = no main action button (default). Read once when the board is shown.</summary>
+        public virtual MainActionInfo MainAction => null;
+
+        /// <summary>An animation is running: the main action, undo and restart are disabled.</summary>
+        public virtual bool IsBusy => false;
+
+        /// <summary>The player pressed the main action button (only called when <see cref="IsBusy"/> is false).</summary>
+        public virtual void RunMainAction() { }
 
         public abstract void Load(LevelRequest request);
         public abstract void Undo();
@@ -47,5 +71,6 @@ namespace ResolverMaster.Core.UI
 
         protected void RaiseChanged() => Changed?.Invoke();
         protected void RaiseCompleted() => Completed?.Invoke();
+        protected void RaiseMessage(string key) => MessageRequested?.Invoke(key);
     }
 }

@@ -6,30 +6,47 @@ namespace ResolverMaster.Games.Plumber
 {
     /// <summary>
     /// Builds a level from a seed inside a difficulty tier:
-    /// 1. a random self-avoiding route source -> sink of the tier's length; the right piece (straight or curve) on every route cell;
-    /// 2. T and cross pieces as the tier asks (on the route or not: a T or a cross can carry any route turn);
-    /// 3. every other cell gets a random straight or curve; 4. every rotatable piece gets a random rotation;
-    /// 5. the solver measures it: candidates already solved, or with minimum moves / route length outside the tier, are discarded
-    /// and the next attempt starts from the same random sequence. Same seed + same tier = same level, on every platform.
+    /// 1. the water routes, by self-avoiding random walks: one source -> one sink (chapter 1); one source -> a T -> two sinks (chapter 2);
+    ///    two separate routes of different colors (chapter 3). Each route cell gets the piece its openings ask for (straight, curve, T);
+    /// 2. decoy T and cross pieces off the routes, as many as the tier asks; 3. random straights and curves everywhere else;
+    /// 4. a random rotation for every rotatable piece;
+    /// 5. the solver measures it: candidates that are already solved, not solvable, too hard for the solver, outside the tier, or
+    ///    (one sink) whose best solution uses a T, are discarded and the next attempt continues the same random sequence.
+    /// Same seed + same tier = same level, on every platform.
     /// </summary>
     public static class PlumberGenerator
     {
+        public enum Layout
+        {
+            /// <summary>One source, one sink.</summary>
+            Single,
+            /// <summary>One source, a T, two sinks of the same color.</summary>
+            Fork,
+            /// <summary>Two sources and two sinks, one pair per color.</summary>
+            TwoColors,
+        }
+
         public sealed class Settings
         {
             public int Size;
             public DifficultyRange MinMoves, Path, Tees, Crosses;
+            public Layout Layout;
             public int MaxAttempts = 20000;
+            /// <summary>Solver node limit per candidate: harder candidates are skipped.</summary>
+            public int SolverLimit = 400000;
 
             public static Settings FromTier(DifficultyTier tier, int maxAttempts)
             {
-                var size = tier.Get(PlumberDifficulty.Size);
+                int sinks = tier.GetOr(PlumberDifficulty.Sinks, 1).min;
+                int colors = tier.GetOr(PlumberDifficulty.Colors, 1).min;
                 return new Settings
                 {
-                    Size = size.min,
+                    Size = tier.Get(PlumberDifficulty.Size).min,
                     MinMoves = tier.Get(PlumberDifficulty.MinMoves),
                     Path = tier.Get(PlumberDifficulty.Path),
                     Tees = tier.GetOr(PlumberDifficulty.Tees, 0),
                     Crosses = tier.GetOr(PlumberDifficulty.Crosses, 0),
+                    Layout = colors >= 2 ? Layout.TwoColors : sinks >= 2 ? Layout.Fork : Layout.Single,
                     MaxAttempts = maxAttempts,
                 };
             }
@@ -38,6 +55,7 @@ namespace ResolverMaster.Games.Plumber
         public sealed class Result
         {
             public PlumberLevel Level;
+            public PlumberSolution Solution;
             public int Attempts;
         }
 
@@ -46,18 +64,23 @@ namespace ResolverMaster.Games.Plumber
         {
             int size = settings.Size;
             if (size < 2) throw new ArgumentException("grid size must be at least 2");
-            if (settings.Path.min < 1 || settings.Path.max + 2 > size * size) throw new ArgumentException("route length does not fit the grid");
+            int minPath = settings.Layout == Layout.Single ? 1 : 2;
+            if (settings.Path.min < minPath || settings.Path.max + 4 > size * size) throw new ArgumentException("route length does not fit the grid");
             var rng = new SeededRandom(seed);
+            var options = new PlumberSolver.Options { MaxExpansions = settings.SolverLimit };
             for (int attempt = 1; attempt <= settings.MaxAttempts; attempt++)
             {
                 var grid = TryBuild(settings, rng);
                 if (grid == null) continue;
-                var sol = PlumberSolver.Solve(grid);
+                var sol = PlumberSolver.Solve(grid, options);
                 if (!sol.Solvable || sol.MinMoves == 0) continue;   // MinMoves 0 = already solved at the start
                 if (!settings.MinMoves.Contains(sol.MinMoves) || !settings.Path.Contains(sol.PathLength)) continue;
+                if (settings.Layout == Layout.Single && sol.TeesOnPath > 0) continue;   // chapter 1: a T is only a decoy
+                if (settings.Layout == Layout.Fork && sol.TeesOnPath == 0) continue;
                 return new Result
                 {
                     Attempts = attempt,
+                    Solution = sol,
                     Level = new PlumberLevel
                     {
                         number = number,
@@ -79,18 +102,103 @@ namespace ResolverMaster.Games.Plumber
             int size = s.Size;
             var grid = new PipeGrid(size, size);
             var topo = grid.Topology;
+            int n = grid.CellCount;
+            var open = new int[n];       // route openings per cell
+            var onRoute = new bool[n];
             int length = rng.Range(s.Path.min, s.Path.max);
+            int routeTees = 0;
 
-            // 1. self-avoiding random walk of length + 2 cells (source, pipes, sink)
-            var route = new List<int> { rng.Next(grid.CellCount) };
-            var onRoute = new bool[grid.CellCount];
-            onRoute[route[0]] = true;
+            switch (s.Layout)
+            {
+                case Layout.Single:
+                {
+                    var route = Walk(topo, rng, rng.Next(n), length + 1, onRoute);
+                    if (route == null) return null;
+                    Mark(topo, grid, open, route, PieceKind.Source, PieceKind.Sink, 0);
+                    break;
+                }
+                case Layout.Fork:
+                {
+                    // length = trunk pipes + the T + the pipes of the two branches
+                    int rest = length - 1;
+                    int trunk = rng.Range(1, Math.Max(1, rest / 2));
+                    int b1 = rng.Range(0, rest - trunk);
+                    int b2 = rest - trunk - b1;
+                    var trunkRoute = Walk(topo, rng, rng.Next(n), trunk + 1, onRoute);   // source + trunk pipes + the T cell
+                    if (trunkRoute == null) return null;
+                    int tee = trunkRoute[trunkRoute.Count - 1];
+                    var branch1 = Walk(topo, rng, tee, b1 + 1, onRoute, startOnRoute: true);
+                    if (branch1 == null) return null;
+                    var branch2 = Walk(topo, rng, tee, b2 + 1, onRoute, startOnRoute: true);
+                    if (branch2 == null) return null;
+                    LinkRoute(topo, open, trunkRoute);
+                    LinkRoute(topo, open, branch1);
+                    LinkRoute(topo, open, branch2);
+                    grid.Pieces[trunkRoute[0]] = Fixed(topo, PieceKind.Source, trunkRoute[0], open, 0);
+                    grid.Pieces[branch1[branch1.Count - 1]] = Fixed(topo, PieceKind.Sink, branch1[branch1.Count - 1], open, 0);
+                    grid.Pieces[branch2[branch2.Count - 1]] = Fixed(topo, PieceKind.Sink, branch2[branch2.Count - 1], open, 0);
+                    routeTees = 1;
+                    break;
+                }
+                default:
+                {
+                    int lenA = rng.Range(1, length - 1);
+                    int lenB = length - lenA;
+                    int colorA = rng.Next(2);
+                    var a = Walk(topo, rng, rng.Next(n), lenA + 1, onRoute);
+                    if (a == null) return null;
+                    int startB = PickFree(rng, onRoute);
+                    if (startB < 0) return null;
+                    var b = Walk(topo, rng, startB, lenB + 1, onRoute);
+                    if (b == null) return null;
+                    Mark(topo, grid, open, a, PieceKind.Source, PieceKind.Sink, colorA);
+                    Mark(topo, grid, open, b, PieceKind.Source, PieceKind.Sink, 1 - colorA);
+                    break;
+                }
+            }
+
+            // route pipes: the piece their openings ask for (the rotation is randomized below anyway)
+            for (int c = 0; c < n; c++)
+            {
+                if (!onRoute[c] || grid.Pieces[c].Kind == PieceKind.Source || grid.Pieces[c].Kind == PieceKind.Sink) continue;
+                grid.Pieces[c] = new Piece(PieceFor(topo, c, open[c]));
+            }
+
+            // decoys off the routes, then fillers
+            var free = new List<int>();
+            for (int c = 0; c < n; c++)
+                if (!onRoute[c]) free.Add(c);
+            rng.Shuffle(free);
+            int decoyTees = Math.Max(0, rng.Range(s.Tees.min, s.Tees.max) - routeTees);
+            int crosses = rng.Range(s.Crosses.min, s.Crosses.max);
+            if (decoyTees + crosses > free.Count) return null;
+            for (int i = 0; i < free.Count; i++)
+            {
+                PieceKind kind = i < decoyTees ? PieceKind.Tee
+                    : i < decoyTees + crosses ? PieceKind.Cross
+                    : rng.Chance(0.5) ? PieceKind.Straight : PieceKind.Curve;
+                grid.Pieces[free[i]] = new Piece(kind);
+            }
+            for (int c = 0; c < n; c++)
+                if (grid.Pieces[c].IsRotatable) grid.Pieces[c].Rotation = rng.Next(topo.RotationSteps);
+            return grid;
+        }
+
+        /// <summary>
+        /// Self-avoiding random walk of <paramref name="steps"/> cells after <paramref name="start"/> (returned list includes the start).
+        /// Marks the cells as route. <paramref name="startOnRoute"/>: the start is already a route cell (a branch leaving a T).
+        /// </summary>
+        static List<int> Walk(SquareTopology topo, SeededRandom rng, int start, int steps, bool[] onRoute, bool startOnRoute = false)
+        {
+            if (!startOnRoute && onRoute[start]) return null;
+            var route = new List<int> { start };
+            onRoute[start] = true;
             var options = new List<int>(4);
-            while (route.Count < length + 2)
+            for (int i = 0; i < steps; i++)
             {
                 int cur = route[route.Count - 1];
                 options.Clear();
-                for (int d = 0; d < 4; d++)
+                for (int d = 0; d < topo.DirectionCount; d++)
                 {
                     int nb = topo.Neighbor(cur, d);
                     if (nb >= 0 && !onRoute[nb]) options.Add(nb);
@@ -100,38 +208,52 @@ namespace ResolverMaster.Games.Plumber
                 route.Add(next);
                 onRoute[next] = true;
             }
-            int src = route[0], sink = route[route.Count - 1];
-            grid.Pieces[src] = new Piece(PieceKind.Source, topo.DirectionTo(src, route[1]));
-            grid.Pieces[sink] = new Piece(PieceKind.Sink, topo.DirectionTo(sink, route[route.Count - 2]));
-            for (int i = 1; i < route.Count - 1; i++)
-            {
-                int entry = topo.DirectionTo(route[i], route[i - 1]);
-                int exit = topo.DirectionTo(route[i], route[i + 1]);
-                grid.Pieces[route[i]] = new Piece(exit == topo.Opposite(entry) ? PieceKind.Straight : PieceKind.Curve);
-            }
+            return route;
+        }
 
-            // 2. T and cross pieces anywhere except source and sink
+        static int PickFree(SeededRandom rng, bool[] onRoute)
+        {
             var free = new List<int>();
-            for (int c = 0; c < grid.CellCount; c++)
-                if (c != src && c != sink) free.Add(c);
-            rng.Shuffle(free);
-            int tees = rng.Range(s.Tees.min, s.Tees.max);
-            int crosses = rng.Range(s.Crosses.min, s.Crosses.max);
-            if (tees + crosses > free.Count) return null;
-            var special = new bool[grid.CellCount];
-            for (int i = 0; i < tees + crosses; i++)
-            {
-                grid.Pieces[free[i]] = new Piece(i < tees ? PieceKind.Tee : PieceKind.Cross);
-                special[free[i]] = true;
-            }
+            for (int c = 0; c < onRoute.Length; c++)
+                if (!onRoute[c]) free.Add(c);
+            return free.Count == 0 ? -1 : rng.Pick(free);
+        }
 
-            // 3. fillers, 4. random rotations
-            for (int c = 0; c < grid.CellCount; c++)
+        static void LinkRoute(SquareTopology topo, int[] open, List<int> route)
+        {
+            for (int i = 0; i + 1 < route.Count; i++)
             {
-                if (!onRoute[c] && !special[c]) grid.Pieces[c] = new Piece(rng.Chance(0.5) ? PieceKind.Straight : PieceKind.Curve);
-                if (grid.Pieces[c].IsRotatable) grid.Pieces[c].Rotation = rng.Next(topo.RotationSteps);
+                int d = topo.DirectionTo(route[i], route[i + 1]);
+                open[route[i]] |= 1 << d;
+                open[route[i + 1]] |= 1 << topo.Opposite(d);
             }
-            return grid;
+        }
+
+        /// <summary>A whole route: first cell = source, last = sink, both of <paramref name="color"/>.</summary>
+        static void Mark(SquareTopology topo, PipeGrid grid, int[] open, List<int> route, PieceKind first, PieceKind last, int color)
+        {
+            LinkRoute(topo, open, route);
+            grid.Pieces[route[0]] = Fixed(topo, first, route[0], open, color);
+            grid.Pieces[route[route.Count - 1]] = Fixed(topo, last, route[route.Count - 1], open, color);
+        }
+
+        static Piece Fixed(SquareTopology topo, PieceKind kind, int cell, int[] open, int color) =>
+            new Piece(kind, RotationFor(topo, cell, PieceShapes.BaseMask(kind), open[cell]), color: color);
+
+        static PieceKind PieceFor(SquareTopology topo, int cell, int mask)
+        {
+            int bits = 0;
+            for (int d = 0; d < topo.DirectionCount; d++)
+                if ((mask & (1 << d)) != 0) bits++;
+            if (bits >= 3) return PieceKind.Tee;
+            return RotationFor(topo, cell, PieceShapes.BaseMask(PieceKind.Straight), mask) >= 0 ? PieceKind.Straight : PieceKind.Curve;
+        }
+
+        static int RotationFor(SquareTopology topo, int cell, int baseMask, int wanted)
+        {
+            for (int k = 0; k < topo.RotationSteps; k++)
+                if (topo.RotateMask(cell, baseMask, k) == wanted) return k;
+            return -1;
         }
     }
 }

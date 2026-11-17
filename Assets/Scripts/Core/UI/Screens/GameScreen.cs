@@ -10,7 +10,8 @@ namespace ResolverMaster.Core.UI.Screens
 {
     /// <summary>
     /// The common game screen of every minigame: top bar (back, level number, moves made / minimum), the puzzle area fitted to the
-    /// screen and the safe area, bottom bar (undo, restart, help - disabled for now) and the win panel.
+    /// screen and the safe area, the optional main action button chosen by the game (short messages appear in its place),
+    /// bottom bar (undo, restart, help - disabled for now) and the win panel.
     /// The puzzle itself is a <see cref="PuzzleBoard"/> created once per minigame by its <see cref="MinigameModule"/>.
     /// </summary>
     public sealed class GameScreen : UiScreen
@@ -23,13 +24,26 @@ namespace ResolverMaster.Core.UI.Screens
         Button _undo, _restart, _help;
         readonly Dictionary<string, PuzzleBoard> _boards = new Dictionary<string, PuzzleBoard>();
         WinPanel _win;
+        Button _action;
+        Image _actionIcon;
+        LocalizedText _actionLabel;
+        CanvasGroup _toast;
+        Text _toastText;
+        float _toastTime = -1f;
+        bool _lastBusy;
 
         public MinigameModule Module { get; private set; }
         public PuzzleBoard Board { get; private set; }
+        /// <summary>0-based index in the whole Story (levels are numbered across chapters).</summary>
         public int LevelIndex { get; private set; }
+        public LevelId Level => Module.Story.IdOf(LevelIndex);
         public RectTransform TopBarRect => _topBar;
         public RectTransform BottomBarRect => _bottomBar;
         public RectTransform PuzzleArea => _area;
+        /// <summary>The main action button, null when the current board has none or a message is shown in its place.</summary>
+        public RectTransform MainActionRect => _action.gameObject.activeSelf ? (RectTransform)_action.transform : null;
+        /// <summary>The short message shown in place of the main action, null when hidden.</summary>
+        public RectTransform MessageRect => _toast.gameObject.activeSelf ? (RectTransform)_toast.transform : null;
         public bool WinVisible => _win.Visible;
 
         public static GameScreen Create(AppServices ctx, Transform parent)
@@ -57,7 +71,7 @@ namespace ResolverMaster.Core.UI.Screens
             mrt.offsetMin = new Vector2(side, 8);
             mrt.offsetMax = new Vector2(-side, -4);
 
-            // ---- puzzle area between the bars ----
+            // ---- puzzle area between the bars (and above the main action, when the board has one) ----
             screen._area = ui.Rect("PuzzleArea", layout.Body);
             UiFactory.Stretch(screen._area, s.screenPadding, s.bottomBarHeight, s.screenPadding, 0);
 
@@ -72,9 +86,30 @@ namespace ResolverMaster.Core.UI.Screens
             screen._undo = screen.BarButton("Undo", "undo", -dx);
             screen._restart = screen.BarButton("Restart", "restart", 0);
             screen._help = screen.BarButton("Help", "help", dx);
-            screen._undo.onClick.AddListener(() => screen.Board?.Undo());
-            screen._restart.onClick.AddListener(() => screen.Board?.Restart());
+            screen._undo.onClick.AddListener(() => { if (screen.Board != null && !screen.Board.IsBusy) screen.Board.Undo(); });
+            screen._restart.onClick.AddListener(() => { if (screen.Board != null && !screen.Board.IsBusy) screen.Board.Restart(); });
             SetEnabled(screen._help, false);   // hints come in a later Update
+
+            // ---- optional main action, centred above the bottom bar; the short messages appear in its place ----
+            var slot = new Vector2(s.mainActionWidth, s.mainActionHeight);
+            var slotPos = new Vector2(0, s.bottomBarHeight + s.mainActionGap);
+            screen._action = ui.Button("MainAction", layout.Body, s.buttonSprite, s.primary);
+            UiFactory.Place((RectTransform)screen._action.transform, 0.5f, 0, slot, slotPos);
+            screen._action.onClick.AddListener(screen.RunMainAction);
+            screen._actionIcon = ui.Icon("Icon", screen._action.transform, null, s.mainActionIconSize, s.onPrimary);
+            UiFactory.Place(screen._actionIcon.rectTransform, 0, 0.5f, new Vector2(s.mainActionIconSize, s.mainActionIconSize), new Vector2(56, 0));
+            var label = ui.Label("Label", screen._action.transform, null, s.headerSize, s.onPrimary, TextAnchor.MiddleCenter, bold: true);
+            UiFactory.Stretch(label.rectTransform, 56 + s.mainActionIconSize + 16, 8, 56, 8);
+            screen._actionLabel = label.gameObject.AddComponent<LocalizedText>();
+            screen._action.gameObject.SetActive(false);
+
+            var toast = ui.Image("Message", layout.Body, s.buttonSprite, s.toastColor);
+            UiFactory.Place(toast.rectTransform, 0.5f, 0, slot, slotPos);
+            screen._toastText = ui.Label("Text", toast.transform, null, s.headerSize, s.toastText, TextAnchor.MiddleCenter, bold: true);
+            UiFactory.Stretch(screen._toastText.rectTransform, 32, 8, 32, 8);
+            screen._toast = toast.gameObject.AddComponent<CanvasGroup>();
+            screen._toast.blocksRaycasts = false;
+            toast.gameObject.SetActive(false);
 
             screen._win = new WinPanel(ctx, layout.Root, screen.Retry, screen.Next);
             return screen;
@@ -99,7 +134,7 @@ namespace ResolverMaster.Core.UI.Screens
             icon.color = c;
         }
 
-        /// <summary>Loads Story level <paramref name="index"/> (0-based) of <paramref name="module"/>; creates its board the first time.</summary>
+        /// <summary>Loads Story level <paramref name="index"/> (0-based, whole Story) of <paramref name="module"/>; creates its board the first time.</summary>
         public void StartLevel(MinigameModule module, int index)
         {
             if (Module != module)
@@ -108,9 +143,11 @@ namespace ResolverMaster.Core.UI.Screens
                 Module = module;
                 Board = GetBoard(module);
                 Board.gameObject.SetActive(true);
+                SetupMainAction();
             }
             LevelIndex = index;
             _win.Hide();
+            HideMessage();
             Board.Load(new LevelRequest(GameMode.Story, index));
             Refresh();
         }
@@ -122,8 +159,29 @@ namespace ResolverMaster.Core.UI.Screens
             if (board == null) throw new System.InvalidOperationException($"minigame '{module.Info.Id}' has no board");
             board.Changed += () => { if (board == Board) Refresh(); };
             board.Completed += () => { if (board == Board) OnCompleted(); };
+            board.MessageRequested += key => { if (board == Board) ShowMessage(_ctx.Loc.Get(key)); };
             _boards[module.Info.Id] = board;
             return board;
+        }
+
+        /// <summary>Shows the main action button only for boards that have one, and gives the puzzle area the room it leaves.</summary>
+        void SetupMainAction()
+        {
+            var s = _ctx.Style;
+            var info = Board.MainAction;
+            _action.gameObject.SetActive(info != null);
+            float bottom = s.bottomBarHeight + (info != null ? s.mainActionHeight + 2 * s.mainActionGap : 0);
+            UiFactory.Stretch(_area, s.screenPadding, bottom, s.screenPadding, 0);
+            if (info == null) return;
+            _actionLabel.Bind(_ctx.Loc, info.LabelKey);
+            _actionIcon.sprite = _ctx.Icons.Get(info.IconName);
+        }
+
+        void RunMainAction()
+        {
+            if (Board == null || Board.IsBusy || Board.Session.IsSolved) return;
+            Board.RunMainAction();
+            Refresh();
         }
 
         void Refresh()
@@ -132,9 +190,42 @@ namespace ResolverMaster.Core.UI.Screens
             var session = Board.Session;
             _title.text = string.Format(_ctx.Loc.Get(LocKeys.GameLevel), LevelIndex + 1);
             _moves.text = string.Format(_ctx.Loc.Get(LocKeys.GameMoves), session.MovesMade, session.MinMoves);
-            bool playing = !session.IsSolved;
+            bool busy = Board.IsBusy;
+            bool playing = !session.IsSolved && !busy;
             SetEnabled(_undo, playing && session.CanUndo);
             SetEnabled(_restart, playing && session.MovesMade > 0);
+            _action.interactable = playing;
+            _actionIcon.color = new Color(1, 1, 1, playing ? 1f : 0.6f);
+            _lastBusy = busy;
+        }
+
+        /// <summary>Short message in place of the main action button (shown at once, held, then faded out).</summary>
+        public void ShowMessage(string text)
+        {
+            _toastText.text = text;
+            _toast.gameObject.SetActive(true);
+            _toast.transform.SetAsLastSibling();
+            _toast.alpha = 1f;
+            _toastTime = 0f;
+            _action.gameObject.SetActive(false);
+        }
+
+        void HideMessage()
+        {
+            _toast.gameObject.SetActive(false);
+            _toastTime = -1f;
+            if (Board != null) _action.gameObject.SetActive(Board.MainAction != null);
+        }
+
+        void TickMessage(float dt)
+        {
+            if (_toastTime < 0f) return;
+            var s = _ctx.Style;
+            _toastTime += dt;
+            float fade = Mathf.Max(0.01f, s.toastFade);
+            float t = _toastTime - s.toastHold;
+            _toast.alpha = t <= 0 ? 1f : Mathf.Clamp01(1f - t / fade);
+            if (t >= fade) HideMessage();
         }
 
         void OnCompleted() => ShowWin(animate: true);
@@ -144,28 +235,45 @@ namespace ResolverMaster.Core.UI.Screens
         {
             var session = Board.Session;
             int stars = StarRating.Compute(session.MovesMade, session.MinMoves, _ctx.Puzzle.stars);
-            if (_ctx.Data.progress.SetBest(Module.Info.Id, GameModeCodes.ToCode(GameMode.Story), LevelIndex, stars)) _ctx.Save();
+            if (_ctx.Data.progress.SetBest(StoryProgress.Mode, Level, stars)) _ctx.Save();
             Refresh();
-            bool hasNext = LevelIndex + 1 < Module.StoryLevelCount;
-            _win.Show(stars, session.MovesMade, session.MinMoves, hasNext, animate);
+            _win.Show(stars, session.MovesMade, session.MinMoves, HasNext(), animate);
         }
+
+        /// <summary>The next numbered level exists and is unlocked (the next chapter only once this one is complete).</summary>
+        bool HasNext() =>
+            LevelIndex + 1 < Module.StoryLevelCount && StoryProgress.IsLevelUnlocked(_ctx.Data.progress, Module.Story, LevelIndex + 1);
 
         void Retry()
         {
             _win.Hide();
+            HideMessage();
             Board.Load(new LevelRequest(GameMode.Story, LevelIndex));
             Refresh();
         }
 
         void Next()
         {
-            if (LevelIndex + 1 < Module.StoryLevelCount) StartLevel(Module, LevelIndex + 1);
-            else _ctx.Screens.Back();
+            if (!HasNext())
+            {
+                _ctx.Screens.Back();
+                return;
+            }
+            var chapter = Module.Story.ChapterOf(LevelIndex + 1);
+            if (!chapter.Contains(LevelIndex))   // moving into the next chapter: Back then returns to its grid
+                _ctx.Screens.Get<LevelSelectScreen>(ScreenIds.LevelSelect)?.Open(Module, chapter.Number);
+            StartLevel(Module, LevelIndex + 1);
         }
 
         public override void OnShow() => Refresh();
 
-        void Update() => _win.Tick(Time.unscaledDeltaTime);
+        void Update()
+        {
+            float dt = Time.unscaledDeltaTime;
+            _win.Tick(dt);
+            TickMessage(dt);
+            if (Board != null && Board.IsBusy != _lastBusy) Refresh();   // animations start and end without a move
+        }
 
         // ------------------------------------------------------------------ win panel
 

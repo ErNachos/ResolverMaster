@@ -5,6 +5,7 @@ namespace ResolverMaster.Core.UI.Screens
         public const string Home = "home";
         public const string ModeSelect = "mode_select";
         public const string Settings = "settings";
+        public const string ChapterSelect = "chapter_select";
         public const string LevelSelect = "level_select";
         public const string Game = "game";
     }

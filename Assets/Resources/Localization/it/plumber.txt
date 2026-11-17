@@ -1,2 +1,12 @@
-# Plumber minigame texts (Italian)
+# Plumber minigame texts (Italian). Keys used by code: Scripts/Games/Plumber/PlumberKeys.cs
 game.plumber.name = Idraulico
+
+plumber.chapter1.name = Prima goccia
+plumber.chapter2.name = Il bivio
+plumber.chapter3.name = Due colori
+
+plumber.action.open = Apri l'acqua
+plumber.fail.leak = Perdita!
+plumber.fail.mix = Colori mescolati!
+plumber.fail.wrong_color = Colore sbagliato!
+plumber.fail.dry = Fontana asciutta!

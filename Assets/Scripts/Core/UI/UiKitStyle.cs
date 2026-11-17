@@ -52,15 +52,29 @@ namespace ResolverMaster.Core.UI
         public float rowIconSize = 64;
         public float badgeHeight = 64;
 
-        [Header("Puzzle screens (level choice, game, win panel)")]
+        [Header("Puzzle screens (chapters, level grid, game, win panel)")]
         public float bottomBarHeight = 208;
         public float gameButtonSize = 144;
         public float gameIconSize = 80;
         public float gameButtonGap = 72;
-        public int levelColumns = 5;
-        public Vector2 levelButtonSize = new Vector2(176, 208);
-        public float levelGridSpacing = 24;
-        public float levelStarSize = 40;
+        /// <summary>Level grid of a chapter: 3 columns x 3 rows (9 levels per chapter).</summary>
+        public int levelColumns = 3;
+        public Vector2 levelButtonSize = new Vector2(280, 300);
+        public float levelGridSpacing = 40;
+        public float levelStarSize = 56;
+        public int levelNumberSize = 84;
+        public float chapterCardHeight = 264;
+        public float chapterIconSize = 168;
+        public float chapterStarSize = 48;
+        /// <summary>Optional main action button, centred above the bottom bar (e.g. "Open the water").</summary>
+        public float mainActionWidth = 760;
+        public float mainActionHeight = 152;
+        /// <summary>Space above and below the main action button.</summary>
+        public float mainActionGap = 24;
+        public float mainActionIconSize = 76;
+        /// <summary>Short message shown where the main action button is (the button hides meanwhile).</summary>
+        public Color toastColor = new Color(0.12f, 0.16f, 0.27f, 0.94f);
+        public Color toastText = Hex(0xFFFFFF);
         public float winPanelWidth = 900;
         public float winStarSize = 150;
         public Color starOn = Hex(0xFFC23D);
@@ -82,6 +96,9 @@ namespace ResolverMaster.Core.UI
         /// <summary>Each earned star pops in (scale 0 -> 1.15 -> 1) in this time, one after the other.</summary>
         public float starPop = 0.28f;
         public float starStagger = 0.16f;
+        public float toastFade = 0.15f;
+        /// <summary>Time a short message stays fully visible.</summary>
+        public float toastHold = 1.2f;
 
         [Header("Fonts (Assets/Art/Fonts)")]
         public Font fontRegular;

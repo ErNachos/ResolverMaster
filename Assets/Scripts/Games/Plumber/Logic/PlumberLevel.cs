@@ -10,8 +10,12 @@ namespace ResolverMaster.Games.Plumber
     [Serializable]
     public sealed class PlumberLevel
     {
-        /// <summary>1-based position in the Story.</summary>
+        /// <summary>1-based position in the Story (levels are numbered across chapters: 1..27).</summary>
         public int number;
+        /// <summary>1-based chapter.</summary>
+        public int chapter;
+        /// <summary>0-based position inside the chapter. (game, chapter, index) is the stable id used by the save.</summary>
+        public int index;
         /// <summary>Difficulty tier id it was generated in.</summary>
         public string tier;
         public int seed;
@@ -19,7 +23,7 @@ namespace ResolverMaster.Games.Plumber
         public int height;
         /// <summary>Minimum taps, computed by <see cref="PlumberSolver"/> (checked again by the validator).</summary>
         public int minMoves;
-        /// <summary>Pipe cells between source and sink in the optimal solution.</summary>
+        /// <summary>Pipe cells the water crosses in the optimal solution.</summary>
         public int path;
         public string cells;
 

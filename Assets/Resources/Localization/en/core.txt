@@ -22,6 +22,9 @@ language.it = Italiano
 language.en = English
 
 levels.chapter = Chapter {0}
+levels.subtitle = Chapter {0}  ·  stars {1}/{2}
+chapters.subtitle = Story  ·  Chapters
+chapters.stars = {0}/{1}
 game.level = Level {0}
 game.moves = Moves {0} · min {1}
 win.title = Level complete!

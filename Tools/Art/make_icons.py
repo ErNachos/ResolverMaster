@@ -41,6 +41,11 @@ ICONS = {
     "challenge": "bolt",
     "game_plumber": "plumbing",
     "game_trafficjam": "directions_car",
+    # Plumber: chapter themes, "Open the water" button
+    "water_drop": "water_drop",
+    "fork": "call_split",
+    "palette": "palette",
+    "faucet": "faucet",
 }
 
 
