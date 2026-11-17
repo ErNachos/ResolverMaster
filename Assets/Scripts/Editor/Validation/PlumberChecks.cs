@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using ResolverMaster.Core.Localization;
@@ -27,6 +28,46 @@ namespace ResolverMaster.Editor.Validation
             }
             if (cfg.stars.twoStarExtraPercent < 0) report.Error("stars: twoStarExtraPercent must be >= 0");
             if (cfg.stars.twoStarMinExtra < 1) report.Error("stars: twoStarMinExtra must be >= 1");
+        }
+    }
+
+    /// <summary>
+    /// Water colors (ErNa-006): the palette rules of <see cref="PlumberPalette"/> (at most 4, never red with green, lightness apart),
+    /// a sink halo for each, and no UI color (UiKitStyle), theme color (ThemeConfig) or chapter color close to a water color
+    /// (delta E below PlumberConfig.minUiWaterDeltaE). Opaque colors only (dim layers and tints are mixed with other colors).
+    /// </summary>
+    public sealed class PlumberPaletteCheck : IValidationCheck
+    {
+        public string Name => "PlumberPalette";
+
+        public void Run(ValidationReport report)
+        {
+            var cfg = AssetDatabase.LoadAssetAtPath<PlumberConfig>(ConfigAssets.PlumberConfigPath);
+            if (cfg == null) return;   // reported by the Plumber check
+            foreach (var p in PlumberPalette.Problems(cfg.waterColors, cfg.minWaterLightnessGap)) report.Error("waterColors: " + p);
+            if (cfg.sinkHaloColors.Count < cfg.waterColors.Count) report.Error("every water color needs a sink halo color in sinkHaloColors");
+
+            var others = new List<(string what, Color color)>();
+            var style = AssetDatabase.LoadAssetAtPath<UiKitStyle>(UiKitAssets.StylePath);
+            if (style != null)
+                foreach (var f in typeof(UiKitStyle).GetFields(BindingFlags.Public | BindingFlags.Instance).Where(f => f.FieldType == typeof(Color)))
+                    others.Add(("UiKitStyle." + f.Name, (Color)f.GetValue(style)));
+            var themes = AssetDatabase.LoadAssetAtPath<ResolverMaster.Core.UI.Themes.ThemeConfig>(ConfigAssets.ThemeConfigPath);
+            if (themes != null)
+                foreach (var t in themes.themes)
+                foreach (var f in typeof(ResolverMaster.Core.UI.Themes.VisualTheme).GetFields(BindingFlags.Public | BindingFlags.Instance).Where(f => f.FieldType == typeof(Color)))
+                    others.Add(($"theme '{t.id}'.{f.Name}", (Color)f.GetValue(t)));
+            for (int i = 0; i < cfg.chapters.Count; i++) others.Add(($"chapter {i + 1} color", cfg.chapters[i].color));
+            others.Add(("pipeEmpty", cfg.pipeEmpty));
+            foreach (var (what, color) in others)
+            {
+                if (color.a < 0.99f) continue;
+                for (int w = 0; w < cfg.waterColors.Count; w++)
+                {
+                    float d = ColorVision.DeltaE(color, cfg.waterColors[w]);
+                    if (d < cfg.minUiWaterDeltaE) report.Error($"{what} #{ColorUtility.ToHtmlStringRGB(color)} is close to water color {w} (delta E {d:0.0} < {cfg.minUiWaterDeltaE:0})");
+                }
+            }
         }
     }
 

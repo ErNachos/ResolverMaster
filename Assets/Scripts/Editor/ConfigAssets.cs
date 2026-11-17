@@ -72,6 +72,27 @@ namespace ResolverMaster.Editor
             }
         }
 
+        /// <summary>
+        /// Overwrites only the game parameter files (PlumberConfig, ThemeConfig) with the default values of their classes (ErNa-006: new
+        /// water colors, chapters 4-9, new themes and difficulty table). Check with git first that they had no manual edits.
+        /// Batch only: -executeMethod ResolverMaster.Editor.ConfigAssets.ResetGameDefaultsBatch
+        /// </summary>
+        public static void ResetGameDefaultsBatch()
+        {
+            try
+            {
+                ResetToDefaults<PlumberConfig>(PlumberConfigPath);
+                ResetToDefaults<ThemeConfig>(ThemeConfigPath);
+                AssetDatabase.SaveAssets();
+                EditorApplication.Exit(0);
+            }
+            catch (Exception e)
+            {
+                Debug.LogException(e);
+                EditorApplication.Exit(1);
+            }
+        }
+
         static void ResetToDefaults<T>(string path) where T : ScriptableObject
         {
             var asset = Ensure<T>(path);

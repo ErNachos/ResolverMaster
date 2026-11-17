@@ -22,10 +22,24 @@ namespace ResolverMaster.Games.Plumber
         public Color lockedTileColor = new Color32(0xC8, 0xC2, 0xB8, 0xFF);
         /// <summary>Every pipe is this grey (the black outline is drawn in the sprite); the water runs inside it.</summary>
         public Color pipeEmpty = new Color32(0xC2, 0xC6, 0xCF, 0xFF);
-        /// <summary>Water color of each source/sink pair (index = Piece.Color): blue, orange.</summary>
-        public List<Color> waterColors = new List<Color> { new Color32(0x2F, 0x8B, 0xEF, 0xFF), new Color32(0xFF, 0x8A, 0x1F, 0xFF) };
-        /// <summary>Halo drawn under each sink, per water color (same index as <see cref="waterColors"/>): a light blue, a light orange.</summary>
-        public List<Color> sinkHaloColors = new List<Color> { new Color32(0x9C, 0xC8, 0xF7, 0xFF), new Color32(0xFF, 0xC9, 0x96, 0xFF) };
+        /// <summary>
+        /// Water color of each source/sink pair (index = Piece.Color), in order of appearance (ErNa-006): blue, orange, violet, yellow.
+        /// Violet and yellow take their hue from the Okabe-Ito palette (reddish purple made darker, yellow): every pair differs in
+        /// lightness by at least <see cref="minWaterLightnessGap"/>, never red together with green. Colors only, no symbols.
+        /// </summary>
+        public List<Color> waterColors = new List<Color>
+        {
+            new Color32(0x2F, 0x8B, 0xEF, 0xFF), new Color32(0xFF, 0x8A, 0x1F, 0xFF), new Color32(0x8E, 0x3A, 0x80, 0xFF), new Color32(0xF0, 0xE4, 0x42, 0xFF),
+        };
+        /// <summary>Halo drawn under each sink, per water color (same index as <see cref="waterColors"/>): light blue, orange, violet, yellow.</summary>
+        public List<Color> sinkHaloColors = new List<Color>
+        {
+            new Color32(0x9C, 0xC8, 0xF7, 0xFF), new Color32(0xFF, 0xC9, 0x96, 0xFF), new Color32(0xD9, 0xB0, 0xD2, 0xFF), new Color32(0xF8, 0xF2, 0xA8, 0xFF),
+        };
+        /// <summary>Validator: smallest difference of lightness (CIE L*) between two water colors (they stay apart also without hue).</summary>
+        public float minWaterLightnessGap = 10f;
+        /// <summary>Validator: smallest color difference (CIE76 delta E) between a water color and any UI, theme or chapter color.</summary>
+        public float minUiWaterDeltaE = 20f;
         /// <summary>Failure highlight (mixed colors, wrong or dry fountain).</summary>
         public Color errorColor = new Color32(0xE5, 0x48, 0x4D, 0xFF);
 
@@ -71,6 +85,14 @@ namespace ResolverMaster.Games.Plumber
         [Header("Board")]
         /// <summary>Space between the edge of the cream board window and the cells (canvas units): inside its inner frame line.</summary>
         public float boardInset = 30;
+        /// <summary>
+        /// Big grids (ErNa-006, 7x9): when the cells would be smaller than this (canvas units), the window frame is drawn thinner
+        /// (<see cref="compactFrameScale"/> of its size, inset scaled the same) and may use <see cref="compactOverflow"/> of the screen
+        /// margin around the puzzle area, so the cells stay about 145-150 units wide on a 1080-wide screen.
+        /// </summary>
+        public float compactCellBelow = 150;
+        [Range(0.3f, 1f)] public float compactFrameScale = 0.5f;
+        public float compactOverflow = 16;
 
         [Header("Water (continuous, ErNa-005)")]
         /// <summary>Speed of the water front along the pipes, in cells per second (the same everywhere).</summary>
@@ -101,8 +123,8 @@ namespace ResolverMaster.Games.Plumber
         [Header("Story chapters (9 levels each, in order)")]
         public List<ChapterTheme> chapters = new List<ChapterTheme>
         {
-            // not blue or orange: those are the water colors. Themes: Core ThemeConfig ids.
-            new ChapterTheme(PlumberKeys.Chapter1, "water_drop", new Color32(0xFF, 0xCD, 0x3C, 0xFF), ThemeConfig.Garden),
+            // never close to the water colors (blue, orange, violet, yellow: checked by the validator). Themes: Core ThemeConfig ids.
+            new ChapterTheme(PlumberKeys.Chapter1, "water_drop", new Color32(0xF2, 0x8D, 0xB2, 0xFF), ThemeConfig.Garden),
             new ChapterTheme(PlumberKeys.Chapter2, "fork", new Color32(0x2E, 0xB8, 0x8A, 0xFF), ThemeConfig.Farm),
             new ChapterTheme(PlumberKeys.Chapter3, "palette", new Color32(0xB0, 0x7C, 0xF0, 0xFF), ThemeConfig.City),
         };

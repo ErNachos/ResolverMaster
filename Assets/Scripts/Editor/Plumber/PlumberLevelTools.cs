@@ -50,6 +50,63 @@ namespace ResolverMaster.Editor.Plumber
             public double Ms;
         }
 
+        /// <summary>
+        /// Menu Resolver Master > Idraulico > Misura risolutore (ErNa-006): generates <see cref="TimingSamples"/> random 7x9 levels with
+        /// 4 colors (and the other big grids) and times the exact solver alone on each one (average, max, nodes).
+        /// Batch: -executeMethod ResolverMaster.Editor.Plumber.PlumberLevelTools.MeasureSolverBatch
+        /// </summary>
+        [MenuItem("Resolver Master/Idraulico/Misura risolutore")]
+        public static void MeasureSolver() => Debug.Log(SolverTiming());
+
+        public static void MeasureSolverBatch()
+        {
+            try
+            {
+                Debug.Log(SolverTiming());
+                EditorApplication.Exit(0);
+            }
+            catch (Exception e)
+            {
+                Debug.LogException(e);
+                EditorApplication.Exit(1);
+            }
+        }
+
+        /// <summary>Solver time on random big levels: (columns, rows, colors, route pipes min..max).</summary>
+        public static string SolverTiming()
+        {
+            var cases = new[] { (6, 8, 2, 12, 18), (6, 8, 3, 14, 22), (7, 9, 3, 18, 26), (7, 9, 4, 18, 28), (7, 9, 4, 26, 34) };
+            var sb = new StringBuilder("PlumberLevelTools: solver timing (exact minimum, no estimate)\n");
+            foreach (var (w, h, colors, pmin, pmax) in cases)
+            {
+                var settings = new PlumberGenerator.Settings
+                {
+                    Width = w, Height = h, ColorCount = colors, Layout = PlumberGenerator.Layout.Colors,
+                    MinMoves = new DifficultyRange(PlumberDifficulty.MinMoves, 1, 999), Path = new DifficultyRange(PlumberDifficulty.Path, pmin, pmax),
+                    Tees = new DifficultyRange(PlumberDifficulty.Tees, 1, 3), Crosses = new DifficultyRange(PlumberDifficulty.Crosses, 0, 1),
+                    MaxAttempts = 2000, SolverLimit = PlumberSolver.DefaultMaxExpansions,
+                };
+                var times = new List<double>();
+                var nodes = new List<int>();
+                var moves = new List<int>();
+                PlumberSolver.Solve(PlumberGenerator.Generate(settings, TimingSeedBase - 1).Level.CreateGrid());   // warm-up (JIT)
+                for (int i = 0; i < TimingSamples; i++)
+                {
+                    var level = PlumberGenerator.Generate(settings, TimingSeedBase + i).Level;
+                    var grid = level.CreateGrid();
+                    var sw = Stopwatch.StartNew();
+                    var sol = PlumberSolver.Solve(grid);
+                    sw.Stop();
+                    times.Add(sw.Elapsed.TotalMilliseconds);
+                    nodes.Add(sol.Expanded);
+                    moves.Add(sol.MinMoves);
+                }
+                sb.Append($"  {w}x{h}, {colors} colors, route pipes {pmin}-{pmax}, {TimingSamples} levels: solver average {times.Average():0.0} ms, max {times.Max():0.0} ms, " +
+                          $"average nodes {nodes.Average():0}, max nodes {nodes.Max()}, minimum moves {moves.Min()}-{moves.Max()}\n");
+            }
+            return sb.ToString();
+        }
+
         static void Run()
         {
             ConfigAssets.EnsureAll();

@@ -2,6 +2,7 @@ using System.Linq;
 using NUnit.Framework;
 using ResolverMaster.Core.Puzzle;
 using ResolverMaster.Games.Plumber;
+using UnityEngine;
 
 namespace ResolverMaster.Tests
 {
@@ -266,6 +267,91 @@ namespace ResolverMaster.Tests
             var eased = new WaterMotion(4f, 0.35f, 0.35f);
             for (float d = 0.1f; d < 5f; d += 0.37f) Assert.AreEqual(d, eased.DistanceAt(eased.TimeAt(d)), 1e-3f, "time and distance agree");
             Assert.AreEqual(t.EndDistance, t.StopDistance, 1e-5f, "success: the water stops when everything is full");
+        }
+
+        // ErNa-006
+        [Test]
+        public void Palette_FourWaterColors_Valid_RedWithGreenOrSameLightnessRejected()
+        {
+            var cfg = UnityEngine.ScriptableObject.CreateInstance<PlumberConfig>();
+            try
+            {
+                Assert.AreEqual(4, cfg.waterColors.Count, "blue, orange, violet, yellow");
+                Assert.AreEqual(cfg.waterColors.Count, cfg.sinkHaloColors.Count);
+                CollectionAssert.IsEmpty(PlumberPalette.Problems(cfg.waterColors, cfg.minWaterLightnessGap));
+                // blue and orange unchanged from ErNa-003
+                Assert.AreEqual(new Color32(0x2F, 0x8B, 0xEF, 0xFF), (Color32)cfg.waterColors[0]);
+                Assert.AreEqual(new Color32(0xFF, 0x8A, 0x1F, 0xFF), (Color32)cfg.waterColors[1]);
+            }
+            finally { UnityEngine.Object.DestroyImmediate(cfg); }
+
+            var redGreen = new[] { new Color(0.85f, 0.1f, 0.1f), new Color(0.2f, 0.75f, 0.2f) };
+            Assert.IsTrue(PlumberPalette.Problems(redGreen, 0f).Any(p => p.Contains("red")));
+            var sameLightness = new[] { new Color(0.5f, 0.5f, 0.5f), new Color(0.52f, 0.5f, 0.48f) };
+            Assert.IsTrue(PlumberPalette.Problems(sameLightness, 10f).Any(p => p.Contains("lightness")));
+        }
+
+        // ErNa-006
+        [Test]
+        public void Solver_ThreeAndFourColors_SolvableAndMinimumEqualsExhaustiveSearch()
+        {
+            // small 3- and 4-color levels: the solver minimum equals the cheapest of every rotation of every pipe
+            foreach (var (w, h, colors) in new[] { (3, 4, 3), (4, 3, 3), (4, 4, 4) })
+            for (int seed = 1; seed <= 6; seed++)
+            {
+                var settings = new PlumberGenerator.Settings
+                {
+                    Width = w, Height = h, ColorCount = colors, Layout = PlumberGenerator.Layout.Colors,
+                    MinMoves = new DifficultyRange(PlumberDifficulty.MinMoves, 1, 99), Path = new DifficultyRange(PlumberDifficulty.Path, colors, w * h - 2 * colors),
+                    Tees = new DifficultyRange(PlumberDifficulty.Tees, 0, 0), Crosses = new DifficultyRange(PlumberDifficulty.Crosses, 0, 0), MaxAttempts = 5000,
+                };
+                var level = PlumberGenerator.Generate(settings, seed * 101).Level;
+                var grid = level.CreateGrid();
+                Assert.AreEqual(colors, grid.ColorCount());
+                var sol = PlumberSolver.Solve(grid);
+                Assert.IsTrue(sol.Solvable, level.cells);
+                Assert.AreEqual(Exhaustive(grid), sol.MinMoves, level.cells);
+                foreach (int cell in sol.Taps) grid.Rotate(cell, 1);
+                Assert.IsTrue(WaterFlow.Compute(grid).Success, level.cells);
+            }
+
+            // a 7x9 level with 4 colors from the generator: same seed, same level, solved by the solver taps
+            var big = new PlumberGenerator.Settings
+            {
+                Width = 7, Height = 9, ColorCount = 4, Layout = PlumberGenerator.Layout.Colors,
+                MinMoves = new DifficultyRange(PlumberDifficulty.MinMoves, 1, 99), Path = new DifficultyRange(PlumberDifficulty.Path, 20, 30),
+                Tees = new DifficultyRange(PlumberDifficulty.Tees, 1, 2), Crosses = new DifficultyRange(PlumberDifficulty.Crosses, 0, 1),
+            };
+            var a = PlumberGenerator.Generate(big, 4242).Level;
+            Assert.AreEqual(a.cells, PlumberGenerator.Generate(big, 4242).Level.cells);
+            var g = a.CreateGrid();
+            Assert.AreEqual(4, g.ColorCount());
+            var s = PlumberSolver.Solve(g);
+            Assert.AreEqual(a.minMoves, s.MinMoves);
+            foreach (int cell in s.Taps) g.Rotate(cell, 1);
+            Assert.IsTrue(WaterFlow.Compute(g).Success);
+        }
+
+        /// <summary>Cheapest successful opening over every rotation of every rotatable piece (small grids only).</summary>
+        static int Exhaustive(PipeGrid start)
+        {
+            var cells = Enumerable.Range(0, start.CellCount).Where(c => start.Pieces[c].IsRotatable).ToArray();
+            Assert.LessOrEqual(cells.Length, 10, "too many pieces for the exhaustive search");
+            int best = int.MaxValue;
+            var grid = start.Clone();
+            int combos = 1 << (2 * cells.Length);
+            for (int k = 0; k < combos; k++)
+            {
+                int cost = 0;
+                for (int i = 0; i < cells.Length; i++)
+                {
+                    int taps = (k >> (2 * i)) & 3;
+                    grid.Pieces[cells[i]].Rotation = (start.Pieces[cells[i]].Rotation + taps) % 4;
+                    cost += taps;
+                }
+                if (cost < best && WaterFlow.Compute(grid).Success) best = cost;
+            }
+            return best;
         }
 
         static PlumberSolution Solve(string cells) => PlumberSolver.Solve(PlumberLevelCodec.Parse(cells));

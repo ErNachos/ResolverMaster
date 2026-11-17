@@ -35,6 +35,8 @@ namespace ResolverMaster.Editor
     public static class PreviewMaker
     {
         public const string OutDir = "Previews";
+        /// <summary>Color-blind versions of the game screens (ErNa-006): Italian only, every device, one file per deficiency.</summary>
+        public const string ColorBlindDir = OutDir + "/colorblind";
 
         /// <summary>A preview resolution with the safe area of a typical phone of that shape (pixels, origin bottom-left).</summary>
         public readonly struct Device
@@ -175,8 +177,10 @@ namespace ResolverMaster.Editor
         public static List<string> Make()
         {
             Directory.CreateDirectory(OutDir);
+            Directory.CreateDirectory(ColorBlindDir);
             var files = new List<string>();
             var report = new StringBuilder("Resolver Master previews - layout measurements\n");
+            AppendPaletteReport(report);
             // batchmode starts on an unsaved untitled scene, which cannot host an additive one: replace it there
             bool additive = !string.IsNullOrEmpty(SceneManager.GetActiveScene().path);
             var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, additive ? NewSceneMode.Additive : NewSceneMode.Single);
@@ -277,6 +281,7 @@ namespace ResolverMaster.Editor
                 RenderTexture.active = prev;
                 TintOutsideSafeArea(tex, device.Safe);
                 File.WriteAllBytes(file, tex.EncodeToPNG());
+                if (shot.Name.StartsWith("game", StringComparison.Ordinal) && lang == Language.Italian) SaveColorBlind(tex, file);
                 Object.DestroyImmediate(tex);
 
                 return Measure(root, device, style, out margins);
@@ -287,6 +292,36 @@ namespace ResolverMaster.Editor
                 Object.DestroyImmediate(camGo);
                 rt.Release();
                 Object.DestroyImmediate(rt);
+            }
+        }
+
+        /// <summary>The same picture as seen with deuteranopia, protanopia and tritanopia (Machado 2009), in <see cref="ColorBlindDir"/>.</summary>
+        static void SaveColorBlind(Texture2D tex, string file)
+        {
+            var src = tex.GetPixels32();
+            var sim = new Texture2D(tex.width, tex.height, TextureFormat.RGBA32, false);
+            try
+            {
+                foreach (var d in ColorVision.Deficiencies)
+                {
+                    sim.SetPixels32(ColorVision.SimulateImage(src, d));
+                    sim.Apply();
+                    File.WriteAllBytes($"{ColorBlindDir}/{Path.GetFileNameWithoutExtension(file)}_{ColorVision.Code(d)}.png", sim.EncodeToPNG());
+                }
+            }
+            finally { Object.DestroyImmediate(sim); }
+        }
+
+        /// <summary>Water colors: lightness, and the smallest difference between two of them as seen normally and with each deficiency.</summary>
+        static void AppendPaletteReport(StringBuilder report)
+        {
+            var cfg = AssetDatabase.LoadAssetAtPath<PlumberConfig>(ConfigAssets.PlumberConfigPath);
+            if (cfg == null) return;
+            report.Append("water colors: ").Append(string.Join(", ", cfg.waterColors.Select((c, i) => $"{i} #{ColorUtility.ToHtmlStringRGB(c)} L* {ColorVision.Lightness(c):0.0}"))).Append('\n');
+            foreach (var d in new[] { ColorDeficiency.None }.Concat(ColorVision.Deficiencies))
+            {
+                float min = PlumberPalette.MinDeltaE(cfg.waterColors, d, out int a, out int b);
+                report.Append($"  {ColorVision.Code(d)}: smallest difference between two water colors delta E {min:0.0} (colors {a} and {b})\n");
             }
         }
 

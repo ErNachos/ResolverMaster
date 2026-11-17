@@ -7,7 +7,7 @@ namespace ResolverMaster.Games.Plumber
     /// <summary>
     /// Builds a level from a seed inside a difficulty tier:
     /// 1. the water routes, by self-avoiding random walks: one source -> one sink (chapter 1); one source -> a T -> two sinks (chapter 2);
-    ///    two separate routes of different colors (chapter 3). Each route cell gets the piece its openings ask for (straight, curve, T);
+    ///    one separate route per color, 2-4 colors (chapters 3, 6, 8). Each route cell gets the piece its openings ask for (straight, curve, T);
     /// 2. decoy T and cross pieces off the routes, as many as the tier asks; 3. random straights and curves everywhere else;
     /// 4. a random rotation for every rotatable piece;
     /// 5. the solver measures it: candidates that are already solved, not solvable, too hard for the solver, outside the tier, or
@@ -22,8 +22,8 @@ namespace ResolverMaster.Games.Plumber
             Single,
             /// <summary>One source, a T, two sinks of the same color.</summary>
             Fork,
-            /// <summary>Two sources and two sinks, one pair per color.</summary>
-            TwoColors,
+            /// <summary>One separate route per color (2-4 colors, ErNa-006): a source and a sink of each color.</summary>
+            Colors,
         }
 
         public sealed class Settings
@@ -32,6 +32,8 @@ namespace ResolverMaster.Games.Plumber
             public int Width, Height;
             public DifficultyRange MinMoves, Path, Tees, Crosses;
             public Layout Layout;
+            /// <summary>Water colors (= routes) of the <see cref="Layout.Colors"/> layout.</summary>
+            public int ColorCount = 1;
             public int MaxAttempts = 20000;
             /// <summary>Solver node limit per candidate: harder candidates are skipped.</summary>
             public int SolverLimit = 400000;
@@ -48,7 +50,8 @@ namespace ResolverMaster.Games.Plumber
                     Path = tier.Get(PlumberDifficulty.Path),
                     Tees = tier.GetOr(PlumberDifficulty.Tees, 0),
                     Crosses = tier.GetOr(PlumberDifficulty.Crosses, 0),
-                    Layout = colors >= 2 ? Layout.TwoColors : sinks >= 2 ? Layout.Fork : Layout.Single,
+                    Layout = colors >= 2 ? Layout.Colors : sinks >= 2 ? Layout.Fork : Layout.Single,
+                    ColorCount = Math.Max(1, colors),
                     MaxAttempts = maxAttempts,
                 };
             }
@@ -65,8 +68,11 @@ namespace ResolverMaster.Games.Plumber
         public static Result Generate(Settings settings, int seed, string tierId = "", int number = 0)
         {
             if (settings.Width < 2 || settings.Height < 2) throw new ArgumentException("grid columns and rows must be at least 2");
-            int minPath = settings.Layout == Layout.Single ? 1 : 2;
-            if (settings.Path.min < minPath || settings.Path.max + 4 > settings.Width * settings.Height) throw new ArgumentException("route length does not fit the grid");
+            int routes = settings.Layout == Layout.Colors ? settings.ColorCount : 1;
+            int endpoints = settings.Layout == Layout.Single ? 2 : settings.Layout == Layout.Fork ? 3 : 2 * routes;
+            int minPath = settings.Layout == Layout.Single ? 1 : settings.Layout == Layout.Fork ? 2 : routes;
+            if (settings.ColorCount > PlumberPalette.MaxColors) throw new ArgumentException($"at most {PlumberPalette.MaxColors} colors");
+            if (settings.Path.min < minPath || settings.Path.max + endpoints > settings.Width * settings.Height) throw new ArgumentException("route length does not fit the grid");
             var rng = new SeededRandom(seed);
             var options = new PlumberSolver.Options { MaxExpansions = settings.SolverLimit };
             for (int attempt = 1; attempt <= settings.MaxAttempts; attempt++)
@@ -142,6 +148,12 @@ namespace ResolverMaster.Games.Plumber
                 }
                 default:
                 {
+                    if (s.ColorCount != 2)
+                    {
+                        if (!BuildRoutes(s, rng, topo, grid, open, onRoute, length)) return null;
+                        break;
+                    }
+                    // two colors: the ErNa-003 sequence of random numbers, so the saved chapter 3 levels stay the same
                     int lenA = rng.Range(1, length - 1);
                     int lenB = length - lenA;
                     int colorA = rng.Next(2);
@@ -182,6 +194,31 @@ namespace ResolverMaster.Games.Plumber
             for (int c = 0; c < n; c++)
                 if (grid.Pieces[c].IsRotatable) grid.Pieces[c].Rotation = rng.Next(topo.RotationSteps);
             return grid;
+        }
+
+        /// <summary>
+        /// <see cref="Settings.ColorCount"/> separate routes (3-4 colors, ErNa-006): the pipes are split at random among the routes
+        /// (at least one each), the colors are shuffled, each route starts on a free cell.
+        /// </summary>
+        static bool BuildRoutes(Settings s, SeededRandom rng, SquareTopology topo, PipeGrid grid, int[] open, bool[] onRoute, int length)
+        {
+            int k = s.ColorCount;
+            if (length < k) return false;
+            var lens = new int[k];
+            for (int i = 0; i < k; i++) lens[i] = 1;
+            for (int i = k; i < length; i++) lens[rng.Next(k)]++;
+            var colors = new int[k];
+            for (int i = 0; i < k; i++) colors[i] = i;
+            rng.Shuffle(colors);
+            for (int r = 0; r < k; r++)
+            {
+                int start = r == 0 ? rng.Next(grid.CellCount) : PickFree(rng, onRoute);
+                if (start < 0) return false;
+                var route = Walk(topo, rng, start, lens[r] + 1, onRoute);
+                if (route == null) return false;
+                Mark(topo, grid, open, route, PieceKind.Source, PieceKind.Sink, colors[r]);
+            }
+            return true;
         }
 
         /// <summary>
