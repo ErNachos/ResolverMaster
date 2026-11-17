@@ -1,8 +1,11 @@
+using System.Collections.Generic;
+using UnityEngine;
+
 namespace ResolverMaster.Core.Games
 {
     public enum GameAvailability
     {
-        /// <summary>Shown in Home with the "Coming soon" badge.</summary>
+        /// <summary>Shown in Home with the "Coming soon" lock; PLAY disabled.</summary>
         ComingSoon,
         Available,
     }
@@ -19,5 +22,25 @@ namespace ResolverMaster.Core.Games
         public GameAvailability Availability;
         /// <summary>Position in Home (ascending).</summary>
         public int Order;
+        /// <summary>
+        /// Illustration of the Home card: sprite name in the card library (Assets/Art/Cards/&lt;name&gt;.png). Missing image = a placeholder
+        /// drawn by code (the game icon), and a validator warning.
+        /// </summary>
+        public string CardImage;
+        /// <summary>Color of the rounded frame of the Home card (not blue or orange: those are the water colors). Transparent = not set (validator error).</summary>
+        public Color CardColor = new Color(0, 0, 0, 0);
+    }
+
+    /// <summary>Which Home card to show at start-up (pure logic, tested in EditMode).</summary>
+    public static class HomeSelection
+    {
+        /// <summary>Index of the saved game in <paramref name="games"/>; the first card when nothing is saved or the game no longer exists.</summary>
+        public static int IndexOf(IReadOnlyList<GameInfo> games, string savedId)
+        {
+            if (games == null || string.IsNullOrEmpty(savedId)) return 0;
+            for (int i = 0; i < games.Count; i++)
+                if (games[i].Id == savedId) return i;
+            return 0;
+        }
     }
 }

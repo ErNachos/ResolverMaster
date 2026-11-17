@@ -58,13 +58,13 @@ namespace ResolverMaster.Core.UI.Screens
             screen._topBar = layout.TopBar;
             ScreenLayout.TopBarButton(ctx, layout.TopBar, "back", left: true).onClick.AddListener(() => ctx.Screens.Back());
             float side = s.screenPadding + s.iconButtonSize + 16;
-            screen._title = ui.Label("Title", layout.TopBar, null, s.headerSize, s.text, TextAnchor.LowerCenter, bold: true);
+            screen._title = ui.Title("Title", layout.TopBar, null, s.headerSize, TextAnchor.LowerCenter);
             var trt = screen._title.rectTransform;
             trt.anchorMin = new Vector2(0, 0.45f);
             trt.anchorMax = new Vector2(1, 1);
             trt.offsetMin = new Vector2(side, 0);
             trt.offsetMax = new Vector2(-side, -8);
-            screen._moves = ui.Label("Moves", layout.TopBar, null, s.smallSize, s.textMuted, TextAnchor.UpperCenter, bold: true);
+            screen._moves = ui.Label("Moves", layout.TopBar, null, s.smallSize, s.text, TextAnchor.UpperCenter, bold: true);
             var mrt = screen._moves.rectTransform;
             mrt.anchorMin = new Vector2(0, 0);
             mrt.anchorMax = new Vector2(1, 0.45f);
@@ -88,25 +88,27 @@ namespace ResolverMaster.Core.UI.Screens
             screen._help = screen.BarButton("Help", "help", dx);
             screen._undo.onClick.AddListener(() => { if (screen.Board != null && !screen.Board.IsBusy) screen.Board.Undo(); });
             screen._restart.onClick.AddListener(() => { if (screen.Board != null && !screen.Board.IsBusy) screen.Board.Restart(); });
-            SetEnabled(screen._help, false);   // hints come in a later Update
+            UiFactory.SetInteractable(screen._help, false);   // hints come in a later Update
 
             // ---- optional main action, centred above the bottom bar; the short messages appear in its place ----
             var slot = new Vector2(s.mainActionWidth, s.mainActionHeight);
             var slotPos = new Vector2(0, s.bottomBarHeight + s.mainActionGap);
-            screen._action = ui.Button("MainAction", layout.Body, s.buttonSprite, s.primary);
+            screen._action = ui.PrimaryButton("MainAction", layout.Body, null, out var label);
             UiFactory.Place((RectTransform)screen._action.transform, 0.5f, 0, slot, slotPos);
             screen._action.onClick.AddListener(screen.RunMainAction);
             screen._actionIcon = ui.Icon("Icon", screen._action.transform, null, s.mainActionIconSize, s.onPrimary);
-            UiFactory.Place(screen._actionIcon.rectTransform, 0, 0.5f, new Vector2(s.mainActionIconSize, s.mainActionIconSize), new Vector2(56, 0));
-            var label = ui.Label("Label", screen._action.transform, null, s.headerSize, s.onPrimary, TextAnchor.MiddleCenter, bold: true);
-            UiFactory.Stretch(label.rectTransform, 56 + s.mainActionIconSize + 16, 8, 56, 8);
+            UiFactory.Place(screen._actionIcon.rectTransform, 0, 0.5f, new Vector2(s.mainActionIconSize, s.mainActionIconSize), new Vector2(56, s.buttonDepth / 2f));
+            label.fontSize = s.headerSize;
+            UiFactory.Stretch(label.rectTransform, 56 + s.mainActionIconSize + 16, 6 + s.buttonDepth, 56, 6);
             screen._actionLabel = label.gameObject.AddComponent<LocalizedText>();
             screen._action.gameObject.SetActive(false);
 
+            // the short (error) messages: same shape as the buttons, red, white outlined text
             var toast = ui.Image("Message", layout.Body, s.buttonSprite, s.toastColor);
             UiFactory.Place(toast.rectTransform, 0.5f, 0, slot, slotPos);
             screen._toastText = ui.Label("Text", toast.transform, null, s.headerSize, s.toastText, TextAnchor.MiddleCenter, bold: true);
-            UiFactory.Stretch(screen._toastText.rectTransform, 32, 8, 32, 8);
+            ui.AddOutline(screen._toastText);
+            UiFactory.Stretch(screen._toastText.rectTransform, 32, 6 + s.buttonDepth, 32, 6);
             screen._toast = toast.gameObject.AddComponent<CanvasGroup>();
             screen._toast.blocksRaycasts = false;
             toast.gameObject.SetActive(false);
@@ -118,20 +120,9 @@ namespace ResolverMaster.Core.UI.Screens
         Button BarButton(string name, string icon, float x)
         {
             var s = _ctx.Style;
-            var b = _ctx.Ui.IconButton(name, _bottomBar, icon);
+            var b = _ctx.Ui.IconButton(name, _bottomBar, icon, s.gameButtonSize, s.gameIconSize);
             UiFactory.Place((RectTransform)b.transform, 0.5f, 0.5f, new Vector2(s.gameButtonSize, s.gameButtonSize), new Vector2(x, 0));
-            var iconImg = b.transform.Find("Icon").GetComponent<Image>();
-            iconImg.rectTransform.sizeDelta = new Vector2(s.gameIconSize, s.gameIconSize);
             return b;
-        }
-
-        static void SetEnabled(Button b, bool on)
-        {
-            b.interactable = on;
-            var icon = b.transform.Find("Icon").GetComponent<Image>();
-            var c = icon.color;
-            c.a = on ? 1f : 0.35f;
-            icon.color = c;
         }
 
         /// <summary>Loads Story level <paramref name="index"/> (0-based, whole Story) of <paramref name="module"/>; creates its board the first time.</summary>
@@ -170,7 +161,7 @@ namespace ResolverMaster.Core.UI.Screens
             var s = _ctx.Style;
             var info = Board.MainAction;
             _action.gameObject.SetActive(info != null);
-            float bottom = s.bottomBarHeight + (info != null ? s.mainActionHeight + 2 * s.mainActionGap : 0);
+            float bottom = s.bottomBarHeight + (info != null ? s.mainActionHeight + s.mainActionGap + s.mainActionGapAbove : 0);
             UiFactory.Stretch(_area, s.screenPadding, bottom, s.screenPadding, 0);
             if (info == null) return;
             _actionLabel.Bind(_ctx.Loc, info.LabelKey);
@@ -192,10 +183,9 @@ namespace ResolverMaster.Core.UI.Screens
             _moves.text = string.Format(_ctx.Loc.Get(LocKeys.GameMoves), session.MovesMade, session.MinMoves);
             bool busy = Board.IsBusy;
             bool playing = !session.IsSolved && !busy;
-            SetEnabled(_undo, playing && session.CanUndo);
-            SetEnabled(_restart, playing && session.MovesMade > 0);
-            _action.interactable = playing;
-            _actionIcon.color = new Color(1, 1, 1, playing ? 1f : 0.6f);
+            UiFactory.SetInteractable(_undo, playing && session.CanUndo);
+            UiFactory.SetInteractable(_restart, playing && session.MovesMade > 0);
+            UiFactory.SetInteractable(_action, playing);
             _lastBusy = busy;
         }
 
@@ -303,11 +293,11 @@ namespace ResolverMaster.Core.UI.Screens
                 _group = dim.gameObject.AddComponent<CanvasGroup>();
 
                 const float pad = 56, titleH = 84, starsH = 180, movesH = 64, gap = 32;
-                float height = pad + titleH + gap + starsH + gap + movesH + gap + 8 + s.buttonHeight + pad;
-                var panel = ui.Image("WinPanel", dim.transform, s.panelSprite, s.surface);
+                float height = pad + titleH + gap + starsH + gap + movesH + gap + 8 + s.buttonHeight + pad + s.cardDepth;
+                var panel = ui.Panel("WinPanel", dim.transform, s.surface);
                 UiFactory.Place(panel.rectTransform, 0.5f, 0.5f, new Vector2(s.winPanelWidth, height), Vector2.zero);
 
-                var title = ui.Label("Title", panel.transform, LocKeys.WinTitle, s.headerSize, s.text, TextAnchor.MiddleCenter, bold: true);
+                var title = ui.Title("Title", panel.transform, LocKeys.WinTitle, s.headerSize);
                 Top(title.rectTransform, pad, titleH, pad);
 
                 var starsRow = ui.Rect("Stars", panel.transform);
@@ -321,18 +311,18 @@ namespace ResolverMaster.Core.UI.Screens
                         new Vector2((i - 1) * step, i == 1 ? 14 : -6));
                 }
 
-                _moves = ui.Label("Moves", panel.transform, null, s.bodySize, s.textMuted, TextAnchor.MiddleCenter);
+                _moves = ui.Label("Moves", panel.transform, null, s.bodySize, s.text, TextAnchor.MiddleCenter, bold: true);
                 Top(_moves.rectTransform, pad + titleH + gap + starsH + gap, movesH, pad);
 
                 var buttons = ui.Rect("Buttons", panel.transform);
                 buttons.anchorMin = new Vector2(0, 0);
                 buttons.anchorMax = new Vector2(1, 0);
                 buttons.pivot = new Vector2(0.5f, 0);
-                buttons.offsetMin = new Vector2(pad, pad);
-                buttons.offsetMax = new Vector2(-pad, pad + s.buttonHeight);
+                buttons.offsetMin = new Vector2(pad, pad + s.cardDepth);
+                buttons.offsetMax = new Vector2(-pad, pad + s.cardDepth + s.buttonHeight);
                 ui.Row(buttons, 32);
-                ui.TextButton("Retry", buttons, LocKeys.WinRetry, s.badge, s.text, out _).onClick.AddListener(() => retry());
-                ui.TextButton("Next", buttons, LocKeys.WinNext, s.primary, s.onPrimary, out var nextText).onClick.AddListener(() => next());
+                ui.SecondaryButton("Retry", buttons, LocKeys.WinRetry, out _).onClick.AddListener(() => retry());
+                ui.PrimaryButton("Next", buttons, LocKeys.WinNext, out var nextText).onClick.AddListener(() => next());
                 _nextLabel = nextText.GetComponent<LocalizedText>();
 
                 dim.gameObject.SetActive(false);

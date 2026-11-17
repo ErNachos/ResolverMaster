@@ -21,12 +21,13 @@ using Object = UnityEngine.Object;
 namespace ResolverMaster.Editor
 {
     /// <summary>
-    /// Menu Resolver Master > Make Previews: renders Home, Settings, chapter list, 3x3 level grid and game (the last level of each chapter
-    /// before the opening, a successful two-color opening, a failed opening at the leak effect, win panel), in Italian
-    /// and English, at 1080x1920 (9:16) and 1080x2520 (9:21)
-    /// into Previews/, with the area outside the simulated safe area tinted red, and measures the layout:
-    /// safe-area margins, elements off screen or outside the safe area, clipped texts, overlapping elements; on the game screen also the
-    /// cell size and the gaps between the grid, the screen edges, the bars and the main action button.
+    /// Menu Resolver Master > Make Previews: renders Home (with the Plumber card and with the Traffic jam card in the centre), mode choice,
+    /// Settings, chapter list, 3x3 level grid and game (a 3x3 level of chapter 1 and a 6x6 level of chapter 3 before the opening, a
+    /// successful two-color opening, a failed opening at the leak effect, win panel), in Italian and English, at 1080x1920 (9:16) and
+    /// 1080x2520 (9:21) into Previews/, with the area outside the simulated safe area tinted red, and measures the layout:
+    /// safe-area margins, elements off screen or outside the safe area, clipped texts, overlapping elements, the smallest button;
+    /// on the game screen also the cell size, the size of the fountain drawings and the gaps between the grid, the screen edges,
+    /// the bars and the main action button.
     /// Report: Previews/previews_report.txt (also in the log). Batch: -executeMethod ResolverMaster.Editor.PreviewMaker.MakePreviewsBatch
     /// </summary>
     public static class PreviewMaker
@@ -68,7 +69,17 @@ namespace ResolverMaster.Editor
 
         static readonly Shot[] Shots =
         {
-            new Shot { Name = ScreenIds.Home },
+            HomeShot(ScreenIds.Home, PlumberModule.Id),
+            HomeShot("home_trafficjam", "trafficjam"),
+            new Shot
+            {
+                Name = ScreenIds.ModeSelect,
+                Setup = (ctx, m) =>
+                {
+                    m.Get<ModeSelectScreen>(ScreenIds.ModeSelect).SetGame(ctx.Games.Find(PlumberModule.Id));
+                    m.PushImmediate(ScreenIds.ModeSelect);
+                },
+            },
             new Shot { Name = ScreenIds.Settings, Setup = (ctx, m) => m.PushImmediate(ScreenIds.Settings) },
             new Shot
             {
@@ -90,9 +101,8 @@ namespace ResolverMaster.Editor
                     m.PushImmediate(ScreenIds.LevelSelect);
                 },
             },
-            // one level per chapter before the opening: the last (largest) of each, 5x5, 5x5 and 6x6
-            GameShot("game_c1", 8, BoardPreview.Start, win: false),
-            GameShot("game_c2", 17, BoardPreview.Start, win: false),
+            // before the opening: the first level of chapter 1 (3x3) and the last of chapter 3 (6x6), the smallest and the largest cells
+            GameShot("game_c1", 0, BoardPreview.Start, win: false),
             GameShot("game_c3", 26, BoardPreview.Start, win: false),
             GameShot("game_open_ok", 26, BoardPreview.ActionSuccess, win: false),
             GameShot("game_open_leak", 9, BoardPreview.ActionFailure, win: false),
@@ -106,6 +116,17 @@ namespace ResolverMaster.Editor
             int[] stars = { 3, 3, 2, 3, 1, 2, 3, 3, 2, 3, 2, 1 };
             for (int i = 0; i < stars.Length && i < book.LevelCount; i++) ctx.Data.progress.SetBest(StoryProgress.Mode, book.IdOf(i), stars[i]);
         }
+
+        /// <summary>Home with the card of <paramref name="gameId"/> in the centre.</summary>
+        static Shot HomeShot(string name, string gameId) => new Shot
+        {
+            Name = name,
+            AfterLayout = (ctx, m) =>
+            {
+                var home = m.Get<HomeScreen>(ScreenIds.Home);
+                home.ShowCard(Math.Max(0, ctx.Games.Games.ToList().FindIndex(g => g.Id == gameId)));
+            },
+        };
 
         static Shot GameShot(string name, int levelIndex, BoardPreview state, bool win) => new Shot
         {
@@ -218,6 +239,7 @@ namespace ResolverMaster.Editor
                     Games = GameRegistry.Discover(),
                     Style = style,
                     Icons = icons,
+                    Cards = AssetDatabase.LoadAssetAtPath<IconLibrary>(UiKitAssets.CardLibraryPath),
                     Puzzle = AssetDatabase.LoadAssetAtPath<PuzzleConfig>(ConfigAssets.PuzzleConfigPath) ?? ScriptableObject.CreateInstance<PuzzleConfig>(),
                 };
                 ctx.Data.settings.language = LanguageCodes.ToCode(lang);
@@ -246,7 +268,7 @@ namespace ResolverMaster.Editor
                 File.WriteAllBytes(file, tex.EncodeToPNG());
                 Object.DestroyImmediate(tex);
 
-                return Measure(root, device, out margins);
+                return Measure(root, device, style, out margins);
             }
             finally
             {
@@ -277,6 +299,13 @@ namespace ResolverMaster.Editor
             float cell = grid.width / game.Board.GridColumns;
             var sb = new StringBuilder($"{game.Board.GridColumns}x{game.Board.GridColumns} cells of {cell:0.0} px, grid {Fmt(grid)}; gap to screen left {grid.xMin:0} / right {d.Width - grid.xMax:0} px, " +
                    $"to safe area left {grid.xMin - d.Safe.x:0} / right {d.Safe.xMax - grid.xMax:0} px; gap to top bar {top.yMin - grid.yMax:0} px, to bottom bar {grid.yMin - bottom.yMax:0} px");
+            // fountain drawings (sources and sinks): drawn size of the square they sit in
+            if (game.Board is ResolverMaster.Games.Plumber.View.PlumberBoardView plumber)
+            {
+                var ends = plumber.EndpointRects.Select(r => PixelRect(r, d)).ToList();
+                if (ends.Count > 0)
+                    sb.Append($"; {ends.Count} sources/sinks drawn at {ends.Min(r => r.width):0.0}x{ends.Min(r => r.height):0.0} px ({ends[0].width / cell * 100:0}% of a cell)");
+            }
             // the main action button (or the message shown in its place) between the grid and the bottom bar
             var slotRt = game.MainActionRect ?? game.MessageRect;
             if (slotRt != null)
@@ -312,7 +341,10 @@ namespace ResolverMaster.Editor
             public string Path;
         }
 
-        static List<string> Measure(RectTransform root, Device device, out string margins)
+        /// <summary>The first enabled <see cref="Decoration"/> on the graphic or its parents (a disabled one does not count).</summary>
+        static Decoration Deco(Component g) => g.GetComponentsInParent<Decoration>(false).FirstOrDefault(x => x.enabled);
+
+        static List<string> Measure(RectTransform root, Device device, UiKitStyle style, out string margins)
         {
             var issues = new List<string>();
             var screen = new Rect(0, 0, device.Width, device.Height);
@@ -329,13 +361,15 @@ namespace ResolverMaster.Editor
             foreach (var it in leaves)
             {
                 var r = it.Rect;
+                var deco = Deco(it.Graphic);
+                if (deco != null && deco.mayLeaveScreen) continue;   // side cards of the Home carousel peek in from the edges
                 if (!Inside(screen, r)) issues.Add($"off screen: {it.Path} {Fmt(r)}");
                 else if (!Inside(safe, r)) issues.Add($"outside safe area: {it.Path} {Fmt(r)}");
                 var mask = it.Graphic.GetComponentInParent<RectMask2D>();
                 if (mask != null && !Inside(PixelRect(mask.rectTransform, device), r))
                     issues.Add($"hidden by scroll list (scroll to see it): {it.Path}");
 
-                if (it.Graphic.GetComponentInParent<Decoration>() != null) continue;
+                if (deco != null) continue;
                 if (it.Graphic is Text t && IsClipped(t)) issues.Add($"text clipped: {it.Path} \"{t.text.Replace('\n', ' ')}\"");
 
                 freeTop = Mathf.Min(freeTop, safe.yMax - r.yMax);
@@ -349,7 +383,7 @@ namespace ResolverMaster.Editor
                 // an Image without sprite draws a plain rectangle: almost always a missing icon
                 if (g is Image img && img.sprite == null && !IsScreenBackground(g))
                     issues.Add($"image without sprite (draws a plain rectangle): {PathOf(g.transform, root)}");
-                if (g.GetComponentInParent<Decoration>() != null) continue;   // transient effects overlap / leave the board on purpose
+                if (Deco(g) != null) continue;   // transient effects overlap / leave the board on purpose
                 // every element must stay inside its container (nearest ancestor drawn with a sprite: card, button, badge, circle)
                 var container = g.transform.parent != null ? g.transform.parent.GetComponentsInParent<Image>(false).FirstOrDefault(p => p.sprite != null && IsVisible(p)) : null;
                 if (container != null && !Inside(PixelRect(container.rectTransform, device), PixelRect(g.rectTransform, device)))
@@ -357,7 +391,7 @@ namespace ResolverMaster.Editor
             }
 
             // overlaps: leaves (texts, icons) and buttons, ignoring parent/child pairs
-            var boxes = leaves.Where(l => l.Graphic.GetComponentInParent<Decoration>() == null).Concat(visible.Where(g => g.GetComponent<Selectable>() != null && !leaves.Any(l => l.Graphic == g))
+            var boxes = leaves.Where(l => Deco(l.Graphic) == null).Concat(visible.Where(g => g.GetComponent<Selectable>() != null && Deco(g) == null && !leaves.Any(l => l.Graphic == g))
                 .Select(g => new Item { Graphic = g, Rect = PixelRect(g.rectTransform, device), Path = PathOf(g.transform, root) })).ToList();
             for (int i = 0; i < boxes.Count; i++)
             for (int j = i + 1; j < boxes.Count; j++)
@@ -370,7 +404,18 @@ namespace ResolverMaster.Editor
                 if (ix > 1 && iy > 1) issues.Add($"overlap {ix:0}x{iy:0} px: {a.Path} <-> {b.Path}");
             }
 
-            margins = $"content-to-safe-edge min gap top {freeTop:0}, bottom {freeBottom:0}, left {freeLeft:0}, right {freeRight:0} px";
+            // touch size: the smallest visible button (side cards of the carousel excluded: they are scaled down on purpose)
+            var buttons = visible.Where(g => g.GetComponent<Selectable>() != null && Deco(g) == null)
+                .Select(g => (path: PathOf(g.transform, root), rect: PixelRect(g.rectTransform, device))).ToList();
+            string smallest = "no buttons";
+            if (buttons.Count > 0)
+            {
+                var min = buttons.OrderBy(b => Mathf.Min(b.rect.width, b.rect.height)).First();
+                smallest = $"smallest button {min.rect.width:0}x{min.rect.height:0} px ({min.path})";
+                foreach (var b in buttons.Where(b => Mathf.Min(b.rect.width, b.rect.height) < style.minTouchSize - 0.5f))
+                    issues.Add($"button smaller than {style.minTouchSize:0} px: {b.path} {b.rect.width:0}x{b.rect.height:0}");
+            }
+            margins = $"content-to-safe-edge min gap top {freeTop:0}, bottom {freeBottom:0}, left {freeLeft:0}, right {freeRight:0} px; {smallest}";
             return issues;
         }
 

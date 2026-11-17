@@ -48,10 +48,10 @@ namespace ResolverMaster.Core.UI.Screens
             return b;
         }
 
-        /// <summary>Title centred in the top bar, leaving room for the two round buttons.</summary>
+        /// <summary>Title (light text, dark outline) centred in the top bar, leaving room for the two round buttons.</summary>
         public static Text TopBarTitle(AppServices ctx, RectTransform topBar, string key, int size)
         {
-            var t = ctx.Ui.Label("Title", topBar, key, size, ctx.Style.text, TextAnchor.MiddleCenter, bold: true);
+            var t = ctx.Ui.Title("Title", topBar, key, size);
             float side = ctx.Style.screenPadding + ctx.Style.iconButtonSize + 16;
             UiFactory.Stretch(t.rectTransform, side, 0, side, 0);
             return t;

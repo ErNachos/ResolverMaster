@@ -121,3 +121,44 @@
 - La croce resta con 4 aperture collegate; i flussi che si incrociano senza mescolarsi arriveranno con il capitolo 4.
 - Senza simboli, fonti e arrivi si distinguono solo dal colore (scelta dell'utente). Da rivalutare per chi distingue male i colori.
 - `ProjectSettings/ProjectSettings.asset` (formato di compressione delle texture Android, cambiato dall'editor) e la cartella `New Unity Project/` non sono state toccate né incluse nel commit.
+
+## Update ErNa-004 — Grafica: fonti e arrivi veri, stile dei pulsanti, Home a schede (2026-11-17)
+
+**Fatto**
+- **Git:** `git pull --ff-only` già aggiornato. `Prompt/` e `ArtSource/` vanno nel repository con un commit separato (vedi "Problemi aperti").
+- **Script `Tools/Art/make_plumber_art.py`** (rieseguibile, scrittura sicura): toglie lo sfondo bianco dai bordi, ritaglia e centra a 512 px, separa il magenta delle fonti in una maschera con le ombre.
+  - Gli originali non erano in `Sources/`/`Targets/` ma in `ArtSource/Plumber/Fonte_1..4.png` e `Arrivo_1..4.png`: lo script legge entrambe le disposizioni, `ArtSource/` non è stata toccata.
+  - Magenta trovato: fonte 1 45,6%, fonte 2 35,4%, fonte 3 17,3% (barile, solo le fasce), fonte 4 44,3% dell'oggetto. Nessun residuo rosa nell'immagine base (0 pixel).
+- **Core, stile** (`UiKitStyle` ricreato con i nuovi valori, `UiKitGenerator`):
+  - sprite con contorno nero spesso e fascia d'ombra in basso, versioni "premuto", pulsante rotondo; `PressableButton` (scende quando lo premi, colori spenti da disattivato);
+  - `UiFactory`: `PrimaryButton` (verde, testo bianco con contorno), `SecondaryButton` (crema), `IconButton` (rotondo, icona scura), `CardButton`, `Panel`, `Title` (testo con contorno scuro);
+  - palette senza blu né arancione (sfondo lavanda, crema, verde, lampone); anche i colori dei capitoli 1 e 3 (erano blu e arancione) ora sono giallo e viola;
+  - applicato a Home, scelta modalità, Impostazioni, capitoli, livelli, gioco, pannello di vittoria, messaggi di errore.
+- **Core, Home a schede**: una scheda per gioco (riquadro colorato, illustrazione o segnaposto, nome tradotto), scorrimento con il dito e aggancio al centro (`CardCarousel`, C# puro), schede laterali più piccole e trasparenti, pallini, GIOCA!/PLAY!, Impostazioni in basso a sinistra. Traffic jam: scheda attenuata con lucchetto e "Prossimamente", GIOCA! disattivato. Ultima scheda salvata nel nuovo blocco opzionale `home`.
+- **Core, immagini**: `IconLibrary` è ora la libreria di sprite generica (icone, `CardLibrary` delle schede, `PlumberArt` dell'Idraulico); `GameInfo.CardImage`/`CardColor`; `ArtVariants` (disegno scelto dal seed del livello).
+- **Idraulico**: fonti e arrivi disegnati (variante dal seed), maschera della fonte nel colore dell'acqua, alone sotto l'arrivo, moncone di tubo verso l'apertura, gocce alla vittoria; tubi con contorno nero, ombreggiatura e riflesso; acqua che scorre con un leggero movimento. Regole, risolutore, generatore e livelli **non toccati**.
+- **Validatore**: 6 controlli. Nuovi: disegni dell'Idraulico (4 fonti con maschera non vuota, 4 arrivi), colore della scheda (errore) e immagine della scheda (warning), sprite e misure minime dei pulsanti nello stile.
+- **Anteprime**: Home con Idraulico e con Traffic jam al centro, scelta modalità, Impostazioni, capitoli, livelli, livello 1 (3x3), livello 27 (6x6), apertura riuscita, perdita, vittoria. Nuove misure: disegni di fonti/arrivi, pulsante più piccolo.
+- **Test**: 3 nuovi (varianti dal seed, aggancio delle schede, ultima scheda salvata/ripristinata).
+- Documenti: `docs/grafica.md` (nuovo), `docs/architettura.md`, `docs/crediti.md`, `GUIDELINES.md`.
+
+**Risultati**
+- Compilazione: 0 errori, 0 warning. Test: 18/18 verdi. Validatore: OK (6 controlli, 0 errori, 2 warning: immagini delle schede mancanti, ammessi).
+- Anteprime: 44 immagini, nessun problema misurato.
+- **Misure**:
+  - fonti e arrivi: 253,9 px nelle celle 3x3 (317,3 px), 126,9 px nelle 6x6 (158,7 px), cioè l'80% della cella;
+  - pulsante più piccolo: 136x136 px (rotondi); bottoni della barra in basso 144 px;
+  - "Apri l'acqua" → barra in basso: 48 px (9:16 e 9:21); dalla griglia 210 px (9:16) e 414 px (9:21);
+  - nessun testo tagliato né sovrapposto, anche in inglese.
+- Bug trovati dalle misure e dalle immagini e corretti: icona segnaposto di Traffic jam sotto lucchetto e scritta (2 sovrapposizioni misurate); cerchi disegnati come quadrati arrotondati (raggio dello sprite 64 < metà di 168–220 px → 112); GIOCA! disattivato verde scuro invece che spento; gocce della vittoria piccole e in fila; nome degli asset svuotato dal ripristino dei valori predefiniti.
+
+**Da provare a mano sul telefono**
+- Scorrimento delle schede: trascinamento, lancio veloce (al massimo una scheda), tocco su una scheda laterale, scheda ripresa al riavvio.
+- Pulsanti che scendono quando li premi; tocco lungo e trascinamento fuori dal pulsante.
+- Leggibilità di fonti e arrivi nei livelli 6x6 e movimento dell'acqua; effetto di vittoria.
+
+**Problemi aperti / prossimi passi**
+- Il commit separato di `Prompt/` e `ArtSource/` è stato bloccato dai permessi della sessione: da rifare (vedi report).
+- `ArtSource/Reference/fontana_riferimento.png` non c'è nel progetto.
+- Icone e illustrazioni delle schede: segnaposto, arriveranno da Gemini (cartelle e nomi già pronti).
+- Il riflesso dei tubi ruota con il tubo (luce non sempre dall'alto a sinistra).

@@ -143,8 +143,31 @@ namespace ResolverMaster.Core.UI
             return t;
         }
 
+        /// <summary>A title: light text with the dark outline of the style.</summary>
+        public Text Title(string name, Transform parent, string key, int size, TextAnchor align = TextAnchor.MiddleCenter)
+        {
+            var t = Label(name, parent, key, size, Style.title, align, bold: true);
+            AddOutline(t);
+            return t;
+        }
+
+        /// <summary>Dark outline around a text (titles, labels on colored buttons).</summary>
+        public Outline AddOutline(Text text)
+        {
+            var o = text.gameObject.GetComponent<Outline>();
+            if (o == null) o = text.gameObject.AddComponent<Outline>();
+            o.effectColor = Style.outline;
+            o.effectDistance = new Vector2(Style.textOutline, -Style.textOutline);
+            o.useGraphicAlpha = true;
+            return o;
+        }
+
+        /// <summary>Cream panel with the black outline (not tappable).</summary>
+        public Image Panel(string name, Transform parent, Color color) => Image(name, parent, Style.panelSprite, color);
+
         // ---------- controls ----------
 
+        /// <summary>A plain button (no press animation): tinted sprite + Button with the muted disabled tint.</summary>
         public Button Button(string name, Transform parent, Sprite sprite, Color color)
         {
             var img = Image(name, parent, sprite, color);
@@ -155,8 +178,8 @@ namespace ResolverMaster.Core.UI
             colors.normalColor = Color.white;
             colors.highlightedColor = Color.white;
             colors.selectedColor = Color.white;
-            colors.pressedColor = new Color(0.82f, 0.82f, 0.86f, 1f);
-            colors.disabledColor = new Color(1f, 1f, 1f, 0.5f);
+            colors.pressedColor = new Color(0.94f, 0.94f, 0.94f, 1f);
+            colors.disabledColor = Style.disabledTint;
             colors.fadeDuration = Style.buttonPress;
             b.colors = colors;
             var nav = b.navigation;
@@ -165,23 +188,55 @@ namespace ResolverMaster.Core.UI
             return b;
         }
 
-        /// <summary>Round button with a centred icon (back, settings...).</summary>
-        public Button IconButton(string name, Transform parent, string iconName)
+        /// <summary>A button that goes down when pressed (<see cref="PressableButton"/>): <paramref name="pressed"/> is the sprite while held.</summary>
+        public Button Pressable(string name, Transform parent, Sprite normal, Sprite pressed, Color color, float drop)
         {
-            var b = Button(name, parent, Style.circleSprite, Style.surface);
-            ((RectTransform)b.transform).sizeDelta = new Vector2(Style.iconButtonSize, Style.iconButtonSize);
-            var icon = Icon("Icon", b.transform, iconName, Style.iconInButton, Style.primary);
-            Place(icon.rectTransform, 0.5f, 0.5f, new Vector2(Style.iconInButton, Style.iconInButton), Vector2.zero);
+            var b = Button(name, parent, normal, color);
+            b.gameObject.AddComponent<PressableButton>().Init((Image)b.targetGraphic, normal, pressed, drop, Style.disabledContentAlpha, Style.disabledDesaturate);
             return b;
         }
 
-        /// <summary>Rectangular button with a centred localized label.</summary>
-        public Button TextButton(string name, Transform parent, string key, Color background, Color textColor, out Text label)
+        /// <summary>Tappable card (chapters, levels, modes, Home): cream or colored, outline and bottom band.</summary>
+        public Button CardButton(string name, Transform parent, Color color) =>
+            Pressable(name, parent, Style.cardSprite, Style.cardPressedSprite, color, Mathf.Max(0, Style.cardDepth - Style.pressedDepth));
+
+        /// <summary>Round button with a centred dark icon (back, settings, undo, restart, help). <paramref name="size"/> 0 = style size.</summary>
+        public Button IconButton(string name, Transform parent, string iconName, float size = 0, float iconSize = 0)
         {
-            var b = Button(name, parent, Style.buttonSprite, background);
-            label = Label("Label", b.transform, key, Style.buttonTextSize, textColor, TextAnchor.MiddleCenter, bold: true);
-            Stretch(label.rectTransform, 16, 8, 16, 8);
+            if (size <= 0) size = Style.iconButtonSize;
+            if (iconSize <= 0) iconSize = Style.iconInButton;
+            float k = size / Mathf.Max(1f, Style.iconButtonSize);   // the round sprite scales with the rect: so do its depth and drop
+            var b = Pressable(name, parent, Style.roundSprite, Style.roundPressedSprite, Style.surface, Style.PressDrop * k);
+            ((RectTransform)b.transform).sizeDelta = new Vector2(size, size);
+            var icon = Icon("Icon", b.transform, iconName, iconSize, Style.icon);
+            Place(icon.rectTransform, 0.5f, 0.5f, new Vector2(iconSize, iconSize), new Vector2(0, Style.buttonDepth * k / 2f));
             return b;
+        }
+
+        /// <summary>Rectangular button with a centred localized label (label on the face, above the bottom band).</summary>
+        public Button TextButton(string name, Transform parent, string key, Color background, Color textColor, out Text label, bool outlined = false)
+        {
+            var b = Pressable(name, parent, Style.buttonSprite, Style.buttonPressedSprite, background, Style.PressDrop);
+            label = Label("Label", b.transform, key, Style.buttonTextSize, textColor, TextAnchor.MiddleCenter, bold: true);
+            Stretch(label.rectTransform, 20, 6 + Style.buttonDepth, 20, 6);
+            if (outlined) AddOutline(label);
+            return b;
+        }
+
+        /// <summary>Main button (PLAY, Open the water, Next): vivid green, white outlined text.</summary>
+        public Button PrimaryButton(string name, Transform parent, string key, out Text label) =>
+            TextButton(name, parent, key, Style.primary, Style.onPrimary, out label, outlined: true);
+
+        /// <summary>Secondary button: cream, dark text.</summary>
+        public Button SecondaryButton(string name, Transform parent, string key, out Text label) =>
+            TextButton(name, parent, key, Style.surface, Style.text, out label);
+
+        /// <summary>Enables/disables a button: muted background (Button tint) and, for pressable buttons, muted label and icon.</summary>
+        public static void SetInteractable(Button b, bool on)
+        {
+            var p = b.GetComponent<PressableButton>();
+            if (p != null) p.SetInteractable(on);
+            else b.interactable = on;
         }
     }
 }

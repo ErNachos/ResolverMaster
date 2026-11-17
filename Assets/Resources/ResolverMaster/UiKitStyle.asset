@@ -13,37 +13,64 @@ MonoBehaviour:
   m_Name: UiKitStyle
   m_EditorClassIdentifier: 
   referenceResolution: {x: 1080, y: 1920}
-  background: {r: 0.93333334, g: 0.9490196, b: 0.96862745, a: 1}
-  surface: {r: 1, g: 1, b: 1, a: 1}
-  primary: {r: 0.23921569, g: 0.43529412, b: 0.8784314, a: 1}
+  background: {r: 0.9019608, g: 0.8627451, b: 0.9607843, a: 1}
+  surface: {r: 1, g: 0.9647059, b: 0.8901961, a: 1}
+  primary: {r: 0.36078432, g: 0.7882353, b: 0.23137255, a: 1}
   onPrimary: {r: 1, g: 1, b: 1, a: 1}
-  accent: {r: 1, g: 0.62352943, b: 0.2627451, a: 1}
-  text: {r: 0.12156863, g: 0.16470589, b: 0.26666668, a: 1}
-  textMuted: {r: 0.41960785, g: 0.47058824, b: 0.5882353, a: 1}
-  badge: {r: 0.8901961, g: 0.9098039, b: 0.9490196, a: 1}
-  badgeText: {r: 0.33333334, g: 0.38431373, b: 0.49803922, a: 1}
-  toggleOff: {r: 0.7882353, g: 0.81960785, b: 0.8784314, a: 1}
-  outline: {r: 0.8352941, g: 0.8627451, b: 0.9098039, a: 1}
+  accent: {r: 0.9490196, g: 0.36078432, b: 0.5411765, a: 1}
+  text: {r: 0.16862746, g: 0.13333334, b: 0.21960784, a: 1}
+  textMuted: {r: 0.43137255, g: 0.39215687, b: 0.5019608, a: 1}
+  icon: {r: 0.16862746, g: 0.13333334, b: 0.21960784, a: 1}
+  badge: {r: 0.92941177, g: 0.8862745, b: 0.78431374, a: 1}
+  badgeText: {r: 0.36862746, g: 0.32941177, b: 0.4392157, a: 1}
+  toggleOff: {r: 0.8627451, g: 0.827451, b: 0.7607843, a: 1}
+  outline: {r: 0.10980392, g: 0.09019608, b: 0.14901961, a: 1}
+  disabledTint: {r: 0.92, g: 0.91, b: 0.9, a: 1}
+  disabledContentAlpha: 0.45
+  disabledDesaturate: 0.7
+  title: {r: 1, g: 1, b: 1, a: 1}
   buttonRadius: 48
-  cardRadius: 40
+  cardRadius: 44
   panelRadius: 56
-  circleRadius: 64
-  outlineThickness: 4
+  circleRadius: 112
+  outlineThickness: 6
+  thinOutline: 5
+  buttonDepth: 14
+  pressedDepth: 4
+  cardDepth: 12
+  depthShade: 0.72
+  textOutline: 4
   screenPadding: 48
   spacing: 32
   topBarHeight: 176
-  iconButtonSize: 128
-  iconInButton: 72
-  cardHeight: 240
+  iconButtonSize: 136
+  iconInButton: 68
   cardIconSize: 176
   modeCardHeight: 280
-  buttonHeight: 128
-  rowHeight: 128
+  buttonHeight: 136
+  rowHeight: 136
   rowIconSize: 64
   badgeHeight: 64
+  minTouchSize: 130
+  homeTitleHeight: 200
+  homeCardSize: {x: 720, y: 960}
+  homeCardStep: 700
+  homeSideScale: 0.8
+  homeSideAlpha: 0.5
+  homeSnapTime: 0.09
+  homeFlickTime: 0.18
+  homeCardInset: 28
+  homeCardNameHeight: 150
+  homeCardNameSize: 84
+  homeDotSize: 30
+  homeDotGap: 22
+  homeDotsHeight: 64
+  playButtonSize: {x: 560, y: 176}
+  playTextSize: 84
+  comingSoonDim: 0.55
   bottomBarHeight: 208
   gameButtonSize: 144
-  gameIconSize: 80
+  gameIconSize: 76
   gameButtonGap: 72
   levelColumns: 3
   levelButtonSize: {x: 280, y: 300}
@@ -55,22 +82,23 @@ MonoBehaviour:
   chapterStarSize: 48
   mainActionWidth: 760
   mainActionHeight: 152
-  mainActionGap: 24
+  mainActionGap: 48
+  mainActionGapAbove: 24
   mainActionIconSize: 76
-  toastColor: {r: 0.12, g: 0.16, b: 0.27, a: 0.94}
+  toastColor: {r: 0.9137255, g: 0.32941177, b: 0.36862746, a: 1}
   toastText: {r: 1, g: 1, b: 1, a: 1}
   winPanelWidth: 900
   winStarSize: 150
-  starOn: {r: 1, g: 0.7607843, b: 0.23921569, a: 1}
-  starOff: {r: 0.8352941, g: 0.8627451, b: 0.9098039, a: 1}
-  dim: {r: 0.07, g: 0.1, b: 0.18, a: 0.55}
-  titleSize: 84
+  starOn: {r: 1, g: 0.8039216, b: 0.23529412, a: 1}
+  starOff: {r: 0.8901961, g: 0.8509804, b: 0.7764706, a: 1}
+  dim: {r: 0.1, g: 0.07, b: 0.16, a: 0.6}
+  titleSize: 96
   headerSize: 60
   bodySize: 44
-  buttonTextSize: 46
+  buttonTextSize: 48
   smallSize: 36
   screenFade: 0.18
-  buttonPress: 0.08
+  buttonPress: 0.06
   messageFade: 0.25
   winPanelFade: 0.2
   starPop: 0.28
@@ -80,7 +108,12 @@ MonoBehaviour:
   fontRegular: {fileID: 12800000, guid: e43585fa2b77f9142a4bae652f1657b9, type: 3}
   fontBold: {fileID: 12800000, guid: 6b5f320a802330544904b8885e99004a, type: 3}
   buttonSprite: {fileID: 21300000, guid: 4484fb1b3c91c4344b197d8a44147be2, type: 3}
+  buttonPressedSprite: {fileID: 21300000, guid: f22e75499b9ffaa44b0d18bca6331d40, type: 3}
   cardSprite: {fileID: 21300000, guid: 91cb1ebfb21f5ec428f086ea3be5d00b, type: 3}
+  cardPressedSprite: {fileID: 21300000, guid: 1cabbf3a614612a4e912d959f0de74b5, type: 3}
   panelSprite: {fileID: 21300000, guid: 3bb8258a0baeec342909808620777cfb, type: 3}
   outlineSprite: {fileID: 21300000, guid: 75227b517117087488a570c6f8e1bab3, type: 3}
   circleSprite: {fileID: 21300000, guid: 5efc3b90fd453774889884ccafd688e5, type: 3}
+  roundSprite: {fileID: 21300000, guid: 1b32c367a4e818542a86ff4a80e9be55, type: 3}
+  roundPressedSprite: {fileID: 21300000, guid: 03ff21b8c6e0a0942a855a811d9576ed, type: 3}
+  softSprite: {fileID: 21300000, guid: 7675db95d3bcd85448f70d995e94f23e, type: 3}

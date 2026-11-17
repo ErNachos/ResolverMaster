@@ -42,6 +42,7 @@ namespace ResolverMaster.Core.App
                 Games = GameRegistry.Discover(),
                 Style = style,
                 Icons = icons,
+                Cards = Resources.Load<IconLibrary>(IconLibrary.CardsResourcesPath),
                 Puzzle = PuzzleConfig.LoadOrDefault(),
             };
 

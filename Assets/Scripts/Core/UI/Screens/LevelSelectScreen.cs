@@ -46,7 +46,7 @@ namespace ResolverMaster.Core.UI.Screens
             ScreenLayout.TopBarButton(ctx, layout.TopBar, "back", left: true).onClick.AddListener(() => ctx.Screens.Back());
             screen._title = ScreenLayout.TopBarTitle(ctx, layout.TopBar, null, s.headerSize).gameObject.AddComponent<LocalizedText>();
 
-            screen._subtitle = ui.Label("Subtitle", layout.Body, null, s.bodySize, s.textMuted, TextAnchor.MiddleCenter);
+            screen._subtitle = ui.Label("Subtitle", layout.Body, null, s.bodySize, s.text, TextAnchor.MiddleCenter, bold: true);
             UiFactory.Layout(screen._subtitle, preferredHeight: 72);
 
             screen._grid = ui.Rect("Levels", layout.Body);
@@ -82,7 +82,7 @@ namespace ResolverMaster.Core.UI.Screens
             var ui = _ctx.Ui;
             var s = _ctx.Style;
             var b = new LevelButton();
-            b.Button = ui.Button("Level_" + (slot + 1), _grid, s.cardSprite, s.surface);
+            b.Button = ui.CardButton("Level_" + (slot + 1), _grid, s.surface);
             b.Background = (Image)b.Button.targetGraphic;
             b.Button.onClick.AddListener(() => Play(slot));
 
@@ -93,8 +93,8 @@ namespace ResolverMaster.Core.UI.Screens
             nrt.offsetMin = new Vector2(12, 0);
             nrt.offsetMax = new Vector2(-12, -16);
 
-            b.Lock = ui.Icon("Lock", b.Button.transform, "lock", 96, s.textMuted);
-            UiFactory.Place(b.Lock.rectTransform, 0.5f, 0.5f, new Vector2(96, 96), Vector2.zero);
+            b.Lock = ui.Icon("Lock", b.Button.transform, "lock", 96, s.icon);
+            UiFactory.Place(b.Lock.rectTransform, 0.5f, 0.5f, new Vector2(96, 96), new Vector2(0, s.cardDepth / 2f));
 
             b.Stars = new Image[StarRating.MaxStars];
             float step = s.levelStarSize + 8;
@@ -103,7 +103,7 @@ namespace ResolverMaster.Core.UI.Screens
                 b.Stars[i] = ui.Icon("Star" + (i + 1), b.Button.transform, "star", s.levelStarSize, s.starOff);
                 // the middle star sits a little higher, like on the win panel
                 UiFactory.Place(b.Stars[i].rectTransform, 0.5f, 0, new Vector2(s.levelStarSize, s.levelStarSize),
-                    new Vector2((i - 1) * step, 32 + s.levelStarSize / 2 + (i == 1 ? 8 : 0)));
+                    new Vector2((i - 1) * step, 28 + s.cardDepth + s.levelStarSize / 2 + (i == 1 ? 8 : 0)));
                 b.Stars[i].rectTransform.pivot = new Vector2(0.5f, 0.5f);
             }
             return b;
@@ -130,7 +130,7 @@ namespace ResolverMaster.Core.UI.Screens
                 int level = Chapter.FirstLevel + i;
                 bool unlocked = StoryProgress.IsLevelUnlocked(progress, book, level);
                 int stars = StoryProgress.Stars(progress, book, level);
-                b.Button.interactable = unlocked;
+                b.Button.interactable = unlocked;   // locked: the lock says it, the content stays readable
                 b.Background.color = unlocked ? s.surface : s.badge;
                 b.Number.text = (level + 1).ToString();
                 b.Number.gameObject.SetActive(unlocked);

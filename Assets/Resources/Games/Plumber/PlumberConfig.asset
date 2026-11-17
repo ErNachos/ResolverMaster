@@ -12,10 +12,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0efb6d57188baa44b950707cad2143da, type: 3}
   m_Name: PlumberConfig
   m_EditorClassIdentifier: 
-  boardColor: {r: 1, g: 1, b: 1, a: 1}
-  tileColor: {r: 0.9019608, g: 0.92156863, b: 0.9529412, a: 1}
-  lockedTileColor: {r: 0.7882353, g: 0.81960785, b: 0.8784314, a: 1}
-  pipeEmpty: {r: 0.63529414, g: 0.6745098, b: 0.74509805, a: 1}
+  boardColor: {r: 1, g: 0.9647059, b: 0.8901961, a: 1}
+  tileColor: {r: 0.94509804, g: 0.89411765, b: 0.78431374, a: 1}
+  lockedTileColor: {r: 0.8509804, g: 0.79607844, b: 0.68235296, a: 1}
+  pipeEmpty: {r: 0.7607843, g: 0.7764706, b: 0.8117647, a: 1}
   waterColors:
   - {r: 0.18431373, g: 0.54509807, b: 0.9372549, a: 1}
   - {r: 1, g: 0.5411765, b: 0.12156863, a: 1}
@@ -23,22 +23,28 @@ MonoBehaviour:
   - {r: 0.6117647, g: 0.78431374, b: 0.96862745, a: 1}
   - {r: 1, g: 0.7882353, b: 0.5882353, a: 1}
   errorColor: {r: 0.8980392, g: 0.28235295, b: 0.3019608, a: 1}
-  pipeWidth: 0.3
-  pipeOutline: 0.05
-  tankRadius: 0.32
-  sinkRingRadius: 0.3
-  sinkRingWidth: 0.1
+  pipeWidth: 0.34
+  pipeOutline: 0.045
+  pipeShine: 0.55
   tileMargin: 0.035
   tileRadius: 0.14
-  sinkHaloSize: 0.86
+  endpointSize: 0.8
+  sinkHaloSize: 0.92
   splashDropSize: 0.16
   splashDistance: 0.55
+  winDrops: 7
+  winSplashHeight: 0.6
+  winDropSize: 0.22
   spriteSize: 256
+  artVariants: 4
   boardInset: 16
   rotateDuration: 0.12
   waterStep: 0.07
-  sinkFill: 0.4
-  winPause: 0.35
+  sinkFill: 0.8
+  waterShimmer: 0.14
+  waterShimmerSpeed: 7
+  waterShimmerPhase: 0.9
+  winPause: 0.25
   failEffect: 1
   failPause: 0.45
   failBlinks: 3
@@ -47,13 +53,13 @@ MonoBehaviour:
   chapters:
   - nameKey: plumber.chapter1.name
     icon: water_drop
-    color: {r: 0.18431373, g: 0.54509807, b: 0.9372549, a: 1}
+    color: {r: 1, g: 0.8039216, b: 0.23529412, a: 1}
   - nameKey: plumber.chapter2.name
     icon: fork
     color: {r: 0.18039216, g: 0.72156864, b: 0.5411765, a: 1}
   - nameKey: plumber.chapter3.name
     icon: palette
-    color: {r: 1, g: 0.5411765, b: 0.12156863, a: 1}
+    color: {r: 0.6901961, g: 0.4862745, b: 0.9411765, a: 1}
   storyDifficulty:
     tiers:
     - id: c1-1

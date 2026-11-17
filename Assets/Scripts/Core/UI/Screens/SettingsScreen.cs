@@ -12,7 +12,7 @@ namespace ResolverMaster.Core.UI.Screens
         public override string Id => ScreenIds.Settings;
 
         AppServices _ctx;
-        readonly (Language lang, Image bg, Text label)[] _languages = new (Language, Image, Text)[LanguageCodes.All.Length];
+        readonly (Language lang, Image bg, Text label, Outline outline)[] _languages = new (Language, Image, Text, Outline)[LanguageCodes.All.Length];
         Action _refreshToggles;
 
         public static SettingsScreen Create(AppServices ctx, Transform parent)
@@ -27,9 +27,9 @@ namespace ResolverMaster.Core.UI.Screens
             ScreenLayout.TopBarTitle(ctx, layout.TopBar, LocKeys.SettingsTitle, s.headerSize);
 
             // ---- language card ----
-            var langCard = ui.Image("LanguageCard", layout.Body, s.cardSprite, s.surface);
-            ui.Column(langCard.rectTransform, 16, new RectOffset(40, 40, 24, 40));
-            UiFactory.Layout(langCard, preferredHeight: 24 + s.rowHeight + 16 + s.buttonHeight + 40);
+            var langCard = ui.Panel("LanguageCard", layout.Body, s.surface);
+            ui.Column(langCard.rectTransform, 16, new RectOffset(40, 40, 24, 40 + s.cardDepth));
+            UiFactory.Layout(langCard, preferredHeight: 24 + s.rowHeight + 16 + s.buttonHeight + 40 + s.cardDepth);
             CreateRowHeader(ctx, langCard.transform, "language", LocKeys.SettingsLanguage);
             var seg = ui.Rect("Languages", langCard.transform);
             UiFactory.Layout(seg, preferredHeight: s.buttonHeight);
@@ -37,15 +37,16 @@ namespace ResolverMaster.Core.UI.Screens
             for (int i = 0; i < LanguageCodes.All.Length; i++)
             {
                 var lang = LanguageCodes.All[i];
-                var b = ui.TextButton("Lang_" + LanguageCodes.ToCode(lang), seg, LocKeys.LanguageName(lang), s.badge, s.text, out var label);
+                var b = ui.TextButton("Lang_" + LanguageCodes.ToCode(lang), seg, LocKeys.LanguageName(lang), s.surface, s.text, out var label);
+                var outline = ui.AddOutline(label);
                 b.onClick.AddListener(() => screen.SelectLanguage(lang));
-                screen._languages[i] = (lang, (Image)b.targetGraphic, label);
+                screen._languages[i] = (lang, (Image)b.targetGraphic, label, outline);
             }
 
             // ---- sound and vibration card ----
-            var togglesCard = ui.Image("TogglesCard", layout.Body, s.cardSprite, s.surface);
-            ui.Column(togglesCard.rectTransform, 8, new RectOffset(40, 40, 16, 16));
-            UiFactory.Layout(togglesCard, preferredHeight: 16 + s.rowHeight * 2 + 8 + 16);
+            var togglesCard = ui.Panel("TogglesCard", layout.Body, s.surface);
+            ui.Column(togglesCard.rectTransform, 16, new RectOffset(40, 40, 24, 24 + s.cardDepth));
+            UiFactory.Layout(togglesCard, preferredHeight: 24 + s.rowHeight * 2 + 16 + 24 + s.cardDepth);
             var sound = CreateToggleRow(ctx, togglesCard.transform, "sound", LocKeys.SettingsSound,
                 () => ctx.Data.settings.sound, v => ctx.Data.settings.sound = v);
             var vibration = CreateToggleRow(ctx, togglesCard.transform, "vibration", LocKeys.SettingsVibration,
@@ -60,7 +61,7 @@ namespace ResolverMaster.Core.UI.Screens
             var s = ctx.Style;
             var row = ui.Rect("Row_" + iconName, parent);
             UiFactory.Layout(row, preferredHeight: s.rowHeight);
-            var icon = ui.Icon("Icon", row, iconName, s.rowIconSize, s.primary);
+            var icon = ui.Icon("Icon", row, iconName, s.rowIconSize, s.icon);
             UiFactory.Place(icon.rectTransform, 0, 0.5f, new Vector2(s.rowIconSize, s.rowIconSize), Vector2.zero);
             var label = ui.Label("Label", row, key, s.bodySize, s.text, TextAnchor.MiddleLeft, bold: true);
             UiFactory.Stretch(label.rectTransform, s.rowIconSize + 28, 0, 0, 0);
@@ -75,7 +76,8 @@ namespace ResolverMaster.Core.UI.Screens
             var row = CreateRowHeader(ctx, parent, iconName, key);
             ((RectTransform)row.Find("Label")).offsetMax = new Vector2(-(220 + 24), 0);   // leave room for the switch
             var toggle = ui.TextButton("Toggle", row, LocKeys.CommonOn, s.primary, s.onPrimary, out var text);
-            UiFactory.Place((RectTransform)toggle.transform, 1, 0.5f, new Vector2(220, s.buttonHeight * 0.8f), Vector2.zero);
+            var outline = ui.AddOutline(text);
+            UiFactory.Place((RectTransform)toggle.transform, 1, 0.5f, new Vector2(220, s.buttonHeight), Vector2.zero);
             var bg = (Image)toggle.targetGraphic;
             var loc = text.GetComponent<LocalizedText>();
             void Refresh()
@@ -83,6 +85,7 @@ namespace ResolverMaster.Core.UI.Screens
                 bool on = get();
                 bg.color = on ? s.primary : s.toggleOff;
                 text.color = on ? s.onPrimary : s.text;
+                outline.enabled = on;
                 loc.Bind(ctx.Loc, on ? LocKeys.CommonOn : LocKeys.CommonOff);
             }
             toggle.onClick.AddListener(() =>
@@ -106,11 +109,12 @@ namespace ResolverMaster.Core.UI.Screens
         void RefreshLanguages()
         {
             var s = _ctx.Style;
-            foreach (var (lang, bg, label) in _languages)
+            foreach (var (lang, bg, label, outline) in _languages)
             {
                 bool selected = lang == _ctx.Loc.Current;
-                bg.color = selected ? s.primary : s.badge;
+                bg.color = selected ? s.primary : s.surface;
                 label.color = selected ? s.onPrimary : s.text;
+                outline.enabled = selected;
             }
         }
 

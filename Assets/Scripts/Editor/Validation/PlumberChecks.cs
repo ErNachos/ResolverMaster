@@ -5,8 +5,10 @@ using ResolverMaster.Core.Localization;
 using ResolverMaster.Core.Puzzle;
 using ResolverMaster.Core.UI;
 using ResolverMaster.Games.Plumber;
+using ResolverMaster.Games.Plumber.View;
 using UnityEditor;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace ResolverMaster.Editor.Validation
 {
@@ -25,6 +27,54 @@ namespace ResolverMaster.Editor.Validation
             }
             if (cfg.stars.twoStarExtraPercent < 0) report.Error("stars: twoStarExtraPercent must be >= 0");
             if (cfg.stars.twoStarMinExtra < 1) report.Error("stars: twoStarMinExtra must be >= 1");
+        }
+    }
+
+    /// <summary>
+    /// Plumber fountain drawings (ErNa-004): for every variant (PlumberConfig.artVariants, 4) a source with a non-empty mask and a sink,
+    /// as files in Assets/Art/Plumber and in the sprite library the game reads (Resources/Games/Plumber/PlumberArt.asset).
+    /// </summary>
+    public sealed class PlumberArtCheck : IValidationCheck
+    {
+        public string Name => "PlumberArt";
+
+        public void Run(ValidationReport report)
+        {
+            var cfg = AssetDatabase.LoadAssetAtPath<PlumberConfig>(ConfigAssets.PlumberConfigPath);
+            int variants = cfg != null ? cfg.artVariants : 4;
+            if (variants < 1) report.Error("PlumberConfig.artVariants must be at least 1");
+            var lib = AssetDatabase.LoadAssetAtPath<IconLibrary>(UiKitAssets.PlumberArtPath);
+            if (lib == null) report.Error($"{UiKitAssets.PlumberArtPath} missing: run Resolver Master > UI Kit > Rebuild Sprite Libraries");
+            for (int v = 0; v < variants; v++)
+            {
+                Check(report, lib, "Sources", PlumberArt.SourceName(v), needInk: false);
+                Check(report, lib, "Sources", PlumberArt.SourceMaskName(v), needInk: true);
+                Check(report, lib, "Targets", PlumberArt.SinkName(v), needInk: false);
+            }
+        }
+
+        static void Check(ValidationReport report, IconLibrary lib, string folder, string name, bool needInk)
+        {
+            string path = $"{PlumberArt.AssetDir}/{folder}/{name}.png";
+            if (!System.IO.File.Exists(path))
+            {
+                report.Error($"{path} missing: run python Tools/Art/make_plumber_art.py");
+                return;
+            }
+            if (lib != null && !lib.Has(name)) report.Error($"'{name}' not in the Plumber sprite library: run Resolver Master > UI Kit > Rebuild Sprite Libraries");
+            var tex = new Texture2D(2, 2);
+            try
+            {
+                if (!tex.LoadImage(System.IO.File.ReadAllBytes(path)))
+                {
+                    report.Error($"{path}: not a readable PNG");
+                    return;
+                }
+                int visible = tex.GetPixels32().Count(p => p.a > 16);
+                if (visible == 0) report.Error($"{path}: the image is empty");
+                else if (needInk && visible < tex.width * tex.height / 100) report.Error($"{path}: mask almost empty ({visible} visible px): magenta not found?");
+            }
+            finally { Object.DestroyImmediate(tex); }
         }
     }
 

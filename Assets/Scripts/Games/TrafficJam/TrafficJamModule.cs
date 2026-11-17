@@ -1,4 +1,5 @@
 using ResolverMaster.Core.Games;
+using ResolverMaster.Core.UI;
 using UnityEngine.Scripting;
 
 namespace ResolverMaster.Games.TrafficJam
@@ -16,6 +17,8 @@ namespace ResolverMaster.Games.TrafficJam
             IconName = "game_trafficjam",
             Availability = GameAvailability.ComingSoon,
             Order = 20,
+            CardImage = "card_trafficjam",
+            CardColor = UiKitStyle.Hex(0xF7C948),
         };
 
         [Preserve] public TrafficJamModule() { }

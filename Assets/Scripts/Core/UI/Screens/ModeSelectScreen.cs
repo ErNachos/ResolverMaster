@@ -17,7 +17,7 @@ namespace ResolverMaster.Core.UI.Screens
 
         AppServices _ctx;
         LocalizedText _title;
-        Image _gameIcon;
+        Image _gameIcon, _gameCircle;
         CanvasGroup _message;
         Coroutine _messageFade;
 
@@ -37,22 +37,23 @@ namespace ResolverMaster.Core.UI.Screens
             // big game icon
             var iconRow = ui.Rect("GameIcon", layout.Body);
             UiFactory.Layout(iconRow, preferredHeight: 240);
-            var circle = ui.Image("IconBg", iconRow, s.circleSprite, s.accent);
+            var circle = ui.Image("IconBg", iconRow, s.circleSprite, s.surface);
             UiFactory.Place(circle.rectTransform, 0.5f, 0.5f, new Vector2(220, 220), Vector2.zero);
-            screen._gameIcon = ui.Icon("Icon", circle.transform, null, 140, s.onPrimary);
+            screen._gameCircle = circle;
+            screen._gameIcon = ui.Icon("Icon", circle.transform, null, 140, s.icon);
             UiFactory.Place(screen._gameIcon.rectTransform, 0.5f, 0.5f, new Vector2(140, 140), Vector2.zero);
 
-            var choose = ui.Label("Choose", layout.Body, LocKeys.ModeTitle, s.bodySize, s.textMuted, TextAnchor.MiddleCenter);
+            var choose = ui.Label("Choose", layout.Body, LocKeys.ModeTitle, s.bodySize, s.text, TextAnchor.MiddleCenter, bold: true);
             UiFactory.Layout(choose, preferredHeight: 72);
 
             CreateModeCard(ctx, layout.Body, "story", s.primary, LocKeys.ModeStory, LocKeys.ModeStoryDesc).onClick.AddListener(screen.OpenStory);
             CreateModeCard(ctx, layout.Body, "challenge", s.accent, LocKeys.ModeChallenge, LocKeys.ModeChallengeDesc).onClick.AddListener(screen.ShowPlaceholder);
 
             // placeholder message, hidden until a mode is tapped
-            var msg = ui.Image("Message", layout.Body, s.cardSprite, s.badge);
+            var msg = ui.Panel("Message", layout.Body, s.badge);
             UiFactory.Layout(msg, preferredHeight: 200);
             var text = ui.Label("Text", msg.transform, LocKeys.ModePlaceholder, s.bodySize, s.badgeText, TextAnchor.MiddleCenter);
-            UiFactory.Stretch(text.rectTransform, 40, 16, 40, 16);
+            UiFactory.Stretch(text.rectTransform, 40, 16 + s.cardDepth, 40, 16);
             screen._message = msg.gameObject.AddComponent<CanvasGroup>();
             screen._message.alpha = 0f;
             return screen;
@@ -62,12 +63,12 @@ namespace ResolverMaster.Core.UI.Screens
         {
             var ui = ctx.Ui;
             var s = ctx.Style;
-            var card = ui.Button("Mode_" + iconName, parent, s.cardSprite, s.surface);
+            var card = ui.CardButton("Mode_" + iconName, parent, s.surface);
             UiFactory.Layout(card, preferredHeight: s.modeCardHeight);
             const float pad = 32;
             var circle = ui.Image("IconBg", card.transform, s.circleSprite, iconColor);
-            UiFactory.Place(circle.rectTransform, 0, 0.5f, new Vector2(s.cardIconSize, s.cardIconSize), new Vector2(pad, 0));
-            var icon = ui.Icon("Icon", circle.transform, iconName, s.cardIconSize * 0.6f, s.onPrimary);
+            UiFactory.Place(circle.rectTransform, 0, 0.5f, new Vector2(s.cardIconSize, s.cardIconSize), new Vector2(pad, s.cardDepth / 2f));
+            var icon = ui.Icon("Icon", circle.transform, iconName, s.cardIconSize * 0.6f, s.icon);
             UiFactory.Place(icon.rectTransform, 0.5f, 0.5f, icon.rectTransform.sizeDelta, Vector2.zero);
 
             float left = pad + s.cardIconSize + pad;
@@ -79,7 +80,7 @@ namespace ResolverMaster.Core.UI.Screens
             var desc = ui.Label("Desc", card.transform, descKey, s.smallSize, s.textMuted, TextAnchor.UpperLeft);
             desc.rectTransform.anchorMin = new Vector2(0, 0);
             desc.rectTransform.anchorMax = new Vector2(1, 0.55f);
-            desc.rectTransform.offsetMin = new Vector2(left, 20);
+            desc.rectTransform.offsetMin = new Vector2(left, 20 + s.cardDepth);
             desc.rectTransform.offsetMax = new Vector2(-pad, -8);
             return card;
         }
@@ -89,6 +90,7 @@ namespace ResolverMaster.Core.UI.Screens
             Game = game;
             _title.Bind(_ctx.Loc, game.NameKey);
             _gameIcon.sprite = _ctx.Icons.Get(game.IconName);
+            _gameCircle.color = game.CardColor;
         }
 
         public override void OnShow()

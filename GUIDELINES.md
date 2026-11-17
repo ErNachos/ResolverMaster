@@ -21,7 +21,8 @@
 
 ## 4. Parametri in un unico file per sistema
 - Regole comuni dei rompicapi (stelle): **`PuzzleConfig`** (`Assets/Resources/ResolverMaster/PuzzleConfig.asset`). Idraulico: **`PlumberConfig`** (`Assets/Resources/Games/Plumber/PlumberConfig.asset`: colori dell'acqua e aloni degli arrivi, spessori, durate, generatore, capitoli, tabella di difficoltà). Gli asset mancanti si creano con *Setup > Ensure Config Assets* (valori predefiniti dalle classi; gli asset esistenti non vengono toccati).
-- UI: **`UiKitStyle`** (`Assets/Resources/ResolverMaster/UiKitStyle.asset`): colori, raggi, spessori, misure, dimensioni del testo, durate delle animazioni, font, sprite generati. Nessun colore o misura sparso nelle schermate.
+- UI: **`UiKitStyle`** (`Assets/Resources/ResolverMaster/UiKitStyle.asset`): colori, raggi, spessori, profondità dei pulsanti, misure, Home, dimensioni del testo, durate delle animazioni, font, sprite generati. Nessun colore o misura sparso nelle schermate.
+- Se un nuovo stile cambia molti valori predefiniti: `ConfigAssets.ResetVisualDefaultsBatch` riscrive `UiKitStyle` e `PlumberConfig` con i valori delle classi (controllare prima con git che non ci siano modifiche a mano).
 - Ogni sistema futuro (Storia, Challenge, ogni minigioco) avrà il suo unico file di parametri.
 
 ## 5. Testi e lingue
@@ -67,11 +68,16 @@
 - Canvas Scaler: riferimento 1080x1920, modalità *Expand* (da 9:16 a 9:21 la larghezza resta 1080 unità e l'altezza cresce fino a 2520).
 - Ogni schermata ha sfondo a tutto schermo e contenuto dentro `SafeArea`.
 - Gli elementi si costruiscono con `UiFactory` dallo stile. Gli sprite a 9 fette si rigenerano da *Resolver Master > UI Kit > Regenerate Sprites*.
+- **Stile (ErNa-004)**: cartoon, contorno nero spesso nello sprite, angoli molto arrotondati, colori pieni, fascia d'ombra in basso. Pulsanti: `PrimaryButton` (verde, testo bianco con contorno), `SecondaryButton` (crema), `IconButton` (rotondo, icona scura), `CardButton` (scheda), `Panel` (non toccabile), `Title` (testo chiaro con contorno scuro). Ogni pulsante è un `PressableButton`: premuto scende di `buttonDepth - pressedDepth`; disattivato con `UiFactory.SetInteractable` (colori spenti).
+- **Mai blu né arancione** come colori dell'interfaccia (sono i colori dell'acqua). Pulsanti toccabili di almeno `minTouchSize` (130 px): le anteprime lo misurano.
+- Grafica, cartelle e script: `docs/grafica.md`.
 - Un `LayoutElement` dentro un layout group ha `flexibleHeight = 0` (vedi `UiFactory.Layout`): un layout group annidato con *force expand* altrimenti si allunga fino a riempire lo schermo.
 - Un'Image a 9 fette con layout group sullo stesso oggetto riporta come altezza preferita la somma dei bordi dello sprite: fissa l'altezza con un `LayoutElement`.
-- Icone: Google Material Symbols (Apache 2.0) generate da `Tools/Art/make_icons.py` in `Assets/Art/Icons/` (maschere bianche colorate dalla UI). Per aggiungerne una: una riga in `ICONS`, rilancia lo script, poi *UI Kit > Rebuild Icon Library*.
+- Icone: Google Material Symbols (Apache 2.0) generate da `Tools/Art/make_icons.py` in `Assets/Art/Icons/` (maschere bianche, colore scuro unico `UiKitStyle.icon`; segnaposto finché arrivano quelle di Gemini). Per aggiungerne una: una riga in `ICONS`, rilancia lo script, poi *UI Kit > Rebuild Sprite Libraries*.
+- Librerie di sprite (`IconLibrary`, Core): icone, schede della Home (`Assets/Art/Cards`, `CardLibrary`) e disegni dei giochi (es. `PlumberArt`). Una nuova cartella di disegni = una riga in `UiKitAssets.Libraries` (e in `ArtImportRules.IllustrationDirs`).
+- Home: una scheda per gioco (`GameInfo.CardImage`, `GameInfo.CardColor`); immagine mancante = segnaposto e warning del validatore. Logica di scorrimento in `CardCarousel` (C# puro).
 - I popup a tutto schermo (pannello di vittoria) stanno sotto un livello scuro con `ModalOverlay`: le misure delle anteprime considerano solo il popup.
-- Le grafiche disegnate apposta sopra altre (alone sotto un arrivo, schizzi, evidenziazioni) hanno il componente `Decoration`. Le misure non segnalano le loro sovrapposizioni né l'uscita dal contenitore; restano controllati la posizione sullo schermo e lo sprite.
+- Le grafiche disegnate apposta sopra altre (alone sotto un arrivo, fontana sul suo moncone, riflessi, schizzi) hanno il componente `Decoration`. Le misure non segnalano le loro sovrapposizioni né l'uscita dal contenitore; restano controllati la posizione sullo schermo e lo sprite. Con `mayLeaveScreen` (schede laterali della Home) non si controlla neanche lo schermo. Una `Decoration` disattivata non conta.
 - Nessuna animazione deve dipendere da `Awake`/`Start`/coroutine per lo stato finale: ogni board offre `SnapVisuals()` (le anteprime girano in edit mode, dove `Update` non avanza).
 - Font: Fredoka (OFL), `Assets/Art/Fonts/`. Ogni nuovo asset di terze parti va in `docs/crediti.md` con la licenza.
 
@@ -82,15 +88,17 @@
   - minigiochi: id, nome e icona validi;
   - UI kit: stile, font, sprite, icone del Core;
   - PuzzleConfig;
+  - schede della Home: colore impostato (errore), immagine presente (solo warning);
+  - disegni dell'Idraulico: 4 fonti con maschera non vuota e 4 arrivi, nei file e nella libreria;
   - Idraulico, sui parametri: colori e aloni, icone e nomi dei capitoli, chiavi di `PlumberKeys`;
   - Idraulico, su ogni livello della Storia: leggibile e risolvibile con le regole ErNa-003; mosse minime salvate = risolutore; aprendo l'acqua all'inizio non è già risolto; valori nel gradino; ogni capitolo ha esattamente 9 livelli; nel capitolo 1 la soluzione non usa T e non ne ha bisogno; avviso se il seed non lo riproduce più.
 
 ## 11. Anteprime e misure
 - *Resolver Master > Make Previews*, in IT ed EN, a 1080x1920 (9:16) e 1080x2520 (9:21), in `Previews/` (ignorata da git). La zona fuori dalla safe area simulata è tinta di rosso. Schermate:
-  - Home, Impostazioni, lista dei capitoli, griglia 3x3 del capitolo 2;
-  - Gioco: ultimo livello di ogni capitolo prima dell'apertura, apertura riuscita a due colori, apertura sbagliata per perdita nel momento dell'effetto, pannello di vittoria.
+  - Home con la scheda Idraulico e con la scheda Traffic jam al centro, scelta della modalità, Impostazioni, lista dei capitoli, griglia 3x3 del capitolo 2;
+  - Gioco: livello 1 (3x3) e livello 27 (6x6) prima dell'apertura, apertura riuscita a due colori, apertura sbagliata per perdita nel momento dell'effetto, pannello di vittoria.
 - `Previews/previews_report.txt` misura: margini della safe area, distanza minima del contenuto dai bordi sicuri, elementi fuori schermo o fuori safe area, testi tagliati, elementi sovrapposti, elementi che escono dal loro contenitore, Image senza sprite.
-- Nella schermata di gioco misura anche: dimensione delle celle, distanza della griglia da bordi e barre, posizione del pulsante d'azione (o del messaggio) rispetto a griglia e barra in basso.
+- Su ogni schermata misura anche il pulsante più piccolo (errore sotto `minTouchSize`). Nella schermata di gioco: dimensione delle celle e dei disegni di fonti e arrivi, distanza della griglia da bordi e barre, posizione del pulsante d'azione (o del messaggio) rispetto a griglia e barra in basso.
 - Safe area simulata: 9:16 nessun ritaglio; 9:21 120 px in alto (foro/notch) e 72 px in basso (barra dei gesti).
 - In Editor gli asset usati dalle anteprime si caricano **dopo** `NewScene(Single)`, che scarica gli asset non referenziati.
 
@@ -103,4 +111,5 @@
 ## Changelog
 - ErNa-001: prima stesura (scheletro del progetto).
 - ErNa-002: basi dei rompicapi nel Core (§7b), `SeededRandom` al posto di `System.Random` (§7), file di parametri `PuzzleConfig`/`PlumberConfig` (§4), livelli Storia generati e salvati, popup con `ModalOverlay`, `SnapVisuals` per le anteprime.
+- ErNa-004: stile cartoon del UI kit (sprite con contorno e profondità, `PressableButton`, niente blu/arancione), Home a schede (`CardCarousel`, blocco `home` del salvataggio), librerie di sprite generiche, fonti e arrivi disegnati scelti dal seed (`ArtVariants`), nuovi controlli e misure (§9, §10, §11).
 - ErNa-003: capitoli da 9 livelli, sblocco e id stabili nel Core (§7b); pulsante d'azione opzionale e messaggi brevi nella schermata di gioco (§7b); `Decoration` (§9); nuove regole e controlli dell'Idraulico (§10, `docs/idraulico-regole.md`); anteprime aggiornate (§11).

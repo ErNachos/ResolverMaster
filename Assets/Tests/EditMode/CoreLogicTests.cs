@@ -1,8 +1,10 @@
 using System.IO;
 using NUnit.Framework;
+using ResolverMaster.Core.Games;
 using ResolverMaster.Core.Localization;
 using ResolverMaster.Core.Puzzle;
 using ResolverMaster.Core.Save;
+using ResolverMaster.Core.UI;
 using ResolverMaster.Editor;
 
 namespace ResolverMaster.Tests
@@ -110,6 +112,91 @@ namespace ResolverMaster.Tests
             var read = SaveSerializer.FromJson(SaveSerializer.ToJson(data));
             Assert.AreEqual(3, read.progress.GetStars(StoryProgress.Mode, new LevelId("game", 1, 0)));
             Assert.IsTrue(StoryProgress.IsChapterUnlocked(read.progress, book, chapter2));
+        }
+
+        // ---------------- ErNa-004 ----------------
+
+        [Test]
+        public void ArtVariants_SameSeedSameDrawings_DifferentPiecesDiffer()
+        {
+            for (int seed = 0; seed < 50; seed++)
+            {
+                var first = new int[4];
+                for (int k = 0; k < 4; k++)
+                {
+                    first[k] = ArtVariants.Pick(seed, 1, k, 4);
+                    Assert.AreEqual(first[k], ArtVariants.Pick(seed, 1, k, 4), "same seed, same piece: same drawing");
+                    Assert.That(first[k], Is.InRange(0, 3));
+                }
+                CollectionAssert.AllItemsAreUnique(first, "4 pieces of one level get the 4 different drawings");
+                Assert.AreEqual(first[0], ArtVariants.Pick(seed, 1, 4, 4), "the fifth piece starts the cycle again");
+            }
+            // the seed really decides: not every level gets the same first drawing
+            var firsts = new System.Collections.Generic.HashSet<int>();
+            for (int seed = 0; seed < 50; seed++) firsts.Add(ArtVariants.Pick(seed, 2, 0, 4));
+            Assert.Greater(firsts.Count, 1);
+        }
+
+        [Test]
+        public void Carousel_SnapsToNearestCard_NeverPastFirstOrLast()
+        {
+            Assert.AreEqual(1, CardCarousel.Nearest(1.4f, 3));
+            Assert.AreEqual(2, CardCarousel.Nearest(1.6f, 3));
+            Assert.AreEqual(0, CardCarousel.Nearest(-0.8f, 3));
+            Assert.AreEqual(2, CardCarousel.Nearest(7f, 3));
+
+            var c = new CardCarousel(3, 700);
+            c.JumpTo(0);
+            c.BeginDrag();
+            c.Drag(-420);   // finger to the left by 0.6 of a step: the second card is nearer
+            Assert.AreEqual(0.6f, c.Position, 1e-4);
+            Assert.AreEqual(1, c.EndDrag(0, 0.18f));
+            for (int i = 0; i < 200 && c.Tick(1f / 60f, 0.09f); i++) { }
+            Assert.AreEqual(1f, c.Position);
+            Assert.IsTrue(c.Resting);
+
+            c.BeginDrag();
+            c.Drag(-100);   // a short drag: back to the same card
+            Assert.AreEqual(1, c.EndDrag(0, 0.18f));
+
+            c.JumpTo(0);
+            c.BeginDrag();
+            c.Drag(5000);   // far past the first card: soft wall, snap back to the first
+            Assert.Less(c.Position, 0f);
+            Assert.Greater(c.Position, -5000f / 700f, "past the ends the cards move less than the finger");
+            Assert.AreEqual(0, c.EndDrag(3000, 0.18f));
+
+            c.JumpTo(2);
+            c.BeginDrag();
+            c.Drag(-5000);  // far past the last card, with a fast flick: still the last
+            Assert.AreEqual(2, c.EndDrag(-9000, 0.18f));
+
+            c.JumpTo(0);
+            c.BeginDrag();
+            c.Drag(-50);    // small drag but a fast flick to the left: one card only, not two
+            Assert.AreEqual(1, c.EndDrag(-20000, 0.18f));
+        }
+
+        [Test]
+        public void HomeCard_SavedAndRead_UnknownGameFallsBackToFirst()
+        {
+            var games = new[]
+            {
+                new GameInfo { Id = "plumber" },
+                new GameInfo { Id = "trafficjam" },
+            };
+            var data = new SaveData();
+            Assert.AreEqual(0, HomeSelection.IndexOf(games, data.home.selectedGame), "nothing saved: first card");
+
+            data.home.selectedGame = "trafficjam";
+            var read = SaveSerializer.FromJson(SaveSerializer.ToJson(data));
+            Assert.AreEqual("trafficjam", read.home.selectedGame);
+            Assert.AreEqual(1, HomeSelection.IndexOf(games, read.home.selectedGame));
+
+            Assert.AreEqual(0, HomeSelection.IndexOf(games, "removed_game"), "a game that no longer exists: first card");
+            var old = SaveSerializer.FromJson("{\"version\":1,\"settings\":{\"sound\":false}}");
+            Assert.AreEqual("", old.home.selectedGame, "older save without the home block");
+            Assert.AreEqual(0, HomeSelection.IndexOf(games, old.home.selectedGame));
         }
 
         [Test]

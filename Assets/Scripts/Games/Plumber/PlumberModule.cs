@@ -24,6 +24,8 @@ namespace ResolverMaster.Games.Plumber
             IconName = "game_plumber",
             Availability = GameAvailability.Available,
             Order = 10,
+            CardImage = "card_plumber",
+            CardColor = UiKitStyle.Hex(0x9B7BEA),
         };
 
         List<PlumberLevel> _story;

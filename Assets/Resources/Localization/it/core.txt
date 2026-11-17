@@ -1,8 +1,7 @@
 # Resolver Master - Core texts (Italian). Format: key = value. Keys are listed in Scripts/Core/Localization/LocKeys.cs
 app.title = Resolver Master
-home.choose = Scegli un rompicapo
+home.play = GIOCA!
 game.status.coming_soon = Prossimamente
-game.status.available = Gioca
 
 mode.title = Scegli la modalità
 mode.story = Storia

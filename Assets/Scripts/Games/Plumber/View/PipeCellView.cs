@@ -6,19 +6,24 @@ using UnityEngine.UI;
 namespace ResolverMaster.Games.Plumber.View
 {
     /// <summary>
-    /// One pooled cell: tile background (takes the tap), for a sink the colored halo under it, the pipe image (rotates) and, for a sink,
-    /// the water disk that fills it. Rotation is animated at a constant speed towards the target, so taps made during an
-    /// animation queue up (one 90-degree turn each).
+    /// One pooled cell: tile background (takes the tap); for a sink the colored halo under it; the pipe image with its reflection
+    /// (both rotate; for a source or a sink it is only the stub towards the opening); for a source or a sink the fountain drawing on
+    /// top, which never rotates (a source also has its mask, tinted with the water color). Rotation is animated at a constant speed
+    /// towards the target, so taps made during an animation queue up (one 90-degree turn each).
     /// </summary>
     public sealed class PipeCellView : MonoBehaviour, IPointerClickHandler
     {
         public Image Tile;
         public Image Pipe;
-        public Image SinkFill;
+        public Image Shine;
         public Image Halo;
+        /// <summary>Source or fountain drawing (inactive on pipe cells).</summary>
+        public Image Object;
+        /// <summary>Source only: the magenta parts of the drawing, tinted with the water color.</summary>
+        public Image ObjectMask;
         public int Index;
         public Action<int> Tapped;
-        /// <summary>Pipe color while dry (grey, or the water color for sources and sinks).</summary>
+        /// <summary>Pipe color while dry (grey).</summary>
         public Color DryColor;
 
         int _steps;

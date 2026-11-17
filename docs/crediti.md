@@ -7,7 +7,7 @@
 
 Icone usate (nome asset ← simbolo): back ← arrow_back, settings ← settings, undo ← undo, restart ← restart_alt, help ← help, star ← star, lock ← lock, sound ← volume_up, vibration ← vibration, language ← language, story ← menu_book, challenge ← bolt, game_plumber ← plumbing, game_trafficjam ← directions_car, water_drop ← water_drop, fork ← call_split, palette ← palette, faucet ← faucet.
 
-Sprite dell'interfaccia (`Assets/Art/UI/`): generati dal progetto (`UiKitGenerator`), nessuna licenza esterna.
+Sprite dell'interfaccia (`Assets/Art/UI/`) e tubi dell'Idraulico: generati dal progetto (`UiKitGenerator`, `PipeSprites`), nessuna licenza esterna.
 
 Audio: nessuno per ora.
-Grafica dei minigiochi: nessuna per ora (gli originali di Gemini andranno in `ArtSource/`).
+Grafica dei minigiochi: fonti e arrivi dell'Idraulico (`ArtSource/Plumber/Fonte_1..4.png`, `Arrivo_1..4.png`) disegnati con **Google Gemini** su richiesta del team; elaborati da `Tools/Art/make_plumber_art.py` in `Assets/Art/Plumber/`. Uso secondo i termini di Google per i contenuti generati con Gemini (da verificare per l'uso commerciale prima della pubblicazione). Riferimento di stile previsto in `ArtSource/Reference/` (non ancora presente).

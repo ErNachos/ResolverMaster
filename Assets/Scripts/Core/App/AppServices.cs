@@ -16,6 +16,8 @@ namespace ResolverMaster.Core.App
         public GameRegistry Games;
         public UiKitStyle Style;
         public IconLibrary Icons;
+        /// <summary>Illustrations of the Home cards (Assets/Art/Cards); may miss images: Home draws a placeholder.</summary>
+        public IconLibrary Cards;
         public PuzzleConfig Puzzle;
         public UiFactory Ui;
         public ScreenManager Screens;

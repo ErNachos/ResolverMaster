@@ -16,6 +16,15 @@ namespace ResolverMaster.Core.Save
         public SettingsBlock settings = new SettingsBlock();
         /// <summary>Stars per level, per minigame, mode and chapter (ErNa-003). Missing in older files: no progress.</summary>
         public ProgressBlock progress = new ProgressBlock();
+        /// <summary>Home state (ErNa-004). Missing in older files: first card.</summary>
+        public HomeBlock home = new HomeBlock();
+    }
+
+    /// <summary>Home: the id (<c>GameInfo.Id</c>) of the last card chosen, shown again at start-up. Empty = first card.</summary>
+    [Serializable]
+    public sealed class HomeBlock
+    {
+        public string selectedGame = "";
     }
 
     /// <summary>User settings. Empty <see cref="language"/> = never chosen (first launch: the phone language decides).</summary>

@@ -5,12 +5,15 @@ using UnityEngine;
 namespace ResolverMaster.Core.UI
 {
     /// <summary>
-    /// Name -> sprite for every icon in Assets/Art/Icons (white masks, tinted by the UI).
-    /// Asset: Assets/Resources/ResolverMaster/IconLibrary.asset, rebuilt by Resolver Master > UI Kit > Rebuild Icon Library.
+    /// Name -> sprite for every PNG of one art folder. The same class serves every sprite library (no copies, GUIDELINES 1):
+    /// icons (Assets/Art/Icons, white masks tinted by the UI) in Resources/ResolverMaster/IconLibrary.asset, Home card illustrations
+    /// (Assets/Art/Cards) in Resources/ResolverMaster/CardLibrary.asset, and the art of a minigame (e.g. Plumber fountains).
+    /// Rebuilt by Resolver Master > UI Kit > Rebuild Sprite Libraries.
     /// </summary>
     public sealed class IconLibrary : ScriptableObject
     {
         public const string ResourcesPath = "ResolverMaster/IconLibrary";
+        public const string CardsResourcesPath = "ResolverMaster/CardLibrary";
 
         /// <summary>Icons the Core UI uses; the validator checks they all exist.</summary>
         public static readonly string[] CoreIcons =

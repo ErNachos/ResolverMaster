@@ -7,9 +7,9 @@ namespace ResolverMaster.Core.Localization
     public static class LocKeys
     {
         public const string AppTitle = "app.title";
-        public const string HomeChoose = "home.choose";
+        /// <summary>The big Home button: "GIOCA!" / "PLAY!".</summary>
+        public const string HomePlay = "home.play";
         public const string GameComingSoon = "game.status.coming_soon";
-        public const string GameAvailable = "game.status.available";
 
         public const string ModeTitle = "mode.title";
         public const string ModeStory = "mode.story";

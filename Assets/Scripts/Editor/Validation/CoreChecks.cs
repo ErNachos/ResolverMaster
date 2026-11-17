@@ -40,7 +40,10 @@ namespace ResolverMaster.Editor.Validation
         }
     }
 
-    /// <summary>Registered minigames: unique non-empty id, name key present in every language, icon present in the IconLibrary.</summary>
+    /// <summary>
+    /// Registered minigames: unique non-empty id, name key present in every language, icon present in the IconLibrary, Home card color set;
+    /// Home card image present in the card library (warning only: Home draws a placeholder).
+    /// </summary>
     public sealed class GameRegistryCheck : IValidationCheck
     {
         public string Name => "Minigames";
@@ -51,7 +54,9 @@ namespace ResolverMaster.Editor.Validation
             if (registry.Games.Count == 0) report.Error("no minigame registered");
             var loc = LocalizationLoader.Load(Language.English);
             var icons = AssetDatabase.LoadAssetAtPath<IconLibrary>(UiKitAssets.IconLibraryPath);
-            if (icons == null) report.Error("IconLibrary missing: run Resolver Master > UI Kit > Rebuild Icon Library");
+            if (icons == null) report.Error("IconLibrary missing: run Resolver Master > UI Kit > Rebuild Sprite Libraries");
+            var cards = AssetDatabase.LoadAssetAtPath<IconLibrary>(UiKitAssets.CardLibraryPath);
+            if (cards == null) report.Error("CardLibrary missing: run Resolver Master > UI Kit > Rebuild Sprite Libraries");
             foreach (var dup in registry.Games.GroupBy(g => g.Id).Where(g => g.Count() > 1))
                 report.Error($"duplicate minigame id '{dup.Key}'");
             foreach (var g in registry.Games)
@@ -63,11 +68,15 @@ namespace ResolverMaster.Editor.Validation
                     foreach (var lang in LanguageCodes.All)
                         if (!loc.Has(lang, g.NameKey)) report.Error($"'{g.Id}': name key '{g.NameKey}' missing in '{LanguageCodes.ToCode(lang)}'");
                 if (icons != null && !icons.Has(g.IconName)) report.Error($"'{g.Id}': icon '{g.IconName}' not in the IconLibrary");
+                if (g.CardColor.a < 0.01f) report.Error($"'{g.Id}': Home card color not set (GameInfo.CardColor)");
+                if (string.IsNullOrEmpty(g.CardImage)) report.Warning($"'{g.Id}': no Home card image name (GameInfo.CardImage): placeholder used");
+                else if (cards == null || !cards.Has(g.CardImage))
+                    report.Warning($"'{g.Id}': Home card image '{g.CardImage}' missing in {UiKitAssets.CardsDir}: placeholder used");
             }
         }
     }
 
-    /// <summary>UI kit: style asset with fonts and generated sprites, every Core icon present.</summary>
+    /// <summary>UI kit: style asset with fonts and generated sprites (rest and pressed), every Core icon present, touch size of the round buttons.</summary>
     public sealed class UiKitCheck : IValidationCheck
     {
         public string Name => "UiKit";
@@ -81,8 +90,12 @@ namespace ResolverMaster.Editor.Validation
                 return;
             }
             if (style.fontRegular == null || style.fontBold == null) report.Error("UiKitStyle: font missing");
-            if (style.buttonSprite == null || style.cardSprite == null || style.panelSprite == null || style.outlineSprite == null || style.circleSprite == null)
+            if (style.buttonSprite == null || style.buttonPressedSprite == null || style.cardSprite == null || style.cardPressedSprite == null ||
+                style.panelSprite == null || style.outlineSprite == null || style.circleSprite == null || style.roundSprite == null ||
+                style.roundPressedSprite == null || style.softSprite == null)
                 report.Error("UiKitStyle: generated sprites missing: run Resolver Master > UI Kit > Regenerate Sprites");
+            if (style.iconButtonSize < style.minTouchSize || style.gameButtonSize < style.minTouchSize || style.buttonHeight < style.minTouchSize)
+                report.Error($"UiKitStyle: buttons smaller than minTouchSize {style.minTouchSize} (iconButtonSize, gameButtonSize, buttonHeight)");
             var icons = AssetDatabase.LoadAssetAtPath<IconLibrary>(UiKitAssets.IconLibraryPath);
             if (icons == null) return;
             foreach (var name in IconLibrary.CoreIcons)
