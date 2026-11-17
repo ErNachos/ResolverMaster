@@ -11,20 +11,22 @@ Assets/
                                SeededRandom (PCG32), PuzzleBase/IPuzzle/IPuzzleSession, UndoStack, StarRating/StarRules,
                                DifficultyTable, BucketQueue, GameMode/LevelRequest, PuzzleConfig (asset delle stelle),
                                Story (LevelId, StoryChapter, StoryBook, StoryProgress: capitoli e sblocco), ChapterTheme,
-                               ArtVariants (disegno scelto dal seed del livello)
+                               ArtVariants (disegno scelto dal seed del livello), Grid/CellLocks (elementi bloccati o fissati, ErNa-006)
       Localization/            Language, LanguagePicker, LocalizationTable, Localizer, LocKeys, LocalizationLoader, LocalizedText
       Save/                    SaveData (+SettingsBlock, ProgressBlock, HomeBlock), SaveSerializer, SaveStore
       UI/                      UiKitStyle, IconLibrary (libreria di sprite: icone, schede, disegni dei giochi), UiFactory (TextMeshPro),
                                PressableButton (scende e si scurisce; disattivato = desaturato), VertexOffset, SlicedFit (pillole a 9 fette),
                                CardCarousel (logica delle schede della Home), SafeArea, UiScreen, ScreenManager,
-                               PuzzleBoard (board di un gioco + MainActionInfo, GridRows, Theme), ComponentPool, ModalOverlay, Decoration
+                               PuzzleBoard (board di un gioco + MainActionInfo, GridRows, Theme), ComponentPool, ModalOverlay, Decoration,
+                               ColorVision (Lab, delta E, simulazione del daltonismo), ShakeMotion (scossa di un elemento bloccato)
         Themes/                VisualTheme + ThemeCatalog (tema di un capitolo, C# puro), ThemeConfig (asset dei temi), ThemeArt (terreni e sfondi generati)
         Screens/               Home (schede a scorrimento), ModeSelect, Settings, ChapterSelect (capitoli), LevelSelect (griglia 3x3 di un capitolo),
                                Game (+ pulsante d'azione, messaggio breve, pannello di vittoria), ScreenLayout, ScreenIds
     Games/                     ResolverMaster.Games (un sotto-cartella per gioco)
       Plumber/                 PlumberModule, PlumberConfig, PlumberKeys (Idraulico)
         Logic/                 PipePiece, PipeGrid, WaterFlow, WaterTiming + WaterMotion (tempi dell'acqua continua), PlumberPuzzle,
-                               PlumberSolver, PlumberGenerator, PlumberDifficulty, PlumberLevel(+Set), PlumberLevelCodec
+                               PlumberSolver, PlumberGenerator, PlumberDifficulty, PlumberLevel(+Set), PlumberLevelCodec,
+                               PipeNodes (ponte = due nodi), PlumberPalette (regole dei colori dell'acqua)
         View/                  PlumberBoardView (: PuzzleBoard), PipeCellView, PipeSprites (tubi generati), WaterGraphic (acqua nei tubi),
                                PlumberArt (fonti e arrivi)
       TrafficJam/              TrafficJamModule (Traffic jam)
@@ -117,11 +119,12 @@ Indietro (pulsante o tasto Android): chiude la schermata in cima; sulla Home chi
 
 ## Idraulico
 - Regole complete: `docs/idraulico-regole.md`. In breve: prima si collegano i tubi, poi si apre l'acqua. Il tentativo riesce solo se non ci sono perdite, i colori restano separati e ogni fontana riceve il suo colore.
-- **Livelli della Storia**: 27 in 3 capitoli, su griglie rettangolari 3x4, 4x5, 5x7, 6x8 (colonne x righe).
+- **Livelli della Storia**: 81 in 9 capitoli (ErNa-006), su griglie rettangolari 3x4, 4x5, 5x7, 6x8, 7x9 (colonne x righe). Fino a 4 colori, ponti, pezzi bloccati.
   - Sono generati una volta nell'Editor (*Idraulico > Genera livelli Storia*, seed fissi) e salvati in `plumber_story.json`, con `chapter` e `index`. Il telefono non li rigenera.
   - Tabella in `docs/idraulico-livelli.md`.
-- **Risolutore esatto**: cerca la rete chiusa di costo minimo. Gestisce più fonti, più arrivi, i colori e le simmetrie dei pezzi. Usa IDA\* sulle estremità aperte, con un limite inferiore ammissibile.
-- **Generatore**: tre schemi (percorso singolo, bivio con T, due colori).
+- **Risolutore esatto**: cerca la rete chiusa di costo minimo. Lavora sui nodi di `PipeNodes` (una cella = un nodo; un ponte = due nodi separati).
+- **Grandi griglie** (7x9): sotto i 150 px di cella la cornice si disegna a metà spessore e usa un po' del margine (`compactCellBelow`, `compactFrameScale`, `compactOverflow`): celle da 145–146 px su 1080. Gestisce più fonti, più arrivi, i colori e le simmetrie dei pezzi. Usa IDA\* sulle estremità aperte, con un limite inferiore ammissibile.
+- **Generatore**: tre schemi (percorso singolo, bivio con T, un percorso per colore con 2–4 colori). ErNa-006: un percorso può attraversare ad angolo retto un dritto di un altro percorso (ponte); pezzi bloccati sul percorso (già giusti) o fuori.
   - Riempie il resto con pezzi casuali e ruota tutto a caso.
   - Scarta i livelli già risolti, quelli fuori gradino e, nel capitolo 1, quelli che usano una T.
 - **Tocco**: la mossa vale subito nel modello; la rotazione visiva si accoda (0,12 s per quarto di giro).

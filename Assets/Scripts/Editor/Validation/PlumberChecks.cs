@@ -120,6 +120,8 @@ namespace ResolverMaster.Editor.Validation
     }
 
     /// <summary>
+    /// ErNa-006: bridges needed where the tier says so, locked pieces and bridges counted by the tier, last level within the chapter 8
+    /// maximum + 30%.
     /// Plumber parameters and Story levels (ErNa-003 rules): water colors with a sink halo each, chapter icons, names, valid themes and texts in every language;
     /// each chapter has exactly 9 levels in order; each level parses, is solvable with no leaks and colors apart, its saved minimum
     /// moves match the solver, opening the water at the start does not solve it, it respects its difficulty tier, in chapter 1 the
@@ -167,6 +169,16 @@ namespace ResolverMaster.Editor.Validation
 
             for (int i = 0; i < set.levels.Count; i++)
                 CheckLevel(cfg, set.levels[i], i, report);
+
+            // ErNa-006: the last level is demanding but not frustrating: its minimum stays within the chapter 8 maximum + 30%
+            const int chapter8 = 8;
+            var ch8 = set.levels.Where(l => l.chapter == chapter8).ToList();
+            if (ch8.Count > 0 && set.levels.Count > 0)
+            {
+                int max8 = ch8.Max(l => l.minMoves), final = set.levels[set.levels.Count - 1].minMoves;
+                if (final > max8 * cfg.finalLevelMaxRatio)
+                    report.Error($"last level: minimum {final} above the chapter 8 maximum {max8} x {cfg.finalLevelMaxRatio:0.00}");
+            }
         }
 
         static void CheckConfig(PlumberConfig cfg, ValidationReport report)
@@ -175,7 +187,7 @@ namespace ResolverMaster.Editor.Validation
             if (last == 0) report.Error("Story difficulty table is empty");
             for (int n = 1; n <= last; n++)
                 if (cfg.storyDifficulty.ForLevel(n) == null) report.Error($"no difficulty tier covers level {n}");
-            if (cfg.waterColors.Count < 2) report.Error($"waterColors has {cfg.waterColors.Count} colors, the Story uses 2");
+            if (cfg.waterColors.Count < 4) report.Error($"waterColors has {cfg.waterColors.Count} colors, the Story uses 4");
             if (cfg.sinkHaloColors.Count < cfg.waterColors.Count) report.Error("every water color needs a sink halo color in sinkHaloColors");
 
             var icons = AssetDatabase.LoadAssetAtPath<IconLibrary>(UiKitAssets.IconLibraryPath);
@@ -245,6 +257,9 @@ namespace ResolverMaster.Editor.Validation
             if (tier == null) return;
             foreach (var problem in PlumberDifficulty.CheckTier(tier, grid, sol.MinMoves, sol.PathLength))
                 report.Error($"{id} (tier {tier.id}): {problem}");
+            // ErNa-006: a needed bridge = the level is impossible with crosses (which mix) in place of the bridges
+            if (tier.GetOr(PlumberDifficulty.NeedBridge, 0).min > 0 && PlumberSolver.Solve(grid, new PlumberSolver.Options { BridgesAsCrosses = true }).Solvable)
+                report.Error($"{id} (tier {tier.id}): the bridge is not needed (solvable with crosses in its place)");
 
             try
             {

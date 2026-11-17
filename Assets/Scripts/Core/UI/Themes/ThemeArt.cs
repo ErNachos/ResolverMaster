@@ -202,6 +202,78 @@ namespace ResolverMaster.Core.UI.Themes
                     }
                     break;
                 }
+                case BackdropPattern.Harbor:
+                {
+                    // ErNa-006: sky, a dark sea-green sea (never like the blue water) with soft waves, a stone quay with joints and bollards
+                    float horizon = 0.66f, quay = 0.36f;
+                    Fill(c, nseed, 40f, (u, v) =>
+                    {
+                        if (v > horizon) return (Color.Lerp(t.skyBottom, t.skyTop, Smooth(horizon, 1f, v)), false);
+                        if (v > quay)
+                        {
+                            float k = (v - quay) / (horizon - quay);
+                            var sea = Color.Lerp(t.landA * 0.9f, Color.Lerp(t.landA, t.skyBottom, 0.25f), k);
+                            float wave = Mathf.Sin(u * 40f + Mathf.Sin(v * 70f) * 1.5f + v * 120f);
+                            if (wave > 0.93f) sea = Color.Lerp(sea, t.skyBottom, 0.35f);
+                            return (sea, true);
+                        }
+                        return (t.landB, true);
+                    });
+                    for (int i = 0; i < 4; i++) Cloud(c, rng, R(rng, 0, w), h * R(rng, horizon + 0.08f, 0.96f), R(rng, 24f, 40f), Color.white);
+                    float edge = h * quay;
+                    c.Rect(0, edge - 10f, w, edge, t.landB * 0.8f, 1f);   // the quay border
+                    for (float y = edge - 52f; y > 0; y -= 42f) c.Line(0, y, w, y, 1.6f, t.landB * 0.82f, 0.7f);
+                    for (float x = R(rng, 10f, 60f); x < w; x += R(rng, 110f, 170f))
+                    {
+                        c.Disk(x, edge - 30f, 12f, t.landDetail, 1f);   // bollards
+                        c.Disk(x, edge - 26f, 8f, t.landDetail * 1.3f, 1f);
+                    }
+                    break;
+                }
+                case BackdropPattern.Mountains:
+                {
+                    // ErNa-006: sky, rocky peaks with snow caps, a dark alpine meadow in front
+                    float meadow = 0.52f;
+                    Fill(c, nseed, 50f, (u, v) =>
+                    {
+                        float x = u * 3.1f;
+                        float peaks = 0.70f + 0.11f * Mathf.Abs(Mathf.Sin(x * 2.2f + 0.4f)) + 0.05f * Mathf.Abs(Mathf.Sin(x * 5.3f + 1.7f));
+                        float hill = meadow + 0.035f * Mathf.Sin(u * 4.1f + 1.2f);
+                        if (v > peaks) return (Color.Lerp(t.skyBottom, t.skyTop, Smooth(peaks, 1f, v)), false);
+                        if (v > hill)
+                        {
+                            var rock = Color.Lerp(t.landA * 0.92f, t.landA, (v - hill) / Mathf.Max(0.01f, peaks - hill));
+                            if (v > peaks - 0.045f) rock = t.landDetail;   // snow
+                            return (rock, true);
+                        }
+                        return (Color.Lerp(t.landB * 0.8f, t.landB, v / hill), true);
+                    });
+                    for (int i = 0; i < 3; i++) Cloud(c, rng, R(rng, 0, w), h * R(rng, 0.86f, 0.97f), R(rng, 22f, 36f), Color.white);
+                    for (int i = 0; i < 150; i++) Tuft(c, rng, R(rng, 0, w), h * R(rng, 0.02f, meadow - 0.06f), t.landB * 0.75f, R(rng, 6f, 11f), 0.85f);
+                    break;
+                }
+                case BackdropPattern.Castle:
+                {
+                    // ErNa-006: sky, a warm grey castle wall with battlements and two towers, dark grass in front
+                    float ground = 0.40f, wallTop = 0.58f;
+                    Fill(c, nseed, 40f, (u, v) => v > ground ? (Color.Lerp(t.skyBottom, t.skyTop, Smooth(ground, 1f, v)), false) : (Color.Lerp(t.landB * 0.82f, t.landB, v / ground), true));
+                    for (int i = 0; i < 4; i++) Cloud(c, rng, R(rng, 0, w), h * R(rng, 0.80f, 0.96f), R(rng, 24f, 40f), Color.white);
+                    float baseY = h * ground, topY = h * wallTop;
+                    c.Rect(0, baseY, w, topY, t.landA, 1f);
+                    for (float x = 0; x < w; x += 36f) c.Rect(x, topY, x + 20f, topY + 18f, t.landA, 1f);   // battlements
+                    foreach (float tx in new[] { w * 0.18f, w * 0.78f })
+                    {
+                        float tw = 74f, th = h * 0.27f;
+                        c.Rect(tx - tw / 2f, baseY, tx + tw / 2f, baseY + th, t.landA * 0.94f, 1f);
+                        for (float x = tx - tw / 2f; x < tx + tw / 2f; x += 25f) c.Rect(x, baseY + th, x + 14f, baseY + th + 16f, t.landA * 0.94f, 1f);
+                        c.Rect(tx - 9f, baseY + th * 0.55f, tx + 9f, baseY + th * 0.72f, t.landDetail, 1f);   // a window
+                    }
+                    for (float y = baseY + 26f; y < topY - 6f; y += 26f)   // stone rows
+                        c.Line(0, y, w, y, 1.3f, t.landA * 0.86f, 0.6f);
+                    c.Rect(w * 0.45f, baseY, w * 0.55f, baseY + h * 0.11f, t.landDetail, 1f);   // the gate
+                    for (int i = 0; i < 120; i++) Tuft(c, rng, R(rng, 0, w), h * R(rng, 0.02f, ground - 0.04f), t.landB * 0.7f, R(rng, 6f, 11f), 0.85f);
+                    break;
+                }
                 default:
                 {
                     float street = 0.46f;

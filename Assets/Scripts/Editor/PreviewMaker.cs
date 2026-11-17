@@ -98,6 +98,8 @@ namespace ResolverMaster.Editor
             LevelsShot(1),
             LevelsShot(2),
             LevelsShot(3),
+            // ErNa-006: the themes of chapters 4-9
+            LevelsShot(4), LevelsShot(5), LevelsShot(6), LevelsShot(7), LevelsShot(8), LevelsShot(9),
             // before the opening, one level per chapter (theme): 3x4 (level 1), 5x7 (level 14), 6x8 (level 27)
             GameShot("game_c1", 0, BoardPreview.Start, win: false),
             GameShot("game_c2", 13, BoardPreview.Start, win: false),
@@ -106,6 +108,17 @@ namespace ResolverMaster.Editor
             GameShot("game_open_ok", 26, BoardPreview.ActionSuccess, win: false),
             GameShot("game_open_leak", 9, BoardPreview.ActionFailure, win: false),
             GameShot("game_win", 0, BoardPreview.Solved, win: true),
+            // ErNa-006: chapters 4-9 (bridges, locked pieces, 3 and 4 colors, 7x9), two levels each from chapter 6 on (also color-blind)
+            GameShot("game_c4_33", 32, BoardPreview.Start, win: false),
+            GameShot("game_c5_44", 43, BoardPreview.Start, win: false),
+            GameShot("game_c6_47", 46, BoardPreview.Start, win: false),
+            GameShot("game_c6_53", 52, BoardPreview.ActionSuccess, win: false),
+            GameShot("game_c7_58", 57, BoardPreview.Start, win: false),
+            GameShot("game_c7_63", 62, BoardPreview.Start, win: false),
+            GameShot("game_c8_66", 65, BoardPreview.Start, win: false),
+            GameShot("game_c8_72", 71, BoardPreview.ActionFlowing, win: false),
+            GameShot("game_c9_75", 74, BoardPreview.Start, win: false),
+            GameShot("game_c9_81", 80, BoardPreview.ActionSuccess, win: false),
             // ErNa-006: a hand-made level with a bridge (orange east-west, blue north-south), a decoy cross and locked pieces
             CustomShot("game_bridge", BridgeLevel, BoardPreview.Start),
             CustomShot("game_bridge_flowing", BridgeLevel, BoardPreview.ActionFlowing),
@@ -442,16 +455,27 @@ namespace ResolverMaster.Editor
                 .ToList();
 
             float freeTop = float.MaxValue, freeBottom = float.MaxValue, freeLeft = float.MaxValue, freeRight = float.MaxValue;
+            int scrolled = 0;
             foreach (var it in leaves)
             {
                 var r = it.Rect;
                 var deco = Deco(it.Graphic);
                 if (deco != null && deco.mayLeaveScreen) continue;   // side cards of the Home carousel peek in from the edges
+                // ErNa-006: inside a scroll list the list itself must be on screen; elements outside it are reached by scrolling
+                var mask = it.Graphic.GetComponentInParent<RectMask2D>();
+                if (mask != null)
+                {
+                    var view = PixelRect(mask.rectTransform, device);
+                    if (!Inside(screen, view)) issues.Add($"scroll list off screen: {PathOf(mask.transform, root)} {Fmt(view)}");
+                    else if (!Inside(safe, view)) issues.Add($"scroll list outside safe area: {PathOf(mask.transform, root)} {Fmt(view)}");
+                    if (!Inside(view, r))
+                    {
+                        scrolled++;
+                        continue;
+                    }
+                }
                 if (!Inside(screen, r)) issues.Add($"off screen: {it.Path} {Fmt(r)}");
                 else if (!Inside(safe, r)) issues.Add($"outside safe area: {it.Path} {Fmt(r)}");
-                var mask = it.Graphic.GetComponentInParent<RectMask2D>();
-                if (mask != null && !Inside(PixelRect(mask.rectTransform, device), r))
-                    issues.Add($"hidden by scroll list (scroll to see it): {it.Path}");
 
                 if (deco != null) continue;
                 if (it.Graphic is TMP_Text t && IsClipped(t, out string how)) issues.Add($"text clipped ({how}): {it.Path} \"{t.text.Replace('\n', ' ')}\"");
@@ -499,7 +523,8 @@ namespace ResolverMaster.Editor
                 foreach (var b in buttons.Where(b => Mathf.Min(b.rect.width, b.rect.height) < style.minTouchSize - 0.5f))
                     issues.Add($"button smaller than {style.minTouchSize:0} px: {b.path} {b.rect.width:0}x{b.rect.height:0}");
             }
-            margins = $"content-to-safe-edge min gap top {freeTop:0}, bottom {freeBottom:0}, left {freeLeft:0}, right {freeRight:0} px; {smallest}; {MeasureScale(visible, device, root, issues)}";
+            margins = $"content-to-safe-edge min gap top {freeTop:0}, bottom {freeBottom:0}, left {freeLeft:0}, right {freeRight:0} px; {smallest}; {MeasureScale(visible, device, root, issues)}" +
+                      (scrolled > 0 ? $"; {scrolled} element(s) reached by scrolling" : "");
             return issues;
         }
 

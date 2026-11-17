@@ -36,3 +36,10 @@ win.levels = Levels
 theme.garden.name = Garden
 theme.farm.name = Farm
 theme.city.name = City
+# ErNa-006
+theme.factory.name = Factory
+theme.site.name = Building Site
+theme.harbor.name = Harbour
+theme.mountain.name = Mountain
+theme.lab.name = Laboratory
+theme.castle.name = Castle

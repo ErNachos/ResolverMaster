@@ -36,3 +36,10 @@ win.levels = Livelli
 theme.garden.name = Giardino
 theme.farm.name = Fattoria
 theme.city.name = Città
+# ErNa-006
+theme.factory.name = Fabbrica
+theme.site.name = Cantiere
+theme.harbor.name = Porto
+theme.mountain.name = Montagna
+theme.lab.name = Laboratorio
+theme.castle.name = Castello

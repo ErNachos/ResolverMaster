@@ -4,6 +4,12 @@ game.plumber.name = Plumber
 plumber.chapter1.name = First Drop
 plumber.chapter2.name = The Fork
 plumber.chapter3.name = Two Colors
+plumber.chapter4.name = Iron Bridges
+plumber.chapter5.name = Locked Site
+plumber.chapter6.name = Three Colors
+plumber.chapter7.name = High Up
+plumber.chapter8.name = Four Colors
+plumber.chapter9.name = The Grand Finale
 
 plumber.action.open = Open the water
 plumber.fail.leak = Leak!

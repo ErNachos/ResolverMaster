@@ -34,6 +34,10 @@ namespace ResolverMaster.Games.Plumber
             public DifficultyRange MinMoves, Path, Tees, Crosses;
             /// <summary>ErNa-006: locked pieces on the grid, some on the route (already right: a constraint), some off it (obstacles).</summary>
             public DifficultyRange Locked;
+            /// <summary>ErNa-006: bridges, where a route crosses a straight of another route (Colors layout only).</summary>
+            public DifficultyRange Bridges;
+            /// <summary>ErNa-006: keep only levels that are impossible when the bridges are crosses (a bridge is needed).</summary>
+            public bool NeedBridge;
             public Layout Layout;
             /// <summary>Water colors (= routes) of the <see cref="Layout.Colors"/> layout.</summary>
             public int ColorCount = 1;
@@ -54,6 +58,8 @@ namespace ResolverMaster.Games.Plumber
                     Tees = tier.GetOr(PlumberDifficulty.Tees, 0),
                     Crosses = tier.GetOr(PlumberDifficulty.Crosses, 0),
                     Locked = tier.GetOr(PlumberDifficulty.Locked, 0),
+                    Bridges = tier.GetOr(PlumberDifficulty.Bridges, 0),
+                    NeedBridge = tier.GetOr(PlumberDifficulty.NeedBridge, 0).min > 0,
                     Layout = colors >= 2 ? Layout.Colors : sinks >= 2 ? Layout.Fork : Layout.Single,
                     ColorCount = Math.Max(1, colors),
                     MaxAttempts = maxAttempts,
@@ -83,11 +89,18 @@ namespace ResolverMaster.Games.Plumber
             {
                 var grid = TryBuild(settings, rng);
                 if (grid == null) continue;
+                if (!settings.Bridges.Contains(grid.Count(PieceKind.Bridge))) continue;
                 var sol = PlumberSolver.Solve(grid, options);
                 if (!sol.Solvable || sol.MinMoves == 0) continue;   // MinMoves 0 = already solved at the start
                 if (!settings.MinMoves.Contains(sol.MinMoves) || !settings.Path.Contains(sol.PathLength)) continue;
                 if (settings.Layout == Layout.Single && sol.TeesOnPath > 0) continue;   // chapter 1: a T is only a decoy
                 if (settings.Layout == Layout.Fork && sol.TeesOnPath == 0) continue;
+                if (settings.NeedBridge)
+                {
+                    // the bridge must be needed: with crosses in its place (mixing) the level becomes impossible
+                    var asCross = PlumberSolver.Solve(grid, new PlumberSolver.Options { MaxExpansions = settings.SolverLimit, BridgesAsCrosses = true });
+                    if (asCross.Solvable || asCross.LimitReached) continue;
+                }
                 return new Result
                 {
                     Attempts = attempt,
@@ -115,6 +128,7 @@ namespace ResolverMaster.Games.Plumber
             int n = grid.CellCount;
             var open = new int[n];       // route openings per cell
             var onRoute = new bool[n];
+            var bridges = new List<int>();
             int length = rng.Range(s.Path.min, s.Path.max);
             int routeTees = 0;
 
@@ -152,9 +166,9 @@ namespace ResolverMaster.Games.Plumber
                 }
                 default:
                 {
-                    if (s.ColorCount != 2)
+                    if (s.ColorCount != 2 || s.Bridges.max > 0)
                     {
-                        if (!BuildRoutes(s, rng, topo, grid, open, onRoute, length)) return null;
+                        if (!BuildRoutes(s, rng, topo, grid, open, onRoute, length, bridges)) return null;
                         break;
                     }
                     // two colors: the ErNa-003 sequence of random numbers, so the saved chapter 3 levels stay the same
@@ -177,7 +191,7 @@ namespace ResolverMaster.Games.Plumber
             for (int c = 0; c < n; c++)
             {
                 if (!onRoute[c] || grid.Pieces[c].Kind == PieceKind.Source || grid.Pieces[c].Kind == PieceKind.Sink) continue;
-                grid.Pieces[c] = new Piece(PieceFor(topo, c, open[c]));
+                grid.Pieces[c] = new Piece(bridges.Contains(c) ? PieceKind.Bridge : PieceFor(topo, c, open[c]));
             }
 
             // decoys off the routes, then fillers
@@ -228,8 +242,10 @@ namespace ResolverMaster.Games.Plumber
         /// <see cref="Settings.ColorCount"/> separate routes (3-4 colors, ErNa-006): the pipes are split at random among the routes
         /// (at least one each), the colors are shuffled, each route starts on a free cell.
         /// </summary>
-        static bool BuildRoutes(Settings s, SeededRandom rng, SquareTopology topo, PipeGrid grid, int[] open, bool[] onRoute, int length)
+        static bool BuildRoutes(Settings s, SeededRandom rng, SquareTopology topo, PipeGrid grid, int[] open, bool[] onRoute, int length, List<int> bridges)
         {
+            // routes after the first may cross a straight of an earlier route (another color) at a right angle: a bridge (ErNa-006)
+            var cross = s.Bridges.max > 0 ? new Crossing { Open = open, Bridges = bridges, Max = s.Bridges.max } : null;
             int k = s.ColorCount;
             if (length < k) return false;
             var lens = new int[k];
@@ -242,7 +258,7 @@ namespace ResolverMaster.Games.Plumber
             {
                 int start = r == 0 ? rng.Next(grid.CellCount) : PickFree(rng, onRoute);
                 if (start < 0) return false;
-                var route = Walk(topo, rng, start, lens[r] + 1, onRoute);
+                var route = Walk(topo, rng, start, lens[r] + 1, onRoute, cross: r > 0 ? cross : null);
                 if (route == null) return false;
                 Mark(topo, grid, open, route, PieceKind.Source, PieceKind.Sink, colors[r]);
             }
@@ -253,27 +269,58 @@ namespace ResolverMaster.Games.Plumber
         /// Self-avoiding random walk of <paramref name="steps"/> cells after <paramref name="start"/> (returned list includes the start).
         /// Marks the cells as route. <paramref name="startOnRoute"/>: the start is already a route cell (a branch leaving a T).
         /// </summary>
-        static List<int> Walk(SquareTopology topo, SeededRandom rng, int start, int steps, bool[] onRoute, bool startOnRoute = false)
+        static List<int> Walk(SquareTopology topo, SeededRandom rng, int start, int steps, bool[] onRoute, bool startOnRoute = false, Crossing cross = null)
         {
             if (!startOnRoute && onRoute[start]) return null;
             var route = new List<int> { start };
             onRoute[start] = true;
             var options = new List<int>(4);
-            for (int i = 0; i < steps; i++)
+            var crossings = new List<int>(4);
+            while (route.Count < steps + 1)
             {
                 int cur = route[route.Count - 1];
                 options.Clear();
+                crossings.Clear();
                 for (int d = 0; d < topo.DirectionCount; d++)
                 {
                     int nb = topo.Neighbor(cur, d);
                     if (nb >= 0 && !onRoute[nb]) options.Add(nb);
+                    else if (cross != null && nb >= 0 && route.Count + 2 <= steps + 1 && cross.CanCross(nb, d))
+                    {
+                        int beyond = topo.Neighbor(nb, d);
+                        if (beyond >= 0 && !onRoute[beyond]) crossings.Add(d);
+                    }
                 }
-                if (options.Count == 0) return null;   // stuck: next attempt
+                if (options.Count == 0 && crossings.Count == 0) return null;   // stuck: next attempt
+                if (crossings.Count > 0 && cross.Bridges.Count < cross.Max && (options.Count == 0 || rng.Chance(Crossing.Chance)))
+                {
+                    // over the straight of the other route, out on the other side: the crossed cell becomes a bridge
+                    int d = rng.Pick(crossings);
+                    int bridge = topo.Neighbor(cur, d), beyond = topo.Neighbor(bridge, d);
+                    route.Add(bridge);
+                    route.Add(beyond);
+                    onRoute[beyond] = true;
+                    cross.Bridges.Add(bridge);
+                    continue;
+                }
+                if (options.Count == 0) return null;
                 int next = rng.Pick(options);
                 route.Add(next);
                 onRoute[next] = true;
             }
             return route;
+        }
+
+        /// <summary>Where a walk may cross an earlier route (ErNa-006): a straight of it, entered at a right angle.</summary>
+        sealed class Crossing
+        {
+            public const double Chance = 0.7;
+            public int[] Open;
+            public List<int> Bridges;
+            public int Max;
+
+            public bool CanCross(int cell, int dir) =>
+                !Bridges.Contains(cell) && Open[cell] == (PieceShapes.IsVertical(dir) ? PieceShapes.HorizontalChannel : PieceShapes.VerticalChannel);
         }
 
         static int PickFree(SeededRandom rng, bool[] onRoute)

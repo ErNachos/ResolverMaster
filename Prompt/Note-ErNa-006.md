@@ -18,8 +18,16 @@
 - Grafica: piastra scura (`lockPlateColor` #3E424C) grande come la lastra, bordo nero e 4 bulloni chiari con taglio; il tubo resta sopra. Controllata su Giardino, Fattoria e Città (anteprime `game_locked_c1`, `game_locked_c2`, `game_bridge`). Ponte ritoccato dopo la prima anteprima: flange più grandi e ombra più scura (`bridgeShadowAlpha` 0,45), per distinguerlo meglio dalla croce.
 - Anteprime daltonismo: `Previews/colorblind/<schermata>_it_<risoluzione>_{deut,prot,trit}.png` (Machado 2009, gravità piena) per le schermate di gioco in italiano; il report riporta la differenza minima tra i colori dell'acqua per ogni tipo.
 
+- **Parte D**: gradini 28–81 nella tabella (`PlumberDifficulty.Story`, copiati in `PlumberConfig.asset` con `ConfigAssets.ResetGameDefaultsBatch`: il diff ha mostrato solo righe aggiunte). Il livello 81 era uscito a 24 mosse (limite 18 × 1,3 = 23,4): gradino ristretto a 21–23 → 21.
+- Ponti nel generatore: un percorso (dal secondo in poi) può attraversare ad angolo retto un dritto di un percorso di altro colore (probabilità 0,7 quando servono ponti); "necessario" verificato con il risolutore.
+- Temi: Fabbrica (terreno a mattoni, lastre grigie, sfondo città), Cantiere (terra battuta e sabbia scura, campi), Porto (banchina in pietra, lastre di legno, **mare verde acqua scuro** `#4E7D74`), Montagna (prato alpino scuro, roccia, cime innevate), Laboratorio (piastrelle chiare, grigio freddo), Castello (pietra grigia calda, erba scura, mura merlate). Tutti passano il controllo ΔE ≥ 20 dall'acqua.
+- Nomi dei capitoli: 4 Ponti di ferro / Iron Bridges, 5 Cantiere bloccato / Locked Site, 6 Tre colori / Three Colors, 7 Alta quota / High Up, 8 Quattro colori / Four Colors, 9 Il gran finale / The Grand Finale. Icone (Material Symbols, segnaposto): factory, construction, anchor, landscape, science, castle.
+- **Lista dei capitoli scorrevole**: con 9 capitoli le anteprime misuravano i capitoli 7–9 fuori dallo schermo → `UiFactory.ScrollList` (Core). Le misure ora controllano la lista e contano gli elementi raggiungibili scorrendo.
+
 ## Problemi aperti
-- Nessuno per ora.
+- Daltonismo: con deuteranopia e protanopia arancione e giallo si distinguono soprattutto per luminosità (ΔE simulato 17,4 deut, 29,7 prot); il viola diventa blu notte, distinto dal blu per luminosità. Tritanopia: tutti ben distinti (minimo ΔE 37). Accettabile, ma è il caso più debole senza simboli.
+- Il livello 80 (22 mosse) è un po' più lungo del livello 81 (21), che resta entro il limite richiesto.
+- Le icone dei capitoli 4–9 sono segnaposto Material, come quelle dei capitoli 1–3.
 
 ## Tempi del risolutore (Parte A)
 Misurati con *Idraulico > Misura risolutore* (30 livelli casuali per riga, risolutore esatto da solo):
@@ -33,3 +41,31 @@ Misurati con *Idraulico > Misura risolutore* (30 livelli casuali per riga, risol
 | 7x9 | 4 | 26–34 | 0,3 ms | 0,5 ms | 511 / 952 |
 
 Ben sotto 1 s: nessuna ottimizzazione necessaria.
+
+## Riepilogo finale
+**Fatto**
+- A: 4 colori (blu, arancione, viola, giallo) con controlli di palette e distanza da interfaccia/temi; griglia 7x9 (celle 145–146 px); generatore e risolutore con 1–4 fonti, mosse minime esatte; anteprime daltonismo.
+- B: ponte a due canali indipendenti, disegnato dal codice e molto diverso dalla croce; croce e ponte non contano mosse (scossa).
+- C: pezzi bloccati (concetto nel Core `CellLockSet`), piastra con bulloni, risolutore e generatore, formato compatibile.
+- D: capitoli 4–9, 54 livelli nuovi, 6 temi, lista dei capitoli scorrevole.
+- Test 27/27 (5 nuovi), validatore OK con 0 errori e 0 avvisi, 0 warning di compilazione, 144 anteprime senza problemi. Commit A, B, C e D su GitHub.
+
+**Tempi del risolutore**: 7x9 con 4 colori in media 0,2–0,5 ms, massimo 2,9 ms; nessun livello vicino a 1 s.
+
+**Mosse minime**
+
+| Cap. | Livelli | Griglie | Mosse minime |
+|---|---|---|---|
+| 1 | 1–9 | 3x4 → 4x5 → 5x7 | 1, 2, 3, 4, 5, 5, 6, 7, 9 |
+| 2 | 10–18 | 4x5 → 5x7 | 2, 4, 4, 5, 6, 7, 9, 10, 10 |
+| 3 | 19–27 | 5x7 → 6x8 | 2, 3, 6, 7, 7, 8, 9, 10, 12 |
+| 4 | 28–36 | 5x7 → 6x8 | 4, 7, 7, 8, 10, 11, 10, 13, 15 |
+| 5 | 37–45 | 5x7 → 6x8 | 7, 8, 7, 10, 11, 11, 13, 13, 14 |
+| 6 | 46–54 | 6x8 | 4, 5, 7, 10, 9, 12, 12, 14, 13 |
+| 7 | 55–63 | 6x8 → 7x9 | 8, 8, 10, 12, 14, 15, 16, 15, 17 |
+| 8 | 64–72 | 6x8 → 7x9 | 8, 9, 11, 10, 12, 13, 17, 18, 18 |
+| 9 | 73–81 | 7x9 | 11, 11, 13, 16, 17, 18, 19, 22, 21 |
+
+**Anteprime daltonismo** (livelli 47, 53, 58, 63, 66, 72, 75, 81 e gli altri di gioco, in `Previews/colorblind/`): i 4 colori restano distinguibili; il caso più debole è arancione/giallo per deuteranopia e protanopia (diversi soprattutto in luminosità).
+
+**Da provare sul telefono**: ponte e croce (scossa, nessuna mossa), pezzi bloccati, griglie 7x9, scorrimento della lista dei capitoli, leggibilità di arancione e giallo.

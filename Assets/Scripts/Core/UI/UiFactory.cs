@@ -81,6 +81,35 @@ namespace ResolverMaster.Core.UI
             return le;
         }
 
+        /// <summary>
+        /// A vertical scroll list filling the rest of a column (ErNa-006: 9 chapters do not fit a screen): a masked viewport (flexible
+        /// height) and a <paramref name="content"/> column that grows with its children. Drags anywhere in the list scroll it.
+        /// </summary>
+        public ScrollRect ScrollList(string name, Transform parent, float spacing, out RectTransform content, float bottomPadding = 0)
+        {
+            var viewport = Rect(name, parent);
+            Layout(viewport, flexibleHeight: 1);
+            viewport.gameObject.AddComponent<RectMask2D>();
+            var catcher = viewport.gameObject.AddComponent<Image>();   // transparent: catches drags between the items
+            catcher.color = new Color(1, 1, 1, 0);
+            content = Rect("Content", viewport);
+            content.anchorMin = new Vector2(0, 1);
+            content.anchorMax = new Vector2(1, 1);
+            content.pivot = new Vector2(0.5f, 1);
+            content.offsetMin = content.offsetMax = Vector2.zero;
+            Column(content, spacing, new RectOffset(0, 0, 0, (int)bottomPadding));
+            var fitter = content.gameObject.AddComponent<ContentSizeFitter>();
+            fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+            var scroll = viewport.gameObject.AddComponent<ScrollRect>();
+            scroll.horizontal = false;
+            scroll.vertical = true;
+            scroll.viewport = viewport;
+            scroll.content = content;
+            scroll.movementType = ScrollRect.MovementType.Elastic;
+            scroll.scrollSensitivity = 40f;
+            return scroll;
+        }
+
         public VerticalLayoutGroup Column(RectTransform rt, float spacing, RectOffset padding = null)
         {
             var v = rt.gameObject.AddComponent<VerticalLayoutGroup>();

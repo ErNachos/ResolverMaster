@@ -60,6 +60,7 @@
   - I messaggi brevi (`MessageRequested(chiave)`) compaiono al posto del pulsante. Durate in `UiKitStyle` (`toastHold`, `toastFade`).
 - Una vittoria che non nasce da una mossa (es. aprire l'acqua) usa `PuzzleBase.RefreshSolved()`; l'azione non conta come mossa.
 - **Temi dei capitoli (Core, ErNa-005)**: ogni capitolo nomina un tema di `ThemeConfig` (`ChapterTheme.theme`); senza tema o con id sconosciuto vale il tema predefinito (`ThemeCatalog`). La grafica del tema è generata da `ThemeArt` (seed del tema) finché non arrivano le immagini (`VisualTheme.*Image`). Nei terreni niente blu né arancione forti.
+- **Elementi bloccati (Core, ErNa-006)**: `CellLockSet` dice quali celle il giocatore non può cambiare (`Locked` dal livello, `Pinned` fissate durante il gioco). Un tocco su una cella che non può cambiare **non è una mossa**: solo una scossa (`ShakeMotion`). Vale anche per i pezzi uguali in ogni rotazione (croce, ponte).
 - **Animazioni che seguono un percorso** (es. l'acqua): i tempi (in che ordine e quando si raggiunge ogni punto) si calcolano nella logica pura; la vista disegna da quei tempi con il tempo reale (`Time.unscaledDeltaTime`), mai a passi per fotogramma.
 
 ## 8. Pooling
@@ -74,10 +75,11 @@
 - **Testi solo TextMesh Pro** (`TextMeshProUGUI`, Fredoka SDF statico); il contorno è il materiale SDF `fontBoldOutlined`, mai copie del testo. Un carattere nuovo va aggiunto a `UiArtSetup.Charset`.
 - **Mai ingrandire la grafica di progetto**: le pillole non sono mai più alte del disegno (159 px; `SlicedFit` tiene la proporzione verticale), il nastro si disegna alla sua misura. Le anteprime segnalano ogni sprite di `Assets/` disegnato più grande della sua risoluzione.
 - Un `Graphic` scritto da noi (es. `WaterGraphic`) ha `[ExecuteAlways]` (non si eredita) e un `CanvasRenderer` aggiunto prima del componente, altrimenti non si disegna nelle anteprime.
-- **Mai blu né arancione** come colori dell'interfaccia e dei terreni (sono i colori dell'acqua). Pulsanti toccabili di almeno `minTouchSize` (130 px): le anteprime lo misurano.
+- **Mai colori vicini a quelli dell'acqua** (blu, arancione, viola, giallo) nell'interfaccia, nei temi e nei capitoli: il validatore misura ΔE (CIE76) ≥ `PlumberConfig.minUiWaterDeltaE` (20). I colori dell'acqua: mai rosso con verde, luminosità L* distanti almeno `minWaterLightnessGap` (10) (ErNa-006, `ColorVision`, `PlumberPalette`). Pulsanti toccabili di almeno `minTouchSize` (130 px): le anteprime lo misurano.
 - Grafica, cartelle e script: `docs/grafica.md`.
 - Un `LayoutElement` dentro un layout group ha `flexibleHeight = 0` (vedi `UiFactory.Layout`): un layout group annidato con *force expand* altrimenti si allunga fino a riempire lo schermo.
 - Un'Image a 9 fette con layout group sullo stesso oggetto riporta come altezza preferita la somma dei bordi dello sprite: fissa l'altezza con un `LayoutElement`.
+- Liste più lunghe dello schermo: `UiFactory.ScrollList` (es. 9 capitoli). Le anteprime controllano la lista e contano gli elementi raggiungibili scorrendo (non sono problemi).
 - Icone: quelle di Gemini (`icon_*`, a colori, `UiFactory.Icon`); le poche ancora segnaposto sono maschere Material in `Assets/Art/Icons/` (`UiFactory.MaskIcon`, colore `UiKitStyle.icon`). La `IconLibrary` le contiene tutte (*UI Kit > Rebuild Sprite Libraries*).
 - Librerie di sprite (`IconLibrary`, Core): icone, schede della Home (`Assets/Art/Cards`, `CardLibrary`) e disegni dei giochi (es. `PlumberArt`). Una nuova cartella di disegni = una riga in `UiKitAssets.Libraries` (e in `ArtImportRules.IllustrationDirs`).
 - Home: una scheda per gioco (`GameInfo.CardImage`, `GameInfo.CardColor`); immagine mancante = segnaposto e warning del validatore. Logica di scorrimento in `CardCarousel` (C# puro).
@@ -97,12 +99,14 @@
   - schede della Home: colore impostato (errore), immagine presente (solo warning);
   - disegni dell'Idraulico: 4 fonti con maschera non vuota e 4 arrivi, nei file e nella libreria;
   - Idraulico, sui parametri: colori e aloni, icone, nomi e **tema valido** dei capitoli, chiavi di `PlumberKeys`;
-  - Idraulico, su ogni livello della Storia: leggibile e risolvibile con le regole ErNa-003; mosse minime salvate = risolutore; aprendo l'acqua all'inizio non è già risolto; valori nel gradino; ogni capitolo ha esattamente 9 livelli; nel capitolo 1 la soluzione non usa T e non ne ha bisogno; avviso se il seed non lo riproduce più.
+  - colori dell'acqua (ErNa-006, `PlumberPalette`): regole della palette e distanza da interfaccia, temi e capitoli;
+  - Idraulico, su ogni livello della Storia (ErNa-006: anche ponte necessario dove il gradino lo chiede, bloccati e ponti nel gradino, ultimo livello entro il massimo del Capitolo 8 + 30%): leggibile e risolvibile con le regole ErNa-003; mosse minime salvate = risolutore; aprendo l'acqua all'inizio non è già risolto; valori nel gradino; ogni capitolo ha esattamente 9 livelli; nel capitolo 1 la soluzione non usa T e non ne ha bisogno; avviso se il seed non lo riproduce più.
 
 ## 11. Anteprime e misure
 - *Resolver Master > Make Previews*, in IT ed EN, a 1080x1920 (9:16) e 1080x2520 (9:21), in `Previews/` (ignorata da git). La zona fuori dalla safe area simulata è tinta di rosso. Schermate:
   - Home con la scheda Idraulico e con la scheda Traffic jam al centro, scelta della modalità, Impostazioni, lista dei capitoli, griglia dei livelli di ogni capitolo (con il suo tema);
   - Gioco: un livello per capitolo prima dell'apertura (1: 3x4, 14: 5x7, 27: 6x8), acqua a metà percorso, apertura riuscita a due colori, apertura sbagliata per perdita nel momento dell'effetto, pannello di vittoria.
+- Daltonismo (ErNa-006): le schermate di gioco in italiano si salvano anche filtrate per deuteranopia, protanopia e tritanopia in `Previews/colorblind/` (Machado 2009); il report riporta la differenza minima tra i colori dell'acqua per ogni tipo.
 - `Previews/previews_report.txt` misura: margini della safe area, distanza minima del contenuto dai bordi sicuri, elementi fuori schermo o fuori safe area, testi tagliati, elementi sovrapposti, elementi che escono dal loro contenitore, Image senza sprite.
 - Su ogni schermata misura anche il pulsante più piccolo (errore sotto `minTouchSize`), i testi TMP che escono dal loro rettangolo e la scala massima degli sprite (errore se uno sprite di `Assets/` è ingrandito; quelli generati sono solo riportati). Nella schermata di gioco: celle (colonne x righe e lato), spazio libero sopra e sotto la griglia, disegni di fonti e arrivi, distanze da bordi e barre, posizione del pulsante d'azione.
 - Safe area simulata: 9:16 nessun ritaglio; 9:21 120 px in alto (foro/notch) e 72 px in basso (barra dei gesti).
@@ -119,4 +123,5 @@
 - ErNa-002: basi dei rompicapi nel Core (§7b), `SeededRandom` al posto di `System.Random` (§7), file di parametri `PuzzleConfig`/`PlumberConfig` (§4), livelli Storia generati e salvati, popup con `ModalOverlay`, `SnapVisuals` per le anteprime.
 - ErNa-004: stile cartoon del UI kit (sprite con contorno e profondità, `PressableButton`, niente blu/arancione), Home a schede (`CardCarousel`, blocco `home` del salvataggio), librerie di sprite generiche, fonti e arrivi disegnati scelti dal seed (`ArtVariants`), nuovi controlli e misure (§9, §10, §11).
 - ErNa-005: interfaccia di Gemini e TextMesh Pro (§9), pulsanti premuti/disattivati, temi dei capitoli nel Core (§4, §7b), griglie rettangolari (§7b), acqua continua con tempi nella logica (§7b), nuovi controlli e misure (§10, §11).
+- ErNa-006: 4 colori dell'acqua con controlli di palette e daltonismo (§9, §10, §11), ponte (due nodi, `PipeNodes`), croce e ponte non contano mosse, elementi bloccati nel Core (§7b), griglia 7x9 con cornice compatta, liste scorrevoli (§9), 9 capitoli e 6 temi nuovi.
 - ErNa-003: capitoli da 9 livelli, sblocco e id stabili nel Core (§7b); pulsante d'azione opzionale e messaggi brevi nella schermata di gioco (§7b); `Decoration` (§9); nuove regole e controlli dell'Idraulico (§10, `docs/idraulico-regole.md`); anteprime aggiornate (§11).

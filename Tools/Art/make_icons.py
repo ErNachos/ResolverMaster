@@ -35,6 +35,13 @@ ICONS = {
     "water_drop": "water_drop",
     "fork": "call_split",
     "palette": "palette",
+    # ErNa-006: chapters 4-9
+    "factory": "factory",
+    "construction": "construction",
+    "anchor": "anchor",
+    "landscape": "landscape",
+    "science": "science",
+    "castle": "castle",
 }
 
 

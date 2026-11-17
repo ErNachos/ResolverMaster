@@ -13,6 +13,14 @@ MonoBehaviour:
   m_Name: IconLibrary
   m_EditorClassIdentifier: 
   entries:
+  - name: anchor
+    sprite: {fileID: 21300000, guid: 6dc9f6019ac77c144a7a4370d64e86b5, type: 3}
+  - name: castle
+    sprite: {fileID: 21300000, guid: 3550e109b32a366439d3fff3ed4b6108, type: 3}
+  - name: construction
+    sprite: {fileID: 21300000, guid: 0607fea329804b4498f11eb85675fd1a, type: 3}
+  - name: factory
+    sprite: {fileID: 21300000, guid: 558fde6067353bf409bb480c44778f62, type: 3}
   - name: fork
     sprite: {fileID: 21300000, guid: 017c15588effb654cb00a7c02d5b4c51, type: 3}
   - name: game_plumber
@@ -55,8 +63,12 @@ MonoBehaviour:
     sprite: {fileID: 21300000, guid: 2f274ee06452d6344818bbba360b10cb, type: 3}
   - name: icon_vibration
     sprite: {fileID: 21300000, guid: 06a6302bf25100241832a3f966a98d70, type: 3}
+  - name: landscape
+    sprite: {fileID: 21300000, guid: 343c3dbae3ab26648b337d9c309236de, type: 3}
   - name: palette
     sprite: {fileID: 21300000, guid: 3e1b10703c64ff54e8c5fcf3a77ff21a, type: 3}
+  - name: science
+    sprite: {fileID: 21300000, guid: bb822737ce1cc2f48a39228f57fa4183, type: 3}
   - name: story
     sprite: {fileID: 21300000, guid: 3c04ea1a62ef2e44ca01cd30ba37eba5, type: 3}
   - name: water_drop

@@ -1,6 +1,6 @@
 # Idraulico — regole del gioco
 
-Valide da ErNa-003. Codice: `Assets/Scripts/Games/Plumber/Logic/` (`WaterFlow`, `PlumberPuzzle`, `PlumberSolver`, `PlumberGenerator`).
+Valide da ErNa-003; ponte, pezzi bloccati e 4 colori da ErNa-006. Codice: `Assets/Scripts/Games/Plumber/Logic/` (`WaterFlow`, `PlumberPuzzle`, `PlumberSolver`, `PlumberGenerator`).
 
 ## Scopo
 Ruotare i tubi per collegare ogni **fonte** alle **fontane** (arrivi) del suo colore, poi premere **"Apri l'acqua"**.
@@ -11,12 +11,15 @@ Ruotare i tubi per collegare ogni **fonte** alle **fontane** (arrivi) del suo co
 | Dritto | 2 opposte | sì (2 posizioni diverse) |
 | Curva | 2 vicine | sì (4 posizioni) |
 | T | 3 | sì (4 posizioni). Divide un flusso verso due uscite |
-| Croce | 4, tutte collegate tra loro | non serve (1 posizione) |
+| Croce | 4, tutte collegate tra loro: **mescola** i flussi | no (uguale in ogni rotazione): il tocco fa solo una scossa e non conta |
+| Ponte (ErNa-006) | 4, ma come **due tubi separati**: nord–sud ed est–ovest, che non si mescolano | no (uguale in ogni rotazione): scossa, nessuna mossa |
 | Fonte | 1 | no. Colorata come la sua acqua |
 | Fontana (arrivo) | 1 | no. Ha sotto un alone del suo colore |
 
 - Un tocco = un quarto di giro in senso orario = **una mossa**. Annulla e Ricomincia come prima.
-- Colori: blu e arancione (`PlumberConfig.waterColors`). Aloni delle fontane: `sinkHaloColors`, dimensione `sinkHaloSize`.
+- **Pezzi bloccati** (ErNa-006, `#` nel formato): qualsiasi tubo può esserlo. Ha sotto una piastra scura con 4 bulloni, non ruota; il tocco fa una scossa e non conta. Il risolutore lo tiene com'è. Il generatore li mette sul percorso già giusti (vincoli) o fuori (ostacoli, inganni). Nel Core: `CellLockSet`.
+- Ponte: il tubo nord–sud è disegnato sopra (intero, con flange e ombra) e il suo flusso sopra; quello est–ovest sotto. Per il risolutore è due celle separate (`PipeNodes`).
+- Colori, in ordine di comparsa: blu, arancione, viola, giallo (`PlumberConfig.waterColors`; mai rosso con verde, luminosità distanti, controllati dal validatore). Aloni delle fontane: `sinkHaloColors`, dimensione `sinkHaloSize`.
 - Mentre si ruota, l'acqua **non** si vede: i tubi restano grigi.
 
 ## Aprire l'acqua
@@ -55,14 +58,22 @@ Contano le **rotazioni del tentativo riuscito**, confrontate con le mosse minime
 - Il risolutore è stato confrontato con una ricerca che prova tutte le rotazioni, su 32.132 griglie piccole casuali: nessuna differenza.
 
 ## Capitoli della Storia
-I capitoli sono di 9 livelli, numerati di seguito (1–27). Lo sblocco segue le regole del Core.
+I capitoli sono di 9 livelli, numerati di seguito (1–81). Una novità per capitolo. Lo sblocco segue le regole del Core.
 
 | Cap. | Nome | Contenuto | Griglie |
 |---|---|---|---|
 | 1 | Prima goccia / First Drop | 1 fonte → 1 fontana, dritti e curve. La T compare solo come inganno: non serve mai, e il validatore lo verifica | 3x4 → 5x7 (Giardino) |
 | 2 | Il bivio / The Fork | 1 fonte → 2 fontane dello stesso colore, una T sul percorso | 4x5 → 5x7 (Fattoria) |
 | 3 | Due colori / Two Colors | 2 fonti → 2 fontane, una blu e una arancione | 5x7 → 6x8 (Città) |
+| 4 | Ponti di ferro / Iron Bridges | 2 colori; un **ponte** necessario in ogni livello; croci trappola negli ultimi | 5x7 → 6x8 (Fabbrica) |
+| 5 | Cantiere bloccato / Locked Site | 2 colori; **pezzi bloccati**; un ponte negli ultimi 3 | 5x7 → 6x8 (Cantiere) |
+| 6 | Tre colori / Three Colors | **3 colori**; niente bloccati, pochi ponti; i primi 2 livelli ariosi | 6x8 (Porto) |
+| 7 | Alta quota / High Up | mix: 2–3 colori, ponti, bloccati, croci trappola | 6x8, 7x9 negli ultimi 2 (Montagna) |
+| 8 | Quattro colori / Four Colors | **4 colori**; i primi 2 con percorsi brevi e separati, poi ponti | 6x8 → 7x9 (Laboratorio) |
+| 9 | Il gran finale / The Grand Finale | mix finale: 3–4 colori, tutto | 7x9 (Castello) |
 
 - La difficoltà sale dentro il capitolo e riparte più bassa all'inizio del successivo: i primi 2 livelli di ogni capitolo nuovo sono facili.
 - I livelli 1, 2 e 3 richiedono 1, 2 e 3 mosse.
+- "Ponte necessario": con croci al posto dei ponti il livello diventa impossibile (validatore).
+- L'ultimo livello resta entro il massimo del Capitolo 8 + 30% (`PlumberConfig.finalLevelMaxRatio`, validatore).
 - Tabella completa dei livelli: `docs/idraulico-livelli.md`.

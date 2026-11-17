@@ -136,7 +136,7 @@ namespace ResolverMaster.Editor.Plumber
             File.WriteAllText(ConfigAssets.PlumberStoryPath, JsonUtility.ToJson(set, true) + "\n", new UTF8Encoding(false));
             AssetDatabase.ImportAsset(ConfigAssets.PlumberStoryPath);
 
-            string timing = MeasureTiming(cfg, last);
+            string timing = MeasureTiming(cfg, last) + "\n" + SolverTiming();
             WriteDoc(cfg, generated, timing);
             var log = new StringBuilder($"PlumberLevelTools: {generated.Count} Story levels in {chapters} chapters saved in {ConfigAssets.PlumberStoryPath}, table in {DocPath}\n");
             foreach (var g in generated)
@@ -146,7 +146,7 @@ namespace ResolverMaster.Editor.Plumber
             Debug.Log(log.ToString());
         }
 
-        /// <summary>Average time to generate a level of the last tier (6x8 two colors in chapter 3) over <see cref="TimingSamples"/> other seeds.</summary>
+        /// <summary>Average time to generate a level of the last tier (ErNa-006: 7x9, 4 colors, chapter 9) over <see cref="TimingSamples"/> other seeds.</summary>
         static string MeasureTiming(PlumberConfig cfg, int lastLevel)
         {
             var tier = cfg.storyDifficulty.ForLevel(lastLevel);
@@ -174,27 +174,30 @@ namespace ResolverMaster.Editor.Plumber
             sb.Append($"Dati del gioco: `{ConfigAssets.PlumberStoryPath}`. Seed del livello n = {cfg.storySeedBase} + n. ");
             sb.Append("Id stabile di un livello nel salvataggio: (gioco, capitolo, indice nel capitolo).\n\n");
             sb.Append("Colonne: *Fonti/Arrivi/Colori* sulla griglia; *T* = T sulla griglia (tra parentesi quelle sul percorso della soluzione); ");
+            sb.Append("*Ponti* = ponti sulla griglia (tra parentesi quelli con l'acqua nei due canali nella soluzione); *Bloccati* = pezzi che non ruotano; ");
             sb.Append("*Percorso* = tubi attraversati dall'acqua nella soluzione ottima.\n");
             foreach (var chapter in levels.GroupBy(g => g.Level.chapter))
             {
                 var theme = chapter.Key - 1 < cfg.chapters.Count ? cfg.chapters[chapter.Key - 1] : null;
                 sb.Append($"\n## Capitolo {chapter.Key}{(theme != null ? " — `" + theme.nameKey + "`" : "")}\n\n");
-                sb.Append("| Livello | Nel cap. | Gradino | Griglia | Fonti | Arrivi | Colori | Dritti | Curve | T | Croci | Mosse minime | Percorso | Seed | Tentativi |\n");
-                sb.Append("|---:|---:|---|---|---:|---:|---:|---:|---:|---|---:|---:|---:|---:|---:|\n");
+                sb.Append("| Livello | Nel cap. | Gradino | Griglia | Fonti | Arrivi | Colori | Dritti | Curve | T | Croci | Ponti | Bloccati | Mosse minime | Percorso | Seed | Tentativi |\n");
+                sb.Append("|---:|---:|---|---|---:|---:|---:|---:|---:|---|---:|---|---:|---:|---:|---:|---:|\n");
                 foreach (var g in chapter)
                 {
                     var l = g.Level;
                     var grid = l.CreateGrid();
                     sb.Append($"| {l.number} | {l.index + 1} | {l.tier} | {l.width}x{l.height} | {grid.Count(PieceKind.Source)} | {grid.Count(PieceKind.Sink)} | " +
                               $"{grid.ColorCount()} | {grid.Count(PieceKind.Straight)} | {grid.Count(PieceKind.Curve)} | " +
-                              $"{grid.Count(PieceKind.Tee)} ({g.Solution.TeesOnPath}) | {grid.Count(PieceKind.Cross)} | {l.minMoves} | {l.path} | {l.seed} | {g.Attempts} |\n");
+                              $"{grid.Count(PieceKind.Tee)} ({g.Solution.TeesOnPath}) | {grid.Count(PieceKind.Cross)} | {grid.Count(PieceKind.Bridge)} ({g.Solution.BridgesCrossed}) | " +
+                              $"{grid.CountLocked()} | {l.minMoves} | {l.path} | {l.seed} | {g.Attempts} |\n");
                 }
             }
             sb.Append("\n## Gradini di difficoltà (PlumberConfig)\n\n| Gradino | Livelli | Valori |\n|---|---|---|\n");
             foreach (var t in cfg.storyDifficulty.tiers)
                 sb.Append($"| {t.id} | {(t.firstLevel == t.lastLevel ? t.firstLevel.ToString() : t.firstLevel + "–" + t.lastLevel)} | {string.Join(", ", t.values.Select(v => v.ToString()))} |\n");
             sb.Append("\n## Griglie iniziali\n\nFormato di `PlumberLevelCodec`: righe dall'alto separate da `/`; `I` dritto, `C` curva, `T`, `X` croce, ");
-            sb.Append("`S` fonte, `E` arrivo (fontana); la cifra è il numero di rotazioni orarie dalla forma base; `@1` = colore 1 (arancione), senza = colore 0 (blu).\n\n");
+            sb.Append("`B` ponte, `S` fonte, `E` arrivo (fontana); la cifra è il numero di rotazioni orarie dalla forma base; `#` = bloccato; ");
+            sb.Append("`@1` arancione, `@2` viola, `@3` giallo, senza = colore 0 (blu).\n\n");
             foreach (var g in levels) sb.Append($"- {g.Level.number}: `{g.Level.cells}`\n");
             sb.Append("\n## Tempo del generatore\n\n").Append(timing).Append(" (Editor, misurato all'ultima generazione).\n");
             Directory.CreateDirectory(Path.GetDirectoryName(DocPath));

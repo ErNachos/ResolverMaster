@@ -25,6 +25,12 @@ namespace ResolverMaster.Core.UI.Themes
         Fields,
         /// <summary>Blue-grey sky with simple building silhouettes.</summary>
         Skyline,
+        /// <summary>ErNa-006: sky, a dark sea-green sea (never like the blue water), a stone quay with bollards.</summary>
+        Harbor,
+        /// <summary>ErNa-006: rocky peaks with snow and a dark alpine meadow.</summary>
+        Mountains,
+        /// <summary>ErNa-006: a warm grey castle wall with battlements and towers on dark grass.</summary>
+        Castle,
     }
 
     /// <summary>

@@ -5,7 +5,8 @@ using UnityEngine;
 namespace ResolverMaster.Core.UI.Themes
 {
     /// <summary>
-    /// The single parameter file of the chapter themes (Core, shared by every game): Garden, Farm, City.
+    /// The single parameter file of the chapter themes (Core, shared by every game): Garden, Farm, City; ErNa-006: Factory, Building site,
+    /// Harbour, Mountain, Laboratory, Castle.
     /// Asset: Assets/Resources/ResolverMaster/ThemeConfig.asset (created by Resolver Master > Setup > Ensure Config Assets).
     /// Each game's chapters name one of these ids (e.g. PlumberConfig.chapters[i].theme).
     /// </summary>
@@ -14,6 +15,8 @@ namespace ResolverMaster.Core.UI.Themes
     {
         public const string ResourcesPath = "ResolverMaster/ThemeConfig";
         public const string Garden = "garden", Farm = "farm", City = "city";
+        /// <summary>ErNa-006 (Plumber chapters 4-9).</summary>
+        public const string Factory = "factory", Site = "site", Harbor = "harbor", Mountain = "mountain", Lab = "lab", Castle = "castle";
 
         /// <summary>Used by a chapter with no theme or an unknown one.</summary>
         public string defaultTheme = Garden;
@@ -46,6 +49,61 @@ namespace ResolverMaster.Core.UI.Themes
                 slab = C(0xE4E2DD), slabDetail = C(0xC8C6C0), slabEdge = C(0xA9A7A1),
                 backdrop = BackdropPattern.Skyline,
                 skyTop = C(0xC9D6E2), skyBottom = C(0xE8EDF2), landA = C(0xA9B6C4), landB = C(0x8C99A8), landDetail = C(0xF3E9C6),
+            },
+            // ErNa-006: never close to the water colors (blue, orange, violet, yellow): checked by the validator
+            new VisualTheme
+            {
+                id = Factory, nameKey = "theme.factory.name", accent = C(0xB0705E), seed = 404,
+                terrain = TerrainPattern.Pavement,
+                ground = C(0x8F5446), groundDetail = C(0x7A463A),
+                slab = C(0xD5D2CE), slabDetail = C(0xBAB6B0), slabEdge = C(0x9A958F),
+                backdrop = BackdropPattern.Skyline,
+                skyTop = C(0xCCCDD0), skyBottom = C(0xE9E8E6), landA = C(0x9A6A5C), landB = C(0x6F6B69), landDetail = C(0xE6DCC0),
+            },
+            new VisualTheme
+            {
+                id = Site, nameKey = "theme.site.name", accent = C(0xB89466), seed = 505,
+                terrain = TerrainPattern.Dirt,
+                ground = C(0x8A6E50), groundDetail = C(0xB59C74),
+                slab = C(0xCDBB98), slabDetail = C(0xB8A37C), slabEdge = C(0x927B58),
+                backdrop = BackdropPattern.Fields,
+                skyTop = C(0xEDE4D3), skyBottom = C(0xF8F3EA), landA = C(0xC2AA80), landB = C(0x957A57), landDetail = C(0x6B553A),
+            },
+            new VisualTheme
+            {
+                id = Harbor, nameKey = "theme.harbor.name", accent = C(0x5E9A90), seed = 606,
+                terrain = TerrainPattern.Pavement,
+                ground = C(0x8D8A83), groundDetail = C(0x77746E),
+                slab = C(0xC7A47E), slabDetail = C(0xA98761), slabEdge = C(0x876847),
+                backdrop = BackdropPattern.Harbor,
+                skyTop = C(0xD3DCDA), skyBottom = C(0xEEF1EE), landA = C(0x4E7D74), landB = C(0x8B8174), landDetail = C(0x4A4541),
+            },
+            new VisualTheme
+            {
+                id = Mountain, nameKey = "theme.mountain.name", accent = C(0x7FA37A), seed = 707,
+                terrain = TerrainPattern.Grass,
+                ground = C(0x5C7D49), groundDetail = C(0x46633A),
+                slab = C(0xD8D5CD), slabDetail = C(0xBCB7AC), slabEdge = C(0x9C978B),
+                backdrop = BackdropPattern.Mountains,
+                skyTop = C(0xD6E2E4), skyBottom = C(0xF0F4F1), landA = C(0x9A9F99), landB = C(0x5C7D49), landDetail = C(0xF7F7F3),
+            },
+            new VisualTheme
+            {
+                id = Lab, nameKey = "theme.lab.name", accent = C(0xA3B0BD), seed = 808,
+                terrain = TerrainPattern.Pavement,
+                ground = C(0xC5C9CE), groundDetail = C(0xB1B6BC),
+                slab = C(0xEEF0F2), slabDetail = C(0xD6DADF), slabEdge = C(0xAEB4BB),
+                backdrop = BackdropPattern.Skyline,
+                skyTop = C(0xDDE1E5), skyBottom = C(0xF2F3F5), landA = C(0xB9BFC6), landB = C(0x9CA3AB), landDetail = C(0xEFE8CF),
+            },
+            new VisualTheme
+            {
+                id = Castle, nameKey = "theme.castle.name", accent = C(0xA593C0), seed = 909,
+                terrain = TerrainPattern.Grass,
+                ground = C(0x4D6A3B), groundDetail = C(0x3B5430),
+                slab = C(0xD3C8B9), slabDetail = C(0xBAAE9D), slabEdge = C(0x988B79),
+                backdrop = BackdropPattern.Castle,
+                skyTop = C(0xDAD5E3), skyBottom = C(0xF1EFF3), landA = C(0xA69D90), landB = C(0x4D6A3B), landDetail = C(0x5E554B),
             },
         };
 

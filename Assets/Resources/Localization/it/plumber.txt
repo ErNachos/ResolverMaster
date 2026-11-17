@@ -4,6 +4,12 @@ game.plumber.name = Idraulico
 plumber.chapter1.name = Prima goccia
 plumber.chapter2.name = Il bivio
 plumber.chapter3.name = Due colori
+plumber.chapter4.name = Ponti di ferro
+plumber.chapter5.name = Cantiere bloccato
+plumber.chapter6.name = Tre colori
+plumber.chapter7.name = Alta quota
+plumber.chapter8.name = Quattro colori
+plumber.chapter9.name = Il gran finale
 
 plumber.action.open = Apri l'acqua
 plumber.fail.leak = Perdita!

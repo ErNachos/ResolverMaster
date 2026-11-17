@@ -206,3 +206,40 @@
 - Icone ancora segnaposto (Material): Storia, icone dei giochi e dei capitoli.
 - Le TMP Essential Resources in batch si importano con `-importPackage` (vedi `docs/grafica.md`).
 - `.claudesettings.json` (locale) non incluso nel commit.
+
+## Update ErNa-006 — Idraulico: 4 fonti, ponte, tubi bloccati e Capitoli 4–9 (2026-11-17)
+
+**Fatto** (dettagli e scelte in `Prompt/Note-ErNa-006.md`)
+- **Nota di lavoro**: l'Editor di Unity era aperto sul progetto e la sessione non poteva chiuderlo. Test, validatore, anteprime e generazione sono girati in batchmode su una copia in `Logs/BatchCopy/` (ignorata da git); i risultati sono stati riportati nel progetto dopo un `diff`.
+- **A — fino a 4 fonti**: colori viola `#8E3A80` e giallo `#F0E442` (tonalità Okabe-Ito), aloni nuovi; `PlumberPalette` e `PlumberPaletteCheck` (niente rosso + verde, L* distanti ≥ 10, nessun colore di UI/temi/capitoli entro ΔE 20). Colore del Capitolo 1 da giallo a rosa. Generatore con 1 percorso per colore (2–4). Griglia 7x9 con cornice compatta. `ColorVision` (Core): Lab, ΔE, simulazione del daltonismo; anteprime filtrate in `Previews/colorblind/`. Menu *Idraulico > Misura risolutore*.
+- **B — ponte e croce**: pezzo `Bridge` (`B`), due canali separati (`PipeNodes`) in risolutore, acqua e tempi; grafica dal codice (tubo nord–sud sopra con flange e ombra, flusso sopra; est–ovest sotto). Croce e ponte non ruotano: tocco = scossa (`ShakeMotion`, Core), nessuna mossa.
+- **C — tubi bloccati**: `CellLockSet` nel Core (`Locked` / `Pinned`); piastra scura con 4 bulloni; generatore con bloccati sul percorso (già giusti) o fuori; formato `#` (i livelli vecchi restano validi).
+- **D — capitoli 4–9**: 54 livelli nuovi (81 in tutto), 6 temi nuovi (Fabbrica, Cantiere, Porto, Montagna, Laboratorio, Castello) con 3 sfondi nuovi generati (porto con mare verde acqua scuro, montagna, castello), 6 icone Material nuove, nomi IT/EN. Ponti nel generatore (un percorso attraversa un dritto di un altro colore). Validatore: ponte necessario, bloccati e ponti nel gradino, ultimo livello entro il massimo del Capitolo 8 + 30%. Lista dei capitoli scorrevole (`UiFactory.ScrollList`). I 27 livelli dei capitoli 1–3 sono identici a prima.
+- **Test**: 5 nuovi (palette; 3–4 colori risolvibili e minimo uguale alla ricerca esaustiva; ponte senza mescolamento; croce/ponte/bloccati non contano mosse e livelli vecchi compatibili; 81 livelli numerati con minimo esatto).
+
+**Risultati**
+- Compilazione: 0 errori, 0 warning. Test: 27/27 verdi. Validatore: OK (8 controlli, 0 errori, 0 warning).
+- Risolutore (30 livelli casuali per riga): 7x9 con 4 colori media 0,2–0,5 ms, massimo 2,9 ms; generatore 7x9 a 4 colori (gradino c9-9) 2,4 ms in media, massimo 9,8 ms.
+- Anteprime: 144 immagini, nessun problema misurato; 7x9 → celle 145 px (9:16) e 146 px (9:21), griglia a 33/29 px dai bordi.
+
+| Cap. | Livelli | Griglie | Mosse minime |
+|---|---|---|---|
+| 1 | 1–9 | 3x4 → 4x5 → 5x7 | 1, 2, 3, 4, 5, 5, 6, 7, 9 |
+| 2 | 10–18 | 4x5 → 5x7 | 2, 4, 4, 5, 6, 7, 9, 10, 10 |
+| 3 | 19–27 | 5x7 → 6x8 | 2, 3, 6, 7, 7, 8, 9, 10, 12 |
+| 4 | 28–36 | 5x7 → 6x8 | 4, 7, 7, 8, 10, 11, 10, 13, 15 |
+| 5 | 37–45 | 5x7 → 6x8 | 7, 8, 7, 10, 11, 11, 13, 13, 14 |
+| 6 | 46–54 | 6x8 | 4, 5, 7, 10, 9, 12, 12, 14, 13 |
+| 7 | 55–63 | 6x8 → 7x9 | 8, 8, 10, 12, 14, 15, 16, 15, 17 |
+| 8 | 64–72 | 6x8 → 7x9 | 8, 9, 11, 10, 12, 13, 17, 18, 18 |
+| 9 | 73–81 | 7x9 | 11, 11, 13, 16, 17, 18, 19, 22, 21 |
+
+**Da provare a mano sul telefono**
+- Ponte: tocco (scossa, mosse invariate), acqua che passa sopra e sotto; croce: scossa. Pezzi bloccati su tutti i terreni.
+- Griglie 7x9 (celle da 145 px): precisione dei tocchi.
+- Lista dei capitoli: scorrimento, tocco su un capitolo dopo lo scorrimento.
+- Leggibilità dei 4 colori, soprattutto arancione e giallo.
+
+**Problemi aperti / prossimi passi**
+- Con deuteranopia/protanopia arancione e giallo si distinguono soprattutto per luminosità (ΔE 17 simulato): accettabile, ma senza simboli (scelta dell'utente) resta il caso più debole.
+- Il livello 80 (22 mosse) è più lungo del livello 81 (21).

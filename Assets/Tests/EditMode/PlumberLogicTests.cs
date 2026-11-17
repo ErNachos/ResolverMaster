@@ -422,6 +422,35 @@ namespace ResolverMaster.Tests
             Assert.AreEqual(1, PlumberSolver.Solve(oldGrid).MinMoves);
         }
 
+        // ErNa-006
+        [Test]
+        public void Story_81LevelsInNineChapters_NumberedInOrder_SavedMinimumIsExact()
+        {
+            var module = new PlumberModule();
+            var levels = module.StoryLevels;
+            Assert.AreEqual(81, levels.Count);
+            var book = module.Story;
+            Assert.AreEqual(9, book.Chapters.Count);
+            Assert.IsTrue(book.Chapters.All(c => c.LevelCount == StoryBook.LevelsPerChapter));
+            int maxColors = 0;
+            for (int i = 0; i < levels.Count; i++)
+            {
+                var l = levels[i];
+                Assert.AreEqual(i + 1, l.number);
+                Assert.AreEqual(i / 9 + 1, l.chapter, $"level {l.number}");
+                Assert.AreEqual(i % 9, l.index, $"level {l.number}");
+                var grid = l.CreateGrid();
+                var sol = PlumberSolver.Solve(grid);
+                Assert.IsTrue(sol.Solvable, $"level {l.number}");
+                Assert.AreEqual(l.minMoves, sol.MinMoves, $"level {l.number}");
+                maxColors = System.Math.Max(maxColors, grid.ColorCount());
+            }
+            Assert.AreEqual(4, maxColors, "the last chapters use 4 colors");
+            // saw-tooth: every chapter starts easier than the previous one ends
+            for (int c = 1; c < 9; c++)
+                Assert.Less(levels[c * 9].minMoves, levels[c * 9 - 1].minMoves, $"chapter {c + 1} starts easier");
+        }
+
         /// <summary>Cheapest successful opening over every rotation of every rotatable piece (small grids only).</summary>
         static int Exhaustive(PipeGrid start)
         {

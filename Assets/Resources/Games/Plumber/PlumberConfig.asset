@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   lockedTileColor: {r: 0.78431374, g: 0.7607843, b: 0.72156864, a: 1}
   pipeEmpty: {r: 0.7607843, g: 0.7764706, b: 0.8117647, a: 1}
+  finalLevelMaxRatio: 1.3
   waterColors:
   - {r: 0.18431373, g: 0.54509807, b: 0.9372549, a: 1}
   - {r: 1, g: 0.5411765, b: 0.12156863, a: 1}
@@ -26,12 +27,15 @@ MonoBehaviour:
   - {r: 0.972549, g: 0.9490196, b: 0.65882355, a: 1}
   minWaterLightnessGap: 10
   minUiWaterDeltaE: 20
+  lockPlateColor: {r: 0.24313726, g: 0.25882354, b: 0.29803923, a: 1}
+  lockBoltColor: {r: 0.827451, g: 0.8392157, b: 0.8627451, a: 1}
   errorColor: {r: 0.8980392, g: 0.28235295, b: 0.3019608, a: 1}
   pipeWidthPercent: 34
   pipeOutline: 0.022
   pipeShading: 0
   waterWidth: 0.78
   tileMargin: 0.035
+  bridgeShadowAlpha: 0.45
   endpointSize: 0.78
   endpointLift: 0.08
   shadowWidth: 0.72
@@ -54,6 +58,9 @@ MonoBehaviour:
   waterAccelTime: 0.35
   waterStartSpeed: 0.35
   rotateDuration: 0.12
+  shakeDuration: 0.28
+  shakeAmplitude: 0.06
+  shakeCycles: 3
   fountainFill: 0.45
   winSpray: 0.8
   winPause: 0.25
@@ -75,6 +82,30 @@ MonoBehaviour:
     icon: palette
     color: {r: 0.6901961, g: 0.4862745, b: 0.9411765, a: 1}
     theme: city
+  - nameKey: plumber.chapter4.name
+    icon: factory
+    color: {r: 0.6901961, g: 0.4392157, b: 0.36862746, a: 1}
+    theme: factory
+  - nameKey: plumber.chapter5.name
+    icon: construction
+    color: {r: 0.72156864, g: 0.5803922, b: 0.4, a: 1}
+    theme: site
+  - nameKey: plumber.chapter6.name
+    icon: anchor
+    color: {r: 0.36862746, g: 0.6039216, b: 0.5647059, a: 1}
+    theme: harbor
+  - nameKey: plumber.chapter7.name
+    icon: landscape
+    color: {r: 0.49803922, g: 0.6392157, b: 0.47843137, a: 1}
+    theme: mountain
+  - nameKey: plumber.chapter8.name
+    icon: science
+    color: {r: 0.6392157, g: 0.6901961, b: 0.7411765, a: 1}
+    theme: lab
+  - nameKey: plumber.chapter9.name
+    icon: castle
+    color: {r: 0.64705884, g: 0.5764706, b: 0.7529412, a: 1}
+    theme: castle
   storyDifficulty:
     tiers:
     - id: c1-1
@@ -833,3 +864,2001 @@ MonoBehaviour:
       - key: colors
         min: 2
         max: 2
+    - id: c4-1
+      firstLevel: 28
+      lastLevel: 28
+      values:
+      - key: cols
+        min: 5
+        max: 5
+      - key: rows
+        min: 7
+        max: 7
+      - key: minMoves
+        min: 3
+        max: 6
+      - key: path
+        min: 5
+        max: 9
+      - key: tees
+        min: 0
+        max: 0
+      - key: crosses
+        min: 0
+        max: 0
+      - key: sinks
+        min: 2
+        max: 2
+      - key: colors
+        min: 2
+        max: 2
+      - key: locked
+        min: 0
+        max: 0
+      - key: bridges
+        min: 1
+        max: 1
+      - key: needBridge
+        min: 1
+        max: 1
+    - id: c4-2
+      firstLevel: 29
+      lastLevel: 29
+      values:
+      - key: cols
+        min: 5
+        max: 5
+      - key: rows
+        min: 7
+        max: 7
+      - key: minMoves
+        min: 4
+        max: 7
+      - key: path
+        min: 6
+        max: 10
+      - key: tees
+        min: 0
+        max: 0
+      - key: crosses
+        min: 0
+        max: 0
+      - key: sinks
+        min: 2
+        max: 2
+      - key: colors
+        min: 2
+        max: 2
+      - key: locked
+        min: 0
+        max: 0
+      - key: bridges
+        min: 1
+        max: 1
+      - key: needBridge
+        min: 1
+        max: 1
+    - id: c4-3
+      firstLevel: 30
+      lastLevel: 30
+      values:
+      - key: cols
+        min: 5
+        max: 5
+      - key: rows
+        min: 7
+        max: 7
+      - key: minMoves
+        min: 6
+        max: 8
+      - key: path
+        min: 7
+        max: 11
+      - key: tees
+        min: 0
+        max: 1
+      - key: crosses
+        min: 0
+        max: 0
+      - key: sinks
+        min: 2
+        max: 2
+      - key: colors
+        min: 2
+        max: 2
+      - key: locked
+        min: 0
+        max: 0
+      - key: bridges
+        min: 1
+        max: 1
+      - key: needBridge
+        min: 1
+        max: 1
+    - id: c4-4
+      firstLevel: 31
+      lastLevel: 31
+      values:
+      - key: cols
+        min: 5
+        max: 5
+      - key: rows
+        min: 7
+        max: 7
+      - key: minMoves
+        min: 7
+        max: 9
+      - key: path
+        min: 8
+        max: 12
+      - key: tees
+        min: 0
+        max: 1
+      - key: crosses
+        min: 0
+        max: 0
+      - key: sinks
+        min: 2
+        max: 2
+      - key: colors
+        min: 2
+        max: 2
+      - key: locked
+        min: 0
+        max: 0
+      - key: bridges
+        min: 1
+        max: 1
+      - key: needBridge
+        min: 1
+        max: 1
+    - id: c4-5
+      firstLevel: 32
+      lastLevel: 32
+      values:
+      - key: cols
+        min: 6
+        max: 6
+      - key: rows
+        min: 8
+        max: 8
+      - key: minMoves
+        min: 8
+        max: 10
+      - key: path
+        min: 9
+        max: 14
+      - key: tees
+        min: 0
+        max: 1
+      - key: crosses
+        min: 0
+        max: 0
+      - key: sinks
+        min: 2
+        max: 2
+      - key: colors
+        min: 2
+        max: 2
+      - key: locked
+        min: 0
+        max: 0
+      - key: bridges
+        min: 1
+        max: 2
+      - key: needBridge
+        min: 1
+        max: 1
+    - id: c4-6
+      firstLevel: 33
+      lastLevel: 33
+      values:
+      - key: cols
+        min: 6
+        max: 6
+      - key: rows
+        min: 8
+        max: 8
+      - key: minMoves
+        min: 9
+        max: 11
+      - key: path
+        min: 10
+        max: 15
+      - key: tees
+        min: 0
+        max: 1
+      - key: crosses
+        min: 0
+        max: 0
+      - key: sinks
+        min: 2
+        max: 2
+      - key: colors
+        min: 2
+        max: 2
+      - key: locked
+        min: 0
+        max: 0
+      - key: bridges
+        min: 1
+        max: 2
+      - key: needBridge
+        min: 1
+        max: 1
+    - id: c4-7
+      firstLevel: 34
+      lastLevel: 34
+      values:
+      - key: cols
+        min: 6
+        max: 6
+      - key: rows
+        min: 8
+        max: 8
+      - key: minMoves
+        min: 10
+        max: 12
+      - key: path
+        min: 11
+        max: 16
+      - key: tees
+        min: 0
+        max: 1
+      - key: crosses
+        min: 1
+        max: 1
+      - key: sinks
+        min: 2
+        max: 2
+      - key: colors
+        min: 2
+        max: 2
+      - key: locked
+        min: 0
+        max: 0
+      - key: bridges
+        min: 1
+        max: 2
+      - key: needBridge
+        min: 1
+        max: 1
+    - id: c4-8
+      firstLevel: 35
+      lastLevel: 35
+      values:
+      - key: cols
+        min: 6
+        max: 6
+      - key: rows
+        min: 8
+        max: 8
+      - key: minMoves
+        min: 11
+        max: 13
+      - key: path
+        min: 12
+        max: 17
+      - key: tees
+        min: 0
+        max: 2
+      - key: crosses
+        min: 1
+        max: 1
+      - key: sinks
+        min: 2
+        max: 2
+      - key: colors
+        min: 2
+        max: 2
+      - key: locked
+        min: 0
+        max: 0
+      - key: bridges
+        min: 1
+        max: 2
+      - key: needBridge
+        min: 1
+        max: 1
+    - id: c4-9
+      firstLevel: 36
+      lastLevel: 36
+      values:
+      - key: cols
+        min: 6
+        max: 6
+      - key: rows
+        min: 8
+        max: 8
+      - key: minMoves
+        min: 12
+        max: 15
+      - key: path
+        min: 13
+        max: 19
+      - key: tees
+        min: 0
+        max: 2
+      - key: crosses
+        min: 1
+        max: 2
+      - key: sinks
+        min: 2
+        max: 2
+      - key: colors
+        min: 2
+        max: 2
+      - key: locked
+        min: 0
+        max: 0
+      - key: bridges
+        min: 1
+        max: 2
+      - key: needBridge
+        min: 1
+        max: 1
+    - id: c5-1
+      firstLevel: 37
+      lastLevel: 37
+      values:
+      - key: cols
+        min: 5
+        max: 5
+      - key: rows
+        min: 7
+        max: 7
+      - key: minMoves
+        min: 4
+        max: 7
+      - key: path
+        min: 6
+        max: 10
+      - key: tees
+        min: 0
+        max: 0
+      - key: crosses
+        min: 0
+        max: 0
+      - key: sinks
+        min: 2
+        max: 2
+      - key: colors
+        min: 2
+        max: 2
+      - key: locked
+        min: 2
+        max: 3
+      - key: bridges
+        min: 0
+        max: 0
+      - key: needBridge
+        min: 0
+        max: 0
+    - id: c5-2
+      firstLevel: 38
+      lastLevel: 38
+      values:
+      - key: cols
+        min: 5
+        max: 5
+      - key: rows
+        min: 7
+        max: 7
+      - key: minMoves
+        min: 5
+        max: 8
+      - key: path
+        min: 7
+        max: 11
+      - key: tees
+        min: 0
+        max: 0
+      - key: crosses
+        min: 0
+        max: 0
+      - key: sinks
+        min: 2
+        max: 2
+      - key: colors
+        min: 2
+        max: 2
+      - key: locked
+        min: 2
+        max: 3
+      - key: bridges
+        min: 0
+        max: 0
+      - key: needBridge
+        min: 0
+        max: 0
+    - id: c5-3
+      firstLevel: 39
+      lastLevel: 39
+      values:
+      - key: cols
+        min: 5
+        max: 5
+      - key: rows
+        min: 7
+        max: 7
+      - key: minMoves
+        min: 7
+        max: 9
+      - key: path
+        min: 8
+        max: 12
+      - key: tees
+        min: 0
+        max: 1
+      - key: crosses
+        min: 0
+        max: 0
+      - key: sinks
+        min: 2
+        max: 2
+      - key: colors
+        min: 2
+        max: 2
+      - key: locked
+        min: 3
+        max: 4
+      - key: bridges
+        min: 0
+        max: 0
+      - key: needBridge
+        min: 0
+        max: 0
+    - id: c5-4
+      firstLevel: 40
+      lastLevel: 40
+      values:
+      - key: cols
+        min: 5
+        max: 5
+      - key: rows
+        min: 7
+        max: 7
+      - key: minMoves
+        min: 8
+        max: 10
+      - key: path
+        min: 9
+        max: 13
+      - key: tees
+        min: 0
+        max: 1
+      - key: crosses
+        min: 0
+        max: 0
+      - key: sinks
+        min: 2
+        max: 2
+      - key: colors
+        min: 2
+        max: 2
+      - key: locked
+        min: 3
+        max: 4
+      - key: bridges
+        min: 0
+        max: 0
+      - key: needBridge
+        min: 0
+        max: 0
+    - id: c5-5
+      firstLevel: 41
+      lastLevel: 41
+      values:
+      - key: cols
+        min: 6
+        max: 6
+      - key: rows
+        min: 8
+        max: 8
+      - key: minMoves
+        min: 9
+        max: 11
+      - key: path
+        min: 10
+        max: 15
+      - key: tees
+        min: 0
+        max: 1
+      - key: crosses
+        min: 0
+        max: 0
+      - key: sinks
+        min: 2
+        max: 2
+      - key: colors
+        min: 2
+        max: 2
+      - key: locked
+        min: 3
+        max: 5
+      - key: bridges
+        min: 0
+        max: 0
+      - key: needBridge
+        min: 0
+        max: 0
+    - id: c5-6
+      firstLevel: 42
+      lastLevel: 42
+      values:
+      - key: cols
+        min: 6
+        max: 6
+      - key: rows
+        min: 8
+        max: 8
+      - key: minMoves
+        min: 10
+        max: 12
+      - key: path
+        min: 11
+        max: 16
+      - key: tees
+        min: 0
+        max: 1
+      - key: crosses
+        min: 0
+        max: 0
+      - key: sinks
+        min: 2
+        max: 2
+      - key: colors
+        min: 2
+        max: 2
+      - key: locked
+        min: 4
+        max: 5
+      - key: bridges
+        min: 0
+        max: 0
+      - key: needBridge
+        min: 0
+        max: 0
+    - id: c5-7
+      firstLevel: 43
+      lastLevel: 43
+      values:
+      - key: cols
+        min: 6
+        max: 6
+      - key: rows
+        min: 8
+        max: 8
+      - key: minMoves
+        min: 11
+        max: 13
+      - key: path
+        min: 12
+        max: 17
+      - key: tees
+        min: 0
+        max: 1
+      - key: crosses
+        min: 0
+        max: 0
+      - key: sinks
+        min: 2
+        max: 2
+      - key: colors
+        min: 2
+        max: 2
+      - key: locked
+        min: 4
+        max: 6
+      - key: bridges
+        min: 1
+        max: 1
+      - key: needBridge
+        min: 1
+        max: 1
+    - id: c5-8
+      firstLevel: 44
+      lastLevel: 44
+      values:
+      - key: cols
+        min: 6
+        max: 6
+      - key: rows
+        min: 8
+        max: 8
+      - key: minMoves
+        min: 12
+        max: 14
+      - key: path
+        min: 13
+        max: 18
+      - key: tees
+        min: 0
+        max: 2
+      - key: crosses
+        min: 0
+        max: 0
+      - key: sinks
+        min: 2
+        max: 2
+      - key: colors
+        min: 2
+        max: 2
+      - key: locked
+        min: 4
+        max: 6
+      - key: bridges
+        min: 1
+        max: 1
+      - key: needBridge
+        min: 1
+        max: 1
+    - id: c5-9
+      firstLevel: 45
+      lastLevel: 45
+      values:
+      - key: cols
+        min: 6
+        max: 6
+      - key: rows
+        min: 8
+        max: 8
+      - key: minMoves
+        min: 13
+        max: 16
+      - key: path
+        min: 14
+        max: 20
+      - key: tees
+        min: 0
+        max: 2
+      - key: crosses
+        min: 0
+        max: 0
+      - key: sinks
+        min: 2
+        max: 2
+      - key: colors
+        min: 2
+        max: 2
+      - key: locked
+        min: 5
+        max: 6
+      - key: bridges
+        min: 1
+        max: 2
+      - key: needBridge
+        min: 1
+        max: 1
+    - id: c6-1
+      firstLevel: 46
+      lastLevel: 46
+      values:
+      - key: cols
+        min: 6
+        max: 6
+      - key: rows
+        min: 8
+        max: 8
+      - key: minMoves
+        min: 3
+        max: 6
+      - key: path
+        min: 5
+        max: 9
+      - key: tees
+        min: 0
+        max: 0
+      - key: crosses
+        min: 0
+        max: 0
+      - key: sinks
+        min: 3
+        max: 3
+      - key: colors
+        min: 3
+        max: 3
+      - key: locked
+        min: 0
+        max: 0
+      - key: bridges
+        min: 0
+        max: 0
+      - key: needBridge
+        min: 0
+        max: 0
+    - id: c6-2
+      firstLevel: 47
+      lastLevel: 47
+      values:
+      - key: cols
+        min: 6
+        max: 6
+      - key: rows
+        min: 8
+        max: 8
+      - key: minMoves
+        min: 5
+        max: 7
+      - key: path
+        min: 6
+        max: 10
+      - key: tees
+        min: 0
+        max: 0
+      - key: crosses
+        min: 0
+        max: 0
+      - key: sinks
+        min: 3
+        max: 3
+      - key: colors
+        min: 3
+        max: 3
+      - key: locked
+        min: 0
+        max: 0
+      - key: bridges
+        min: 0
+        max: 0
+      - key: needBridge
+        min: 0
+        max: 0
+    - id: c6-3
+      firstLevel: 48
+      lastLevel: 48
+      values:
+      - key: cols
+        min: 6
+        max: 6
+      - key: rows
+        min: 8
+        max: 8
+      - key: minMoves
+        min: 7
+        max: 9
+      - key: path
+        min: 8
+        max: 13
+      - key: tees
+        min: 0
+        max: 1
+      - key: crosses
+        min: 0
+        max: 0
+      - key: sinks
+        min: 3
+        max: 3
+      - key: colors
+        min: 3
+        max: 3
+      - key: locked
+        min: 0
+        max: 0
+      - key: bridges
+        min: 0
+        max: 0
+      - key: needBridge
+        min: 0
+        max: 0
+    - id: c6-4
+      firstLevel: 49
+      lastLevel: 49
+      values:
+      - key: cols
+        min: 6
+        max: 6
+      - key: rows
+        min: 8
+        max: 8
+      - key: minMoves
+        min: 8
+        max: 10
+      - key: path
+        min: 9
+        max: 14
+      - key: tees
+        min: 0
+        max: 1
+      - key: crosses
+        min: 0
+        max: 0
+      - key: sinks
+        min: 3
+        max: 3
+      - key: colors
+        min: 3
+        max: 3
+      - key: locked
+        min: 0
+        max: 0
+      - key: bridges
+        min: 0
+        max: 1
+      - key: needBridge
+        min: 0
+        max: 0
+    - id: c6-5
+      firstLevel: 50
+      lastLevel: 50
+      values:
+      - key: cols
+        min: 6
+        max: 6
+      - key: rows
+        min: 8
+        max: 8
+      - key: minMoves
+        min: 9
+        max: 11
+      - key: path
+        min: 10
+        max: 15
+      - key: tees
+        min: 0
+        max: 1
+      - key: crosses
+        min: 0
+        max: 0
+      - key: sinks
+        min: 3
+        max: 3
+      - key: colors
+        min: 3
+        max: 3
+      - key: locked
+        min: 0
+        max: 0
+      - key: bridges
+        min: 0
+        max: 0
+      - key: needBridge
+        min: 0
+        max: 0
+    - id: c6-6
+      firstLevel: 51
+      lastLevel: 51
+      values:
+      - key: cols
+        min: 6
+        max: 6
+      - key: rows
+        min: 8
+        max: 8
+      - key: minMoves
+        min: 10
+        max: 12
+      - key: path
+        min: 11
+        max: 16
+      - key: tees
+        min: 0
+        max: 1
+      - key: crosses
+        min: 0
+        max: 0
+      - key: sinks
+        min: 3
+        max: 3
+      - key: colors
+        min: 3
+        max: 3
+      - key: locked
+        min: 0
+        max: 0
+      - key: bridges
+        min: 0
+        max: 1
+      - key: needBridge
+        min: 0
+        max: 0
+    - id: c6-7
+      firstLevel: 52
+      lastLevel: 52
+      values:
+      - key: cols
+        min: 6
+        max: 6
+      - key: rows
+        min: 8
+        max: 8
+      - key: minMoves
+        min: 11
+        max: 13
+      - key: path
+        min: 12
+        max: 17
+      - key: tees
+        min: 0
+        max: 2
+      - key: crosses
+        min: 0
+        max: 0
+      - key: sinks
+        min: 3
+        max: 3
+      - key: colors
+        min: 3
+        max: 3
+      - key: locked
+        min: 0
+        max: 0
+      - key: bridges
+        min: 0
+        max: 0
+      - key: needBridge
+        min: 0
+        max: 0
+    - id: c6-8
+      firstLevel: 53
+      lastLevel: 53
+      values:
+      - key: cols
+        min: 6
+        max: 6
+      - key: rows
+        min: 8
+        max: 8
+      - key: minMoves
+        min: 12
+        max: 14
+      - key: path
+        min: 13
+        max: 18
+      - key: tees
+        min: 0
+        max: 2
+      - key: crosses
+        min: 0
+        max: 0
+      - key: sinks
+        min: 3
+        max: 3
+      - key: colors
+        min: 3
+        max: 3
+      - key: locked
+        min: 0
+        max: 0
+      - key: bridges
+        min: 0
+        max: 1
+      - key: needBridge
+        min: 0
+        max: 0
+    - id: c6-9
+      firstLevel: 54
+      lastLevel: 54
+      values:
+      - key: cols
+        min: 6
+        max: 6
+      - key: rows
+        min: 8
+        max: 8
+      - key: minMoves
+        min: 13
+        max: 16
+      - key: path
+        min: 14
+        max: 20
+      - key: tees
+        min: 0
+        max: 2
+      - key: crosses
+        min: 0
+        max: 0
+      - key: sinks
+        min: 3
+        max: 3
+      - key: colors
+        min: 3
+        max: 3
+      - key: locked
+        min: 0
+        max: 0
+      - key: bridges
+        min: 0
+        max: 1
+      - key: needBridge
+        min: 0
+        max: 0
+    - id: c7-1
+      firstLevel: 55
+      lastLevel: 55
+      values:
+      - key: cols
+        min: 6
+        max: 6
+      - key: rows
+        min: 8
+        max: 8
+      - key: minMoves
+        min: 7
+        max: 9
+      - key: path
+        min: 8
+        max: 12
+      - key: tees
+        min: 0
+        max: 1
+      - key: crosses
+        min: 0
+        max: 0
+      - key: sinks
+        min: 2
+        max: 2
+      - key: colors
+        min: 2
+        max: 2
+      - key: locked
+        min: 2
+        max: 2
+      - key: bridges
+        min: 1
+        max: 1
+      - key: needBridge
+        min: 1
+        max: 1
+    - id: c7-2
+      firstLevel: 56
+      lastLevel: 56
+      values:
+      - key: cols
+        min: 6
+        max: 6
+      - key: rows
+        min: 8
+        max: 8
+      - key: minMoves
+        min: 8
+        max: 10
+      - key: path
+        min: 9
+        max: 14
+      - key: tees
+        min: 0
+        max: 1
+      - key: crosses
+        min: 1
+        max: 1
+      - key: sinks
+        min: 3
+        max: 3
+      - key: colors
+        min: 3
+        max: 3
+      - key: locked
+        min: 0
+        max: 0
+      - key: bridges
+        min: 0
+        max: 0
+      - key: needBridge
+        min: 0
+        max: 0
+    - id: c7-3
+      firstLevel: 57
+      lastLevel: 57
+      values:
+      - key: cols
+        min: 6
+        max: 6
+      - key: rows
+        min: 8
+        max: 8
+      - key: minMoves
+        min: 10
+        max: 12
+      - key: path
+        min: 11
+        max: 16
+      - key: tees
+        min: 0
+        max: 1
+      - key: crosses
+        min: 1
+        max: 1
+      - key: sinks
+        min: 2
+        max: 2
+      - key: colors
+        min: 2
+        max: 2
+      - key: locked
+        min: 3
+        max: 3
+      - key: bridges
+        min: 1
+        max: 1
+      - key: needBridge
+        min: 1
+        max: 1
+    - id: c7-4
+      firstLevel: 58
+      lastLevel: 58
+      values:
+      - key: cols
+        min: 6
+        max: 6
+      - key: rows
+        min: 8
+        max: 8
+      - key: minMoves
+        min: 11
+        max: 13
+      - key: path
+        min: 12
+        max: 17
+      - key: tees
+        min: 0
+        max: 1
+      - key: crosses
+        min: 0
+        max: 0
+      - key: sinks
+        min: 3
+        max: 3
+      - key: colors
+        min: 3
+        max: 3
+      - key: locked
+        min: 2
+        max: 2
+      - key: bridges
+        min: 0
+        max: 1
+      - key: needBridge
+        min: 0
+        max: 0
+    - id: c7-5
+      firstLevel: 59
+      lastLevel: 59
+      values:
+      - key: cols
+        min: 6
+        max: 6
+      - key: rows
+        min: 8
+        max: 8
+      - key: minMoves
+        min: 12
+        max: 14
+      - key: path
+        min: 13
+        max: 18
+      - key: tees
+        min: 0
+        max: 2
+      - key: crosses
+        min: 1
+        max: 1
+      - key: sinks
+        min: 2
+        max: 2
+      - key: colors
+        min: 2
+        max: 2
+      - key: locked
+        min: 0
+        max: 0
+      - key: bridges
+        min: 1
+        max: 2
+      - key: needBridge
+        min: 1
+        max: 1
+    - id: c7-6
+      firstLevel: 60
+      lastLevel: 60
+      values:
+      - key: cols
+        min: 6
+        max: 6
+      - key: rows
+        min: 8
+        max: 8
+      - key: minMoves
+        min: 13
+        max: 15
+      - key: path
+        min: 14
+        max: 19
+      - key: tees
+        min: 0
+        max: 2
+      - key: crosses
+        min: 0
+        max: 0
+      - key: sinks
+        min: 3
+        max: 3
+      - key: colors
+        min: 3
+        max: 3
+      - key: locked
+        min: 3
+        max: 3
+      - key: bridges
+        min: 1
+        max: 1
+      - key: needBridge
+        min: 1
+        max: 1
+    - id: c7-7
+      firstLevel: 61
+      lastLevel: 61
+      values:
+      - key: cols
+        min: 6
+        max: 6
+      - key: rows
+        min: 8
+        max: 8
+      - key: minMoves
+        min: 14
+        max: 16
+      - key: path
+        min: 15
+        max: 20
+      - key: tees
+        min: 0
+        max: 2
+      - key: crosses
+        min: 1
+        max: 1
+      - key: sinks
+        min: 3
+        max: 3
+      - key: colors
+        min: 3
+        max: 3
+      - key: locked
+        min: 2
+        max: 3
+      - key: bridges
+        min: 1
+        max: 1
+      - key: needBridge
+        min: 1
+        max: 1
+    - id: c7-8
+      firstLevel: 62
+      lastLevel: 62
+      values:
+      - key: cols
+        min: 7
+        max: 7
+      - key: rows
+        min: 9
+        max: 9
+      - key: minMoves
+        min: 15
+        max: 17
+      - key: path
+        min: 16
+        max: 22
+      - key: tees
+        min: 0
+        max: 2
+      - key: crosses
+        min: 1
+        max: 1
+      - key: sinks
+        min: 3
+        max: 3
+      - key: colors
+        min: 3
+        max: 3
+      - key: locked
+        min: 3
+        max: 3
+      - key: bridges
+        min: 1
+        max: 1
+      - key: needBridge
+        min: 1
+        max: 1
+    - id: c7-9
+      firstLevel: 63
+      lastLevel: 63
+      values:
+      - key: cols
+        min: 7
+        max: 7
+      - key: rows
+        min: 9
+        max: 9
+      - key: minMoves
+        min: 16
+        max: 19
+      - key: path
+        min: 17
+        max: 24
+      - key: tees
+        min: 0
+        max: 2
+      - key: crosses
+        min: 1
+        max: 1
+      - key: sinks
+        min: 3
+        max: 3
+      - key: colors
+        min: 3
+        max: 3
+      - key: locked
+        min: 3
+        max: 4
+      - key: bridges
+        min: 1
+        max: 2
+      - key: needBridge
+        min: 1
+        max: 1
+    - id: c8-1
+      firstLevel: 64
+      lastLevel: 64
+      values:
+      - key: cols
+        min: 6
+        max: 6
+      - key: rows
+        min: 8
+        max: 8
+      - key: minMoves
+        min: 5
+        max: 8
+      - key: path
+        min: 6
+        max: 10
+      - key: tees
+        min: 0
+        max: 0
+      - key: crosses
+        min: 0
+        max: 0
+      - key: sinks
+        min: 4
+        max: 4
+      - key: colors
+        min: 4
+        max: 4
+      - key: locked
+        min: 0
+        max: 0
+      - key: bridges
+        min: 0
+        max: 0
+      - key: needBridge
+        min: 0
+        max: 0
+    - id: c8-2
+      firstLevel: 65
+      lastLevel: 65
+      values:
+      - key: cols
+        min: 6
+        max: 6
+      - key: rows
+        min: 8
+        max: 8
+      - key: minMoves
+        min: 7
+        max: 9
+      - key: path
+        min: 8
+        max: 12
+      - key: tees
+        min: 0
+        max: 0
+      - key: crosses
+        min: 0
+        max: 0
+      - key: sinks
+        min: 4
+        max: 4
+      - key: colors
+        min: 4
+        max: 4
+      - key: locked
+        min: 0
+        max: 0
+      - key: bridges
+        min: 0
+        max: 0
+      - key: needBridge
+        min: 0
+        max: 0
+    - id: c8-3
+      firstLevel: 66
+      lastLevel: 66
+      values:
+      - key: cols
+        min: 6
+        max: 6
+      - key: rows
+        min: 8
+        max: 8
+      - key: minMoves
+        min: 9
+        max: 11
+      - key: path
+        min: 10
+        max: 15
+      - key: tees
+        min: 0
+        max: 1
+      - key: crosses
+        min: 0
+        max: 0
+      - key: sinks
+        min: 4
+        max: 4
+      - key: colors
+        min: 4
+        max: 4
+      - key: locked
+        min: 0
+        max: 0
+      - key: bridges
+        min: 1
+        max: 1
+      - key: needBridge
+        min: 0
+        max: 0
+    - id: c8-4
+      firstLevel: 67
+      lastLevel: 67
+      values:
+      - key: cols
+        min: 6
+        max: 6
+      - key: rows
+        min: 8
+        max: 8
+      - key: minMoves
+        min: 10
+        max: 12
+      - key: path
+        min: 11
+        max: 16
+      - key: tees
+        min: 0
+        max: 1
+      - key: crosses
+        min: 0
+        max: 0
+      - key: sinks
+        min: 4
+        max: 4
+      - key: colors
+        min: 4
+        max: 4
+      - key: locked
+        min: 0
+        max: 0
+      - key: bridges
+        min: 1
+        max: 1
+      - key: needBridge
+        min: 1
+        max: 1
+    - id: c8-5
+      firstLevel: 68
+      lastLevel: 68
+      values:
+      - key: cols
+        min: 7
+        max: 7
+      - key: rows
+        min: 9
+        max: 9
+      - key: minMoves
+        min: 12
+        max: 14
+      - key: path
+        min: 13
+        max: 18
+      - key: tees
+        min: 0
+        max: 1
+      - key: crosses
+        min: 0
+        max: 0
+      - key: sinks
+        min: 4
+        max: 4
+      - key: colors
+        min: 4
+        max: 4
+      - key: locked
+        min: 0
+        max: 0
+      - key: bridges
+        min: 1
+        max: 1
+      - key: needBridge
+        min: 1
+        max: 1
+    - id: c8-6
+      firstLevel: 69
+      lastLevel: 69
+      values:
+      - key: cols
+        min: 7
+        max: 7
+      - key: rows
+        min: 9
+        max: 9
+      - key: minMoves
+        min: 13
+        max: 15
+      - key: path
+        min: 14
+        max: 20
+      - key: tees
+        min: 0
+        max: 1
+      - key: crosses
+        min: 0
+        max: 0
+      - key: sinks
+        min: 4
+        max: 4
+      - key: colors
+        min: 4
+        max: 4
+      - key: locked
+        min: 0
+        max: 0
+      - key: bridges
+        min: 1
+        max: 2
+      - key: needBridge
+        min: 1
+        max: 1
+    - id: c8-7
+      firstLevel: 70
+      lastLevel: 70
+      values:
+      - key: cols
+        min: 7
+        max: 7
+      - key: rows
+        min: 9
+        max: 9
+      - key: minMoves
+        min: 14
+        max: 17
+      - key: path
+        min: 16
+        max: 22
+      - key: tees
+        min: 0
+        max: 2
+      - key: crosses
+        min: 0
+        max: 0
+      - key: sinks
+        min: 4
+        max: 4
+      - key: colors
+        min: 4
+        max: 4
+      - key: locked
+        min: 0
+        max: 0
+      - key: bridges
+        min: 1
+        max: 2
+      - key: needBridge
+        min: 1
+        max: 1
+    - id: c8-8
+      firstLevel: 71
+      lastLevel: 71
+      values:
+      - key: cols
+        min: 7
+        max: 7
+      - key: rows
+        min: 9
+        max: 9
+      - key: minMoves
+        min: 16
+        max: 19
+      - key: path
+        min: 18
+        max: 24
+      - key: tees
+        min: 0
+        max: 2
+      - key: crosses
+        min: 0
+        max: 0
+      - key: sinks
+        min: 4
+        max: 4
+      - key: colors
+        min: 4
+        max: 4
+      - key: locked
+        min: 0
+        max: 0
+      - key: bridges
+        min: 1
+        max: 2
+      - key: needBridge
+        min: 1
+        max: 1
+    - id: c8-9
+      firstLevel: 72
+      lastLevel: 72
+      values:
+      - key: cols
+        min: 7
+        max: 7
+      - key: rows
+        min: 9
+        max: 9
+      - key: minMoves
+        min: 18
+        max: 21
+      - key: path
+        min: 20
+        max: 26
+      - key: tees
+        min: 0
+        max: 2
+      - key: crosses
+        min: 0
+        max: 0
+      - key: sinks
+        min: 4
+        max: 4
+      - key: colors
+        min: 4
+        max: 4
+      - key: locked
+        min: 0
+        max: 0
+      - key: bridges
+        min: 1
+        max: 2
+      - key: needBridge
+        min: 1
+        max: 1
+    - id: c9-1
+      firstLevel: 73
+      lastLevel: 73
+      values:
+      - key: cols
+        min: 7
+        max: 7
+      - key: rows
+        min: 9
+        max: 9
+      - key: minMoves
+        min: 10
+        max: 12
+      - key: path
+        min: 11
+        max: 16
+      - key: tees
+        min: 0
+        max: 1
+      - key: crosses
+        min: 1
+        max: 1
+      - key: sinks
+        min: 3
+        max: 3
+      - key: colors
+        min: 3
+        max: 3
+      - key: locked
+        min: 2
+        max: 2
+      - key: bridges
+        min: 1
+        max: 1
+      - key: needBridge
+        min: 1
+        max: 1
+    - id: c9-2
+      firstLevel: 74
+      lastLevel: 74
+      values:
+      - key: cols
+        min: 7
+        max: 7
+      - key: rows
+        min: 9
+        max: 9
+      - key: minMoves
+        min: 11
+        max: 13
+      - key: path
+        min: 12
+        max: 17
+      - key: tees
+        min: 0
+        max: 1
+      - key: crosses
+        min: 0
+        max: 0
+      - key: sinks
+        min: 4
+        max: 4
+      - key: colors
+        min: 4
+        max: 4
+      - key: locked
+        min: 0
+        max: 0
+      - key: bridges
+        min: 1
+        max: 1
+      - key: needBridge
+        min: 1
+        max: 1
+    - id: c9-3
+      firstLevel: 75
+      lastLevel: 75
+      values:
+      - key: cols
+        min: 7
+        max: 7
+      - key: rows
+        min: 9
+        max: 9
+      - key: minMoves
+        min: 13
+        max: 15
+      - key: path
+        min: 14
+        max: 19
+      - key: tees
+        min: 0
+        max: 1
+      - key: crosses
+        min: 1
+        max: 1
+      - key: sinks
+        min: 3
+        max: 3
+      - key: colors
+        min: 3
+        max: 3
+      - key: locked
+        min: 3
+        max: 3
+      - key: bridges
+        min: 1
+        max: 1
+      - key: needBridge
+        min: 1
+        max: 1
+    - id: c9-4
+      firstLevel: 76
+      lastLevel: 76
+      values:
+      - key: cols
+        min: 7
+        max: 7
+      - key: rows
+        min: 9
+        max: 9
+      - key: minMoves
+        min: 14
+        max: 16
+      - key: path
+        min: 15
+        max: 21
+      - key: tees
+        min: 0
+        max: 2
+      - key: crosses
+        min: 0
+        max: 0
+      - key: sinks
+        min: 4
+        max: 4
+      - key: colors
+        min: 4
+        max: 4
+      - key: locked
+        min: 2
+        max: 2
+      - key: bridges
+        min: 1
+        max: 1
+      - key: needBridge
+        min: 1
+        max: 1
+    - id: c9-5
+      firstLevel: 77
+      lastLevel: 77
+      values:
+      - key: cols
+        min: 7
+        max: 7
+      - key: rows
+        min: 9
+        max: 9
+      - key: minMoves
+        min: 16
+        max: 18
+      - key: path
+        min: 17
+        max: 23
+      - key: tees
+        min: 0
+        max: 2
+      - key: crosses
+        min: 1
+        max: 1
+      - key: sinks
+        min: 3
+        max: 3
+      - key: colors
+        min: 3
+        max: 3
+      - key: locked
+        min: 3
+        max: 3
+      - key: bridges
+        min: 1
+        max: 2
+      - key: needBridge
+        min: 1
+        max: 1
+    - id: c9-6
+      firstLevel: 78
+      lastLevel: 78
+      values:
+      - key: cols
+        min: 7
+        max: 7
+      - key: rows
+        min: 9
+        max: 9
+      - key: minMoves
+        min: 17
+        max: 19
+      - key: path
+        min: 18
+        max: 24
+      - key: tees
+        min: 0
+        max: 2
+      - key: crosses
+        min: 1
+        max: 1
+      - key: sinks
+        min: 4
+        max: 4
+      - key: colors
+        min: 4
+        max: 4
+      - key: locked
+        min: 3
+        max: 3
+      - key: bridges
+        min: 1
+        max: 2
+      - key: needBridge
+        min: 1
+        max: 1
+    - id: c9-7
+      firstLevel: 79
+      lastLevel: 79
+      values:
+      - key: cols
+        min: 7
+        max: 7
+      - key: rows
+        min: 9
+        max: 9
+      - key: minMoves
+        min: 18
+        max: 21
+      - key: path
+        min: 19
+        max: 25
+      - key: tees
+        min: 0
+        max: 2
+      - key: crosses
+        min: 1
+        max: 1
+      - key: sinks
+        min: 4
+        max: 4
+      - key: colors
+        min: 4
+        max: 4
+      - key: locked
+        min: 3
+        max: 4
+      - key: bridges
+        min: 1
+        max: 2
+      - key: needBridge
+        min: 1
+        max: 1
+    - id: c9-8
+      firstLevel: 80
+      lastLevel: 80
+      values:
+      - key: cols
+        min: 7
+        max: 7
+      - key: rows
+        min: 9
+        max: 9
+      - key: minMoves
+        min: 20
+        max: 23
+      - key: path
+        min: 21
+        max: 27
+      - key: tees
+        min: 0
+        max: 2
+      - key: crosses
+        min: 1
+        max: 1
+      - key: sinks
+        min: 4
+        max: 4
+      - key: colors
+        min: 4
+        max: 4
+      - key: locked
+        min: 3
+        max: 4
+      - key: bridges
+        min: 1
+        max: 2
+      - key: needBridge
+        min: 1
+        max: 1
+    - id: c9-9
+      firstLevel: 81
+      lastLevel: 81
+      values:
+      - key: cols
+        min: 7
+        max: 7
+      - key: rows
+        min: 9
+        max: 9
+      - key: minMoves
+        min: 21
+        max: 23
+      - key: path
+        min: 21
+        max: 28
+      - key: tees
+        min: 0
+        max: 2
+      - key: crosses
+        min: 1
+        max: 2
+      - key: sinks
+        min: 4
+        max: 4
+      - key: colors
+        min: 4
+        max: 4
+      - key: locked
+        min: 4
+        max: 4
+      - key: bridges
+        min: 2
+        max: 2
+      - key: needBridge
+        min: 1
+        max: 1

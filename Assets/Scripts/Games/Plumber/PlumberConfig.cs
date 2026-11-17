@@ -22,6 +22,8 @@ namespace ResolverMaster.Games.Plumber
         public Color lockedTileColor = new Color32(0xC8, 0xC2, 0xB8, 0xFF);
         /// <summary>Every pipe is this grey (the black outline is drawn in the sprite); the water runs inside it.</summary>
         public Color pipeEmpty = new Color32(0xC2, 0xC6, 0xCF, 0xFF);
+        /// <summary>Validator: the minimum of the last Story level is at most the highest minimum of chapter 8 times this (not frustrating).</summary>
+        public float finalLevelMaxRatio = 1.3f;
         /// <summary>
         /// Water color of each source/sink pair (index = Piece.Color), in order of appearance (ErNa-006): blue, orange, violet, yellow.
         /// Violet and yellow take their hue from the Okabe-Ito palette (reddish purple made darker, yellow): every pair differs in
@@ -136,6 +138,13 @@ namespace ResolverMaster.Games.Plumber
             new ChapterTheme(PlumberKeys.Chapter1, "water_drop", new Color32(0xF2, 0x8D, 0xB2, 0xFF), ThemeConfig.Garden),
             new ChapterTheme(PlumberKeys.Chapter2, "fork", new Color32(0x2E, 0xB8, 0x8A, 0xFF), ThemeConfig.Farm),
             new ChapterTheme(PlumberKeys.Chapter3, "palette", new Color32(0xB0, 0x7C, 0xF0, 0xFF), ThemeConfig.City),
+            // ErNa-006: one novelty per chapter
+            new ChapterTheme(PlumberKeys.Chapter4, "factory", new Color32(0xB0, 0x70, 0x5E, 0xFF), ThemeConfig.Factory),
+            new ChapterTheme(PlumberKeys.Chapter5, "construction", new Color32(0xB8, 0x94, 0x66, 0xFF), ThemeConfig.Site),
+            new ChapterTheme(PlumberKeys.Chapter6, "anchor", new Color32(0x5E, 0x9A, 0x90, 0xFF), ThemeConfig.Harbor),
+            new ChapterTheme(PlumberKeys.Chapter7, "landscape", new Color32(0x7F, 0xA3, 0x7A, 0xFF), ThemeConfig.Mountain),
+            new ChapterTheme(PlumberKeys.Chapter8, "science", new Color32(0xA3, 0xB0, 0xBD, 0xFF), ThemeConfig.Lab),
+            new ChapterTheme(PlumberKeys.Chapter9, "castle", new Color32(0xA5, 0x93, 0xC0, 0xFF), ThemeConfig.Castle),
         };
 
         [Header("Story difficulty (one tier per level, numbered across chapters)")]

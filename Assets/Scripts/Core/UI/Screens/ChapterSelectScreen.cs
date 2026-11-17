@@ -14,6 +14,7 @@ namespace ResolverMaster.Core.UI.Screens
     /// Story of a minigame: one yellow Gemini banner per chapter with a thumbnail of its theme (a cell slab of the theme with the chapter
     /// icon), "Chapter N · theme", the translated name, the stars earned out of the maximum and a lock. A chapter unlocks when every
     /// level of the previous one is solved (<see cref="StoryProgress"/>); a locked banner is desaturated. Tapping a card opens its 3x3 levels.
+    /// The banners are in a vertical scroll list (ErNa-006: 9 chapters).
     /// </summary>
     public sealed class ChapterSelectScreen : UiScreen
     {
@@ -34,6 +35,7 @@ namespace ResolverMaster.Core.UI.Screens
         AppServices _ctx;
         LocalizedText _title;
         RectTransform _body;
+        ScrollRect _scroll;
         readonly List<ChapterCard> _cards = new List<ChapterCard>();
 
         public MinigameModule Module { get; private set; }
@@ -48,7 +50,8 @@ namespace ResolverMaster.Core.UI.Screens
             screen._title = ScreenLayout.TopBarTitle(ctx, layout.TopBar, null, s.headerSize).gameObject.AddComponent<LocalizedText>();
             ScreenLayout.Badge(ctx, layout.Body, "Subtitle", LocKeys.ChaptersSubtitle, s.bodySize, out var badge);
             UiFactory.Layout(badge, preferredHeight: 84);
-            screen._body = layout.Body;
+            // ErNa-006: 9 chapters do not fit the screen: the banners scroll
+            screen._scroll = ctx.Ui.ScrollList("Chapters", layout.Body, s.spacing, out screen._body, bottomPadding: 16);
             return screen;
         }
 
@@ -60,6 +63,8 @@ namespace ResolverMaster.Core.UI.Screens
             var chapters = module.Story.Chapters;
             while (_cards.Count < chapters.Count) _cards.Add(CreateCard(_cards.Count));
             for (int i = 0; i < _cards.Count; i++) _cards[i].Button.gameObject.SetActive(i < chapters.Count);
+            _body.anchoredPosition = Vector2.zero;   // from the first chapter
+            _scroll.velocity = Vector2.zero;
             Refresh();
         }
 
