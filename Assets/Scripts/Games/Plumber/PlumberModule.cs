@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using ResolverMaster.Core.App;
+using ResolverMaster.Core.Challenge;
 using ResolverMaster.Core.Games;
 using ResolverMaster.Core.Puzzle;
 using ResolverMaster.Core.UI;
@@ -41,6 +42,19 @@ namespace ResolverMaster.Games.Plumber
         public override StoryBook Story => _book ??= BuildBook(StoryLevels, PlumberConfig.LoadOrDefault().chapters);
 
         public override PuzzleBoard CreateBoard(AppServices ctx, RectTransform parent) => PlumberBoardView.Create(ctx, parent, this);
+
+        IChallengeSource _challenge;
+
+        /// <summary>ErNa-007: the Plumber Challenge (step table and margins from PlumberConfig, generator + exact solver).</summary>
+        public override IChallengeSource Challenge
+        {
+            get
+            {
+                if (_challenge != null) return _challenge;
+                var cfg = PlumberConfig.LoadOrDefault();
+                return _challenge = new PlumberChallenge(cfg.challengeDifficulty, cfg.challenge, cfg.challengeMaxAttempts);
+            }
+        }
 
         /// <summary>Groups the numbered levels by their chapter field; the chapter themes come from PlumberConfig.</summary>
         public static StoryBook BuildBook(IReadOnlyList<PlumberLevel> levels, IReadOnlyList<ChapterTheme> themes)

@@ -10,6 +10,12 @@
 - I pezzi sistemati sopravvivono al reset per errore dell'acqua (e a Ricomincia); un nuovo caricamento del livello (anche "Ripeti" dal pannello di vittoria) li dimentica: nuovo hook del Core `PuzzleBase.OnFreshLoad`.
 - Lampadina disattivata se tutti i pezzi sono già giusti, se non c'è un annuncio, durante le animazioni o a livello risolto (`RewardedAds.CanOffer`).
 - Il risultato del risolutore per la lampadina è tenuto in memoria finché lo stato non cambia (nessun calcolo a ogni fotogramma).
+- **Parte C — generazione della Challenge** (Core `Core/Challenge/ChallengeGeneration.cs`): un gioco fornisce solo `IChallengeSource` (tabella a gradini, margini, generatore con risolutore esatto); il Core fa il resto. Seed del livello = hash SplitMix64 di (seed della run, numero del livello, numero di cambi): niente orologio, niente `UnityEngine.Random`/`System.Random`; il generatore usa il `SeededRandom` del Core (PCG32). Limite in **tentativi** (`PlumberConfig.challengeMaxAttempts` = 4000 per seed); se non basta, seed + 1, + 2, … fino a `challenge.maxSeedRetries` (30).
+- Massimo di mosse = minimo + margine; il margine scende in modo uniforme dal 60% (primo gradino) al 10% (ultimo), mai sotto +1. Stelle come nella Storia.
+- Tabella a gradini (`PlumberDifficulty.Challenge`, copiata in `PlumberConfig.challengeDifficulty`): 16 gradini, di 3 livelli fino al 15 e di 5 dopo; da 3x4 con 1 fonte a 7x9 con 4 fonti; dente di sega all'arrivo di ogni novità (bivio, secondo colore, ponte, bloccati, terzo e quarto colore). Dopo il livello 70 si resta sull'ultimo gradino.
+- Scorta: `ChallengeQueue` prepara il livello corrente e i 2 successivi con `Task.Run` (fuori dal thread principale); la sorgente dell'Idraulico (`PlumberChallenge`) è pura e legge solo dati copiati.
+- `Resolver Master/Idraulico/Prova Challenge` scrive i primi 50 livelli di un seed (gradino, griglia, fonti, minimo, massimo, tempo) in `docs/idraulico-challenge.md` e nel log, più i tempi medi di tutti i 16 gradini (livelli 1–70).
+- "Numero di cambi": il prompt lo nomina senza descriverlo. L'ho trattato come il contatore delle volte in cui il livello corrente viene sostituito (es. un futuro "cambia livello" o il salvavita dell'ErNa-008): entra nel seed ed è salvato; oggi resta 0.
 
 ## Problemi aperti
 - Il tasto Indietro di Android con il pannello dell'annuncio aperto agisce sulla schermata sotto (il pannello resta aperto).

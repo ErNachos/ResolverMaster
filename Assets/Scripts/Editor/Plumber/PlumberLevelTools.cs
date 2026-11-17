@@ -50,6 +50,78 @@ namespace ResolverMaster.Editor.Plumber
             public double Ms;
         }
 
+        public const string ChallengeDocPath = "docs/idraulico-challenge.md";
+        public const int ChallengeTrialSeed = 20261117, ChallengeTrialLevels = 50;
+
+        /// <summary>
+        /// Menu Resolver Master > Idraulico > Prova Challenge (ErNa-007): generates the first 50 levels of a run seed and writes step,
+        /// grid, sources, minimum, maximum and time of each one (log + docs/idraulico-challenge.md), with the average time per step.
+        /// Batch: -executeMethod ResolverMaster.Editor.Plumber.PlumberLevelTools.TryChallengeBatch
+        /// </summary>
+        [MenuItem("Resolver Master/Idraulico/Prova Challenge")]
+        public static void TryChallenge() => Debug.Log(ChallengeTrial(ChallengeTrialSeed));
+
+        public static void TryChallengeBatch()
+        {
+            try
+            {
+                Debug.Log(ChallengeTrial(ChallengeTrialSeed));
+                EditorApplication.Exit(0);
+            }
+            catch (Exception e)
+            {
+                Debug.LogException(e);
+                EditorApplication.Exit(1);
+            }
+        }
+
+        public static string ChallengeTrial(int runSeed)
+        {
+            ConfigAssets.EnsureAll();
+            var cfg = AssetDatabase.LoadAssetAtPath<PlumberConfig>(ConfigAssets.PlumberConfigPath);
+            var source = new PlumberChallenge(cfg.challengeDifficulty, cfg.challenge, cfg.challengeMaxAttempts);
+            ResolverMaster.Core.Challenge.ChallengeRules.Generate(source, runSeed - 1, 1, 0);   // warm-up (JIT)
+            var levels = new List<ResolverMaster.Core.Challenge.ChallengeLevel>();
+            for (int n = 1; n <= ChallengeTrialLevels; n++)
+            {
+                var sw = Stopwatch.StartNew();
+                var level = ResolverMaster.Core.Challenge.ChallengeRules.Generate(source, runSeed, n, 0);
+                sw.Stop();
+                level.milliseconds = sw.Elapsed.TotalMilliseconds;
+                levels.Add(level);
+            }
+            var sb = new StringBuilder("# Idraulico — prova della Challenge\n\n");
+            sb.Append("File generato da *Resolver Master > Idraulico > Prova Challenge* (non modificare a mano). ");
+            sb.Append($"Seed della run {runSeed}, primi {ChallengeTrialLevels} livelli, 0 cambi. Massimo = minimo + margine ");
+            sb.Append($"(dal {cfg.challenge.marginStartPercent}% al {cfg.challenge.marginEndPercent}% del minimo, almeno +1).\n\n");
+            sb.Append("| Livello | Gradino | Griglia | Fonti | Minimo | Massimo | Seed usato | Tempo (ms) |\n|---:|---|---|---:|---:|---:|---:|---:|\n");
+            foreach (var l in levels)
+            {
+                var grid = PlumberLevelCodec.Parse(l.data);
+                sb.Append($"| {l.number} | {l.tierId} | {grid.Width}x{grid.Height} | {grid.Count(PieceKind.Source)} | {l.minMoves} | {l.maxMoves} | {l.seed} | {l.milliseconds:0.0} |\n");
+            }
+            // the steps after level 50 (up to the last one, 7x9 with 4 colors): timed on levels 51-70 of the same run
+            var later = new List<ResolverMaster.Core.Challenge.ChallengeLevel>();
+            int lastLevel = cfg.challengeDifficulty.LastLevel;
+            for (int n = ChallengeTrialLevels + 1; n <= lastLevel; n++)
+            {
+                var sw = Stopwatch.StartNew();
+                var level = ResolverMaster.Core.Challenge.ChallengeRules.Generate(source, runSeed, n, 0);
+                sw.Stop();
+                level.milliseconds = sw.Elapsed.TotalMilliseconds;
+                later.Add(level);
+            }
+            sb.Append($"\n## Tempo medio per gradino (livelli 1–{lastLevel})\n\n| Gradino | Livelli | Griglia | Fonti | Minimo | Massimo | Media (ms) | Massimo (ms) |\n|---|---:|---|---:|---|---|---:|---:|\n");
+            foreach (var g in levels.Concat(later).GroupBy(l => l.tierId))
+            {
+                var grid = PlumberLevelCodec.Parse(g.First().data);
+                sb.Append($"| {g.Key} | {g.First().number}–{g.Last().number} | {grid.Width}x{grid.Height} | {grid.Count(PieceKind.Source)} | " +
+                          $"{g.Min(l => l.minMoves)}–{g.Max(l => l.minMoves)} | {g.Min(l => l.maxMoves)}–{g.Max(l => l.maxMoves)} | {g.Average(l => l.milliseconds):0.0} | {g.Max(l => l.milliseconds):0.0} |\n");
+            }
+            File.WriteAllText(ChallengeDocPath, sb.ToString(), new UTF8Encoding(false));
+            return "PlumberLevelTools: Challenge trial written to " + ChallengeDocPath + "\n" + sb;
+        }
+
         /// <summary>
         /// Menu Resolver Master > Idraulico > Misura risolutore (ErNa-006): generates <see cref="TimingSamples"/> random 7x9 levels with
         /// 4 colors (and the other big grids) and times the exact solver alone on each one (average, max, nodes).

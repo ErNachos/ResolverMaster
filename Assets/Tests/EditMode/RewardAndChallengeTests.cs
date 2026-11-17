@@ -1,6 +1,7 @@
 using System;
 using NUnit.Framework;
 using ResolverMaster.Core.Ads;
+using ResolverMaster.Core.Challenge;
 using ResolverMaster.Core.Puzzle;
 using ResolverMaster.Games.Plumber;
 
@@ -50,6 +51,41 @@ namespace ResolverMaster.Tests
             Assert.IsTrue(test.IsAvailable);
             test.Enabled = false;
             Assert.IsFalse(RewardedAds.CanOffer(test, true));
+        }
+
+        [Test]
+        public void Challenge_SameSeedSameLevel_EveryThread_MaxAtLeastMinPlusOne_StaysOnTheLastStep()
+        {
+            var source = new PlumberChallenge(PlumberDifficulty.Challenge(), new ChallengeSettings(), 4000);
+            var queue = new ChallengeQueue(source);
+            queue.Reset(777, 0);
+            int lastStep = -1;
+            for (int n = 1; n <= 24; n++)
+            {
+                var a = ChallengeRules.Generate(source, 777, n, 0);
+                var b = queue.Get(n);   // generated on a worker thread: same result
+                Assert.AreEqual(a.data, b.data, $"level {n}");
+                Assert.AreEqual(a.minMoves, b.minMoves);
+                Assert.AreEqual(a.maxMoves, b.maxMoves);
+                Assert.GreaterOrEqual(a.maxMoves, a.minMoves + 1, $"level {n}");
+                Assert.GreaterOrEqual(a.step, lastStep, "steps never go back");
+                lastStep = a.step;
+                var grid = PlumberLevelCodec.Parse(a.data);
+                Assert.AreEqual(a.minMoves, PlumberSolver.Solve(grid).MinMoves, "exact minimum");
+            }
+            // the level seed depends only on (run seed, level, changes): another change gives another level
+            Assert.AreEqual(ChallengeRules.LevelSeed(777, 5, 0), ChallengeRules.LevelSeed(777, 5, 0));
+            Assert.AreNotEqual(ChallengeRules.LevelSeed(777, 5, 0), ChallengeRules.LevelSeed(777, 5, 1));
+            Assert.AreNotEqual(ChallengeRules.Generate(source, 777, 5, 0).data, ChallengeRules.Generate(source, 777, 5, 1).data);
+
+            // the margin goes from 60% to 10% of the minimum, never below +1; after the table the run stays on the last step
+            var s = new ChallengeSettings();
+            int steps = source.Table.tiers.Count;
+            Assert.AreEqual(16, ChallengeRules.MaxMoves(10, 0, steps, s));
+            Assert.AreEqual(11, ChallengeRules.MaxMoves(10, steps - 1, steps, s));
+            Assert.AreEqual(3, ChallengeRules.MaxMoves(2, steps - 1, steps, s), "never less than +1");
+            ChallengeRules.StepFor(source.Table, 10000, out int step);
+            Assert.AreEqual(steps - 1, step);
         }
 
         [Test]

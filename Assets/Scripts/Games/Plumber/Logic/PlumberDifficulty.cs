@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using ResolverMaster.Core.Puzzle;
 
@@ -155,6 +156,42 @@ namespace ResolverMaster.Games.Plumber
                 N("c9-7", 79, 7, 4, 18, 21, 19, 25, 2, 1, 1, 3, 4, 1, 2, true),
                 N("c9-8", 80, 7, 4, 20, 23, 21, 27, 2, 1, 1, 3, 4, 1, 2, true),
                 N("c9-9", 81, 7, 4, 21, 23, 21, 28, 2, 1, 2, 4, 4, 2, 2, true),
+            },
+        };
+
+        /// <summary>A Challenge step (ErNa-007): levels <paramref name="first"/>..<paramref name="last"/> of a run.</summary>
+        static DifficultyTier S(string id, int first, int last, int cols, int colors, int sinks, int minLo, int minHi, int pathLo, int pathHi, int tees,
+            int crosses, int lockLo, int lockHi, int bridgeLo, int bridgeHi, bool needBridge) =>
+            DifficultyTable.Tier(id, first, last, R(Cols, cols, cols), R(Rows, RowsFor(cols), RowsFor(cols)), R(MinMoves, minLo, minHi), R(Path, pathLo, pathHi),
+                R(Tees, sinks == 2 && colors == 1 ? 1 : 0, Math.Max(tees, sinks == 2 && colors == 1 ? 1 : 0)), R(Crosses, 0, crosses), R(Sinks, sinks, sinks),
+                R(Colors, colors, colors), R(Locked, lockLo, lockHi), R(Bridges, bridgeLo, bridgeHi), R(NeedBridge, needBridge ? 1 : 0, needBridge ? 1 : 0));
+
+        /// <summary>
+        /// Default Challenge table (ErNa-007, copied into PlumberConfig.asset; the asset is the one that counts): one step every 3 levels
+        /// at the start, every 5 later; from 3x4 with one source to 7x9 with 4. Saw-tooth: when a novelty arrives (fork, second color,
+        /// bridge, locked pieces, third and fourth color) the minimum drops. After the last step the run stays on it.
+        /// </summary>
+        public static DifficultyTable Challenge() => new DifficultyTable
+        {
+            tiers =
+            {
+                //  id     levels  cols col snk  min      path    tee cr  locked  bridges need
+                S("ch-1",  1,  3, 3, 1, 1,  1,  3,  1,  4, 0, 0, 0, 0, 0, 0, false),
+                S("ch-2",  4,  6, 4, 1, 1,  3,  5,  4,  7, 0, 0, 0, 0, 0, 0, false),
+                S("ch-3",  7,  9, 4, 1, 2,  2,  4,  3,  6, 1, 0, 0, 0, 0, 0, false),
+                S("ch-4", 10, 12, 5, 1, 2,  5,  8,  6, 11, 1, 0, 0, 0, 0, 0, false),
+                S("ch-5", 13, 15, 5, 2, 2,  3,  6,  4,  9, 0, 0, 0, 0, 0, 0, false),
+                S("ch-6", 16, 20, 5, 2, 2,  6,  9,  7, 12, 1, 0, 0, 0, 0, 0, false),
+                S("ch-7", 21, 25, 6, 2, 2,  8, 11,  9, 15, 1, 1, 0, 0, 0, 0, false),
+                S("ch-8", 26, 30, 5, 2, 2,  5,  8,  6, 11, 1, 0, 0, 0, 1, 1, true),
+                S("ch-9", 31, 35, 6, 2, 2,  9, 12, 10, 16, 1, 1, 0, 0, 1, 2, true),
+                S("ch-10", 36, 40, 6, 2, 2,  8, 11,  9, 15, 1, 0, 2, 4, 0, 1, false),
+                S("ch-11", 41, 45, 6, 3, 3,  7, 10,  8, 14, 1, 0, 0, 0, 0, 0, false),
+                S("ch-12", 46, 50, 6, 3, 3, 10, 13, 11, 17, 1, 1, 2, 3, 0, 1, false),
+                S("ch-13", 51, 55, 7, 3, 3, 12, 15, 13, 20, 2, 1, 2, 3, 1, 1, true),
+                S("ch-14", 56, 60, 6, 4, 4,  8, 11,  9, 15, 1, 0, 0, 0, 0, 1, false),
+                S("ch-15", 61, 65, 7, 4, 4, 12, 16, 14, 21, 2, 1, 2, 3, 1, 2, true),
+                S("ch-16", 66, 70, 7, 4, 4, 15, 20, 17, 25, 2, 1, 3, 4, 1, 2, true),
             },
         };
 

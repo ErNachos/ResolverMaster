@@ -21,6 +21,9 @@ namespace ResolverMaster.Core.Games
 
         public int StoryLevelCount => Story?.LevelCount ?? 0;
 
+        /// <summary>ErNa-007: the game's Challenge (step table, margins, generator). Null = no Challenge yet (placeholder message).</summary>
+        public virtual ResolverMaster.Core.Challenge.IChallengeSource Challenge => null;
+
         /// <summary>Creates the game's board under <paramref name="parent"/> (stretched to it). Called once per app run.</summary>
         public virtual PuzzleBoard CreateBoard(AppServices ctx, RectTransform parent) => null;
     }

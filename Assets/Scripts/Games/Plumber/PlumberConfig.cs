@@ -152,6 +152,12 @@ namespace ResolverMaster.Games.Plumber
         [Header("Story difficulty (one tier per level, numbered across chapters)")]
         public DifficultyTable storyDifficulty = PlumberDifficulty.Story();
 
+        [Header("Challenge (ErNa-007): steps by level of the run, margins, generator attempts per seed")]
+        public DifficultyTable challengeDifficulty = PlumberDifficulty.Challenge();
+        public ResolverMaster.Core.Challenge.ChallengeSettings challenge = new ResolverMaster.Core.Challenge.ChallengeSettings();
+        /// <summary>Generator attempts for one Challenge seed (then the next fixed seed is tried): a number, never a time.</summary>
+        public int challengeMaxAttempts = 4000;
+
         public float PipeWidth => pipeWidthPercent / 100f;
 
         public WaterMotion Motion => new WaterMotion(waterSpeed, waterAccelTime, waterStartSpeed);
