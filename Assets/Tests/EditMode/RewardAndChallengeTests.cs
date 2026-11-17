@@ -59,7 +59,7 @@ namespace ResolverMaster.Tests
         {
             var source = new PlumberChallenge(PlumberDifficulty.Challenge(), new ChallengeSettings(), 4000);
             var queue = new ChallengeQueue(source);
-            queue.Reset(777, 0);
+            queue.Reset(777);
             int lastStep = -1;
             for (int n = 1; n <= 24; n++)
             {
@@ -212,6 +212,67 @@ namespace ResolverMaster.Tests
             Assert.IsFalse(run.Continue());
             Assert.IsTrue(run.over);
             Assert.IsFalse(RewardedAds.CanOffer(new TestRewardedAdService(null), run.CanContinue), "no second Continue");
+        }
+
+        [Test]
+        public void ChangeLevel_OnlyAtZeroMoves_SameStep_NewLevelEachTime_SameNumber_ResumedFromTheSave()
+        {
+            var source = new PlumberChallenge(PlumberDifficulty.Challenge(), new ChallengeSettings(), 4000);
+            var queue = new ChallengeQueue(source);
+            var run = ChallengeRunState.Start("plumber", 31337);
+            for (int i = 0; i < 7; i++) run.OnSolved(3);   // level 8
+            queue.Reset(run.runSeed);
+            run.SetLevel(queue.Get(run.level, run.changes));
+            int step = run.step;
+            Assert.IsTrue(run.CanChangeLevel);
+
+            // with a move made: no change (and undoing back to 0 moves allows it again)
+            run.OnMove(0);
+            Assert.IsFalse(run.CanChangeLevel);
+            Assert.IsFalse(run.ChangeLevel());
+            Assert.IsTrue(run.TryUndo(out _));
+            Assert.IsTrue(run.CanChangeLevel);
+            Assert.IsFalse(RewardedAds.CanOffer(new UnavailableRewardedAdService(), run.CanChangeLevel), "no ad: disabled");
+
+            // every change: the same level number and step, a different level, seed = hash(run seed, level, changes)
+            var seen = new System.Collections.Generic.HashSet<string> { run.levelData };
+            for (int c = 1; c <= 4; c++)
+            {
+                Assert.IsTrue(run.ChangeLevel());
+                Assert.AreEqual(c, run.changes);
+                Assert.IsFalse(run.HasLevel);
+                var level = queue.Get(run.level, run.changes);
+                Assert.AreEqual(ChallengeRules.Generate(source, run.runSeed, 8, c).data, level.data, "deterministic");
+                run.SetLevel(level);
+                Assert.AreEqual(8, run.level);
+                Assert.AreEqual(step, run.step, "same step");
+                Assert.IsTrue(seen.Add(run.levelData), $"change {c}: a new level");
+            }
+
+            // saved and resumed: the changed level, its number of changes; the next level starts again from 0 changes
+            run.OnMove(3);
+            var data = new SaveData();
+            data.challenge.SetRun(run);
+            var loaded = SaveSerializer.FromJson(SaveSerializer.ToJson(data)).challenge.ActiveRun("plumber");
+            Assert.AreEqual(4, loaded.changes);
+            Assert.AreEqual(run.levelData, loaded.levelData);
+            Assert.AreEqual(run.levelSeed, loaded.levelSeed);
+            Assert.IsTrue(loaded.allowChange);
+            Assert.IsFalse(loaded.CanChangeLevel, "a move is saved: still no change");
+            var resumed = new PlumberPuzzle { MoveLimit = loaded.maxMoves };
+            resumed.Load(PlumberChallenge.ToLevel(new ChallengeLevel { number = loaded.level, data = loaded.levelData, minMoves = loaded.minMoves }));
+            Assert.IsTrue(resumed.Replay(loaded.undoHistory));
+            Assert.AreEqual(1, resumed.MovesMade);
+            loaded.OnSolved(2);
+            Assert.AreEqual(0, loaded.changes);
+            Assert.AreEqual(9, loaded.level);
+
+            // a run that does not allow it (daily challenge): never
+            var daily = ChallengeRunState.Start("plumber", 20261117);
+            daily.allowChange = false;
+            daily.SetLevel(ChallengeRules.Generate(source, daily.runSeed, 1, 0));
+            Assert.IsFalse(daily.CanChangeLevel);
+            Assert.IsFalse(daily.ChangeLevel());
         }
 
         static string Rotations(PipeGrid grid)

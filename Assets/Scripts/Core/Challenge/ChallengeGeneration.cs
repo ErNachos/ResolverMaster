@@ -138,6 +138,8 @@ namespace ResolverMaster.Core.Challenge
 
     /// <summary>
     /// The next levels of a run generated off the main thread (ErNa-007): asking for level n also prepares n+1 and n+2.
+    /// ErNa-008: a level is identified by (number, changes): the prepared next levels have 0 changes, and the next change of the
+    /// current level is prepared too, so "Change level" is instant.
     /// <see cref="TryGet"/> never blocks; <see cref="Get"/> waits (used when nothing else can be shown).
     /// </summary>
     public sealed class ChallengeQueue
@@ -145,47 +147,61 @@ namespace ResolverMaster.Core.Challenge
         public const int Ahead = 2;
 
         readonly IChallengeSource _source;
-        readonly Dictionary<int, Task<ChallengeLevel>> _tasks = new Dictionary<int, Task<ChallengeLevel>>();
-        int _runSeed, _changes;
+        readonly Dictionary<long, Task<ChallengeLevel>> _tasks = new Dictionary<long, Task<ChallengeLevel>>();
+        int _runSeed;
+        bool _started;
 
         public ChallengeQueue(IChallengeSource source) => _source = source;
 
-        /// <summary>A new run (or a different number of changes): forgets the prepared levels.</summary>
-        public void Reset(int runSeed, int changes)
+        static long Key(int level, int changes) => ((long)level << 32) | (uint)changes;
+
+        /// <summary>A new run: forgets the prepared levels (nothing happens for the same run).</summary>
+        public void Reset(int runSeed)
         {
-            if (runSeed == _runSeed && changes == _changes && _tasks.Count > 0) return;
+            if (_started && runSeed == _runSeed) return;
             _runSeed = runSeed;
-            _changes = changes;
+            _started = true;
             _tasks.Clear();
         }
 
-        /// <summary>Starts level <paramref name="level"/> and the next <see cref="Ahead"/> in the background; drops older ones.</summary>
-        public void Prefetch(int level)
+        /// <summary>
+        /// Starts level <paramref name="level"/> (with its <paramref name="changes"/>), its next change when
+        /// <paramref name="nextChange"/>, and the next <see cref="Ahead"/> levels in the background; drops the older ones.
+        /// </summary>
+        public void Prefetch(int level, int changes = 0, bool nextChange = false)
         {
-            var old = new List<int>();
+            var old = new List<long>();
             foreach (var k in _tasks.Keys)
-                if (k < level) old.Add(k);
-            foreach (var k in old) _tasks.Remove(k);
-            for (int n = level; n <= level + Ahead; n++)
             {
-                if (_tasks.ContainsKey(n)) continue;
-                int seed = _runSeed, changes = _changes, number = n;
-                _tasks[n] = Task.Run(() => ChallengeRules.Generate(_source, seed, number, changes));
+                int n = (int)(k >> 32), c = (int)(k & 0xFFFFFFFF);
+                if (n < level || (n == level && c < changes)) old.Add(k);
             }
+            foreach (var k in old) _tasks.Remove(k);
+            Start(level, changes);
+            if (nextChange) Start(level, changes + 1);
+            for (int n = level + 1; n <= level + Ahead; n++) Start(n, 0);
         }
 
-        public bool TryGet(int level, out ChallengeLevel result)
+        void Start(int level, int changes)
+        {
+            long key = Key(level, changes);
+            if (_tasks.ContainsKey(key)) return;
+            int seed = _runSeed;
+            _tasks[key] = Task.Run(() => ChallengeRules.Generate(_source, seed, level, changes));
+        }
+
+        public bool TryGet(int level, int changes, out ChallengeLevel result)
         {
             result = null;
-            if (!_tasks.TryGetValue(level, out var task) || !task.IsCompleted) return false;
+            if (!_tasks.TryGetValue(Key(level, changes), out var task) || !task.IsCompleted) return false;
             result = task.Result;
             return true;
         }
 
-        public ChallengeLevel Get(int level)
+        public ChallengeLevel Get(int level, int changes = 0)
         {
-            Prefetch(level);
-            return _tasks[level].GetAwaiter().GetResult();
+            Start(level, changes);
+            return _tasks[Key(level, changes)].GetAwaiter().GetResult();
         }
     }
 }

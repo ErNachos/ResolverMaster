@@ -18,8 +18,12 @@ namespace ResolverMaster.Core.Challenge
         public int runSeed;
         /// <summary>1-based level being played.</summary>
         public int level = 1;
-        /// <summary>Times the current level was replaced (part of the level seed; 0 for now, see Note-ErNa-007).</summary>
+        /// <summary>
+        /// ErNa-008: times the current level was replaced with "Change level" (part of the level seed; back to 0 on the next level).
+        /// </summary>
         public int changes;
+        /// <summary>ErNa-008: "Change level" is allowed in this run (not in the daily challenge: its levels are the same for everyone).</summary>
+        public bool allowChange = true;
 
         // ---- the current level (kept so a resumed run never depends on a newer generator)
         public string levelData = "";
@@ -97,6 +101,7 @@ namespace ResolverMaster.Core.Challenge
             stars += Math.Max(0, levelStars);
             levelsCleared++;
             level++;
+            changes = 0;
             levelData = "";
             rotations = "";
             moves = 0;
@@ -127,6 +132,27 @@ namespace ResolverMaster.Core.Challenge
             lifelineUsed = true;
             lost = false;
             undosLeft = UndosPerRun;
+            rotations = "";
+            moves = 0;
+            undoHistory.Clear();
+            return true;
+        }
+
+        /// <summary>
+        /// ErNa-008: "Change level" (after a rewarded ad, as many times as wanted) only with 0 moves on the level, never in a run
+        /// that does not allow it.
+        /// </summary>
+        public bool CanChangeLevel => allowChange && !over && !lost && HasLevel && moves == 0 && undoHistory.Count == 0;
+
+        /// <summary>
+        /// ErNa-008: a new level of the same step replaces the current one (seed = hash(run seed, level, changes + 1)); the level
+        /// number does not change. The caller generates and sets the new level (<see cref="SetLevel"/>).
+        /// </summary>
+        public bool ChangeLevel()
+        {
+            if (!CanChangeLevel) return false;
+            changes++;
+            levelData = "";
             rotations = "";
             moves = 0;
             undoHistory.Clear();

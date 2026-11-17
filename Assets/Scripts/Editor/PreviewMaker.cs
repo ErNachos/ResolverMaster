@@ -120,6 +120,8 @@ namespace ResolverMaster.Editor
                 ctx.Data.challenge.SubmitScore(PlumberModule.Id, over.stars, over.levelsCleared);
                 g.ShowRunOver(over, newRecord: true);
             }),
+            // ErNa-008: a level with 0 moves: "Change level" (ad badge) enabled
+            ChallengeShot("challenge_change", int.MaxValue, null),
             // ErNa-008: lost with the lifeline unused: "Continue" (ad icon) on the end panel
             ChallengeShot("challenge_continue", 3, (ctx, g) =>
             {

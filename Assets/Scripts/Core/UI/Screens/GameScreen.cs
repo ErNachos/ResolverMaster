@@ -32,7 +32,7 @@ namespace ResolverMaster.Core.UI.Screens
         ScreenLayout _layout;
         RectTransform _topBar, _area, _bottomBar;
         TextMeshProUGUI _title, _moves;
-        Button _undo, _restart, _help;
+        Button _undo, _restart, _help, _change;
         readonly Dictionary<string, PuzzleBoard> _boards = new Dictionary<string, PuzzleBoard>();
         WinPanel _win;
         Button _action;
@@ -117,6 +117,21 @@ namespace ResolverMaster.Core.UI.Screens
             screen._undoBadge.gameObject.SetActive(false);
             screen._restart.onClick.AddListener(() => { if (screen.Board != null && !screen.Board.IsBusy) screen.Board.Restart(); });
             screen._help.onClick.AddListener(screen.RequestHint);   // ErNa-007: the light bulb (rewarded ad, then a hint)
+            // ErNa-008, Challenge: "Change level" in the place of the light bulb (placeholder icon), with the ad badge on its corner
+            screen._change = screen.BarButton("ChangeLevel", "change_level", dx);
+            var changeIcon = screen._change.transform.Find("Icon")?.GetComponent<Image>();
+            if (changeIcon != null)
+            {
+                changeIcon.color = s.icon;   // a white mask: tinted like the other placeholder icons
+                changeIcon.rectTransform.sizeDelta *= 1.2f;   // the thin Material glyph next to the full Gemini drawings
+            }
+            var adBadge = ui.Image("AdBadge", screen._change.transform, s.circleSprite, s.primary);
+            UiFactory.Place(adBadge.rectTransform, 1, 1, new Vector2(64, 64), new Vector2(-8, -8));
+            adBadge.gameObject.AddComponent<Decoration>();   // on the corner of the button on purpose
+            var adIcon = ui.MaskIcon("Icon", adBadge.transform, AdIcon, 40, s.onPrimary);
+            UiFactory.Place(adIcon.rectTransform, 0.5f, 0.5f, new Vector2(40, 40), new Vector2(0, 2));
+            screen._change.onClick.AddListener(screen.RequestChangeLevel);
+            screen._change.gameObject.SetActive(false);
 
             // ---- optional main action, centred above the bottom bar; the short messages appear in its place ----
             var slot = new Vector2(s.mainActionWidth, s.mainActionHeight);
@@ -175,6 +190,7 @@ namespace ResolverMaster.Core.UI.Screens
             bool challenge = mode == GameMode.Challenge;
             _restart.gameObject.SetActive(!challenge);
             _help.gameObject.SetActive(!challenge);
+            _change.gameObject.SetActive(false);   // shown by StartChallenge for the runs that allow it
             _undoBadge.gameObject.SetActive(challenge);
             Board.RestartOnFailure = !challenge;
             if (!challenge)
@@ -254,6 +270,7 @@ namespace ResolverMaster.Core.UI.Screens
                 _undoCount.text = _run.undosLeft.ToString();
                 playing &= !_run.over;
                 UiFactory.SetInteractable(_undo, playing && session.CanUndo && _run.undosLeft > 0);
+                UiFactory.SetInteractable(_change, RewardedAds.CanOffer(_ctx.Ads, playing && _run.CanChangeLevel && session.MovesMade == 0));
                 UiFactory.SetInteractable(_action, playing);
                 _end.SetExtraInteractable(RewardedAds.CanOffer(_ctx.Ads, _run.CanContinue));
                 _lastBusy = busy;
@@ -313,7 +330,7 @@ namespace ResolverMaster.Core.UI.Screens
                 int moves = session.MovesMade, min = session.MinMoves;
                 _run.OnSolved(earned);
                 _ctx.Save();
-                QueueFor(Module).Prefetch(_run.level);
+                QueueFor(Module).Prefetch(_run.level, 0, _run.allowChange);
                 Refresh();
                 _win.Show(earned, moves, min, true, animate, showRetry: false);
                 return;
@@ -342,7 +359,8 @@ namespace ResolverMaster.Core.UI.Screens
             UseModule(module);
             SetMode(GameMode.Challenge);
             _run = run;
-            QueueFor(module).Reset(run.runSeed, run.changes);
+            QueueFor(module).Reset(run.runSeed);
+            _change.gameObject.SetActive(run.allowChange);
             LoadChallengeLevel(resume: true);
             if (run.lost) ShowRunOver(run, false);   // ErNa-008: closed on the end panel: the choice (Continue or not) is still open
         }
@@ -353,10 +371,10 @@ namespace ResolverMaster.Core.UI.Screens
             var queue = QueueFor(Module);
             if (!_run.HasLevel)
             {
-                _run.SetLevel(queue.Get(_run.level));
+                _run.SetLevel(queue.Get(_run.level, _run.changes));
                 _ctx.Save();
             }
-            queue.Prefetch(_run.level);   // this level and the next 2, off the main thread
+            queue.Prefetch(_run.level, _run.changes, _run.allowChange);   // this level, its next change and the next 2, off the main thread
             _win.Hide();
             HideMessage();
             var themes = _ctx.Themes != null ? _ctx.Themes.Catalog.Themes : null;
@@ -438,6 +456,23 @@ namespace ResolverMaster.Core.UI.Screens
                 if (_run != null && !_run.over) FinishRun();
                 ChallengeLauncher.Open(_ctx, Module, forceNew: true);
             }, GoHome);
+        }
+
+        /// <summary>
+        /// ErNa-008, "Change level": a rewarded ad, then (if watched) another level of the same step (seed with one more change);
+        /// only with 0 moves, as many times as wanted, never in the daily challenge.
+        /// </summary>
+        void RequestChangeLevel()
+        {
+            if (_run == null || Board == null || Board.IsBusy || Board.Session.MovesMade != 0) return;
+            if (!RewardedAds.CanOffer(_ctx.Ads, _run.CanChangeLevel)) return;
+            var run = _run;
+            _ctx.Ads.Show(() =>
+            {
+                if (run != _run || Board.IsBusy || Board.Session.MovesMade != 0 || !run.ChangeLevel()) return;
+                _ctx.Save();
+                LoadChallengeLevel(resume: false);
+            }, Refresh);
         }
 
         /// <summary>ErNa-008, the lifeline: a rewarded ad, then (if watched) the same level from the start, 0 moves, 3 undos.</summary>
