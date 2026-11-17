@@ -70,3 +70,6 @@ common.no = No
 mode.challenge.run = In corso: livello {0} · {1} stelle
 home.challenge = Challenge
 home.challenge.resume = Riprendi
+
+# ErNa-008: lifeline
+challenge.continue = Continua

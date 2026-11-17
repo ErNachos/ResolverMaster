@@ -146,6 +146,9 @@ namespace ResolverMaster.Tests
             Assert.AreEqual(3, run.level);
             Assert.IsFalse(run.HasLevel);
             run.OnFailed();
+            Assert.IsTrue(run.lost, "ErNa-008: the lifeline is still there, the run waits for Continue");
+            Assert.IsFalse(run.CanMove);
+            run.Finish();
             Assert.IsTrue(run.over);
             Assert.IsFalse(run.CanMove);
             var block = new ChallengeBlock();
@@ -155,6 +158,60 @@ namespace ResolverMaster.Tests
             Assert.IsFalse(block.SubmitScore("plumber", 4, 9));
             Assert.AreEqual(5, block.Record("plumber").stars);
             Assert.AreEqual(3, block.Record("plumber").levels);
+        }
+
+        [Test]
+        public void Continue_OncePerRun_SameLevelFromTheStart_UndosBack_StarsKept_SavedWithTheRun_NoAdNoButton()
+        {
+            var source = new PlumberChallenge(PlumberDifficulty.Challenge(), new ChallengeSettings(), 4000);
+            var run = ChallengeRunState.Start("plumber", 99);
+            run.OnSolved(3);
+            run.OnSolved(2);
+            run.SetLevel(ChallengeRules.Generate(source, run.runSeed, run.level, run.changes));
+            string levelData = run.levelData;
+            run.OnMove(0);
+            run.OnMove(1);
+            Assert.IsTrue(run.TryUndo(out _));
+            Assert.IsTrue(run.TryUndo(out _));
+            Assert.AreEqual(1, run.undosLeft);
+            Assert.IsFalse(run.CanContinue, "nothing lost yet");
+
+            // lost: the run waits; without an ad the Continue button is disabled
+            run.OnFailed();
+            Assert.IsTrue(run.CanContinue);
+            Assert.IsFalse(run.over);
+            Assert.IsFalse(RewardedAds.CanOffer(new UnavailableRewardedAdService(), run.CanContinue));
+            Assert.IsTrue(RewardedAds.CanOffer(new TestRewardedAdService(null), run.CanContinue));
+
+            // the choice survives a save (closing the app on the end panel)
+            var data = new SaveData();
+            data.challenge.SetRun(run);
+            run = SaveSerializer.FromJson(SaveSerializer.ToJson(data)).challenge.ActiveRun("plumber");
+            Assert.IsNotNull(run, "a lost run waiting for Continue is still the active run");
+            Assert.IsTrue(run.CanContinue);
+
+            // Continue: the same level from the start, 0 moves, 3 undos; stars and levels cleared stay
+            run.OnMove(5);   // ignored by the rules below: a lost run takes no moves in the game, but the state must reset anyway
+            Assert.IsTrue(run.Continue());
+            Assert.AreEqual(3, run.level);
+            Assert.AreEqual(levelData, run.levelData, "the same level");
+            Assert.AreEqual(0, run.moves);
+            Assert.AreEqual(0, run.undoHistory.Count);
+            Assert.AreEqual(ChallengeRunState.UndosPerRun, run.undosLeft);
+            Assert.AreEqual(5, run.stars);
+            Assert.AreEqual(2, run.levelsCleared);
+            Assert.IsTrue(run.lifelineUsed);
+            Assert.IsTrue(run.CanMove);
+            var reloaded = SaveSerializer.FromJson(SaveSerializer.ToJson(data)).challenge;
+            reloaded.SetRun(run);
+            Assert.IsTrue(SaveSerializer.FromJson(SaveSerializer.ToJson(new SaveData { challenge = reloaded })).challenge.ActiveRun("plumber").lifelineUsed);
+
+            // only once: the next failure ends the run
+            run.OnFailed();
+            Assert.IsFalse(run.CanContinue);
+            Assert.IsFalse(run.Continue());
+            Assert.IsTrue(run.over);
+            Assert.IsFalse(RewardedAds.CanOffer(new TestRewardedAdService(null), run.CanContinue), "no second Continue");
         }
 
         static string Rotations(PipeGrid grid)

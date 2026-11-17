@@ -120,6 +120,13 @@ namespace ResolverMaster.Editor
                 ctx.Data.challenge.SubmitScore(PlumberModule.Id, over.stars, over.levelsCleared);
                 g.ShowRunOver(over, newRecord: true);
             }),
+            // ErNa-008: lost with the lifeline unused: "Continue" (ad icon) on the end panel
+            ChallengeShot("challenge_continue", 3, (ctx, g) =>
+            {
+                var lost = ctx.Data.challenge.ActiveRun(PlumberModule.Id);
+                lost.OnFailed();
+                g.ShowRunOver(lost, newRecord: false);
+            }),
             new Shot
             {
                 Name = "mode_select_run",

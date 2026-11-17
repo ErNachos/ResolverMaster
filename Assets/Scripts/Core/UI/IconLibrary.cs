@@ -23,6 +23,8 @@ namespace ResolverMaster.Core.UI
         {
             "icon_back", "icon_settings", "icon_undo", "icon_restart", "icon_help", "icon_lock", "icon_sound_on", "icon_sound_off",
             "icon_vibration", "icon_language", "icon_bolt", "story",
+            // ErNa-008: placeholder masks (rewarded ad, change level, daily streak) and the Gemini calendar of the daily challenge
+            "ad_video", "change_level", "streak", "icon_calendar", "icon_trophy",
         };
 
         [Serializable]

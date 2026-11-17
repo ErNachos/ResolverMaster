@@ -19,10 +19,14 @@ namespace ResolverMaster.Core.UI.Screens
     /// ErNa-007, Challenge mode (<see cref="StartChallenge"/>): moves made / minimum / maximum (the counter turns red with 2 moves
     /// left), pieces stop turning at the maximum, 3 undos per run (the undo takes the move back), no restart and no light bulb, a
     /// failure ends the run (end panel), Back opens the pause; the run is saved at every move and at every level change.
+    /// ErNa-008: on the end panel "Continue" (rewarded ad, once per run) plays the same level again from the start with 3 undos.
     /// </summary>
     public sealed class GameScreen : UiScreen
     {
         public override string Id => ScreenIds.Game;
+
+        /// <summary>ErNa-008: the placeholder icon of the buttons that show a rewarded ad.</summary>
+        public const string AdIcon = "ad_video";
 
         AppServices _ctx;
         ScreenLayout _layout;
@@ -139,9 +143,10 @@ namespace ResolverMaster.Core.UI.Screens
             toast.gameObject.SetActive(false);
 
             screen._win = new WinPanel(ctx, layout.Root, screen.Retry, screen.Next);
-            // ErNa-007: Challenge pause and end of the run (room left for "Continue", ErNa-008)
+            // ErNa-007: Challenge pause and end of the run; ErNa-008: "Continue" with the ad icon on the end panel
             screen._pause = new DialogPanel(ctx, layout.Root, "Pause", LocKeys.ChallengePause, 1, LocKeys.ChallengeHome, LocKeys.ChallengeResume);
-            screen._end = new DialogPanel(ctx, layout.Root, "RunOver", LocKeys.ChallengeOver, 3, LocKeys.ChallengeHome, LocKeys.ChallengeNewRun, extraHeight: 110);
+            screen._end = new DialogPanel(ctx, layout.Root, "RunOver", LocKeys.ChallengeOver, 3, LocKeys.ChallengeHome, LocKeys.ChallengeNewRun,
+                extraKey: LocKeys.ChallengeContinue, extraIcon: AdIcon);
             return screen;
         }
 
@@ -250,6 +255,7 @@ namespace ResolverMaster.Core.UI.Screens
                 playing &= !_run.over;
                 UiFactory.SetInteractable(_undo, playing && session.CanUndo && _run.undosLeft > 0);
                 UiFactory.SetInteractable(_action, playing);
+                _end.SetExtraInteractable(RewardedAds.CanOffer(_ctx.Ads, _run.CanContinue));
                 _lastBusy = busy;
                 _lastAds = _ctx.Ads != null && _ctx.Ads.IsAvailable;
                 return;
@@ -338,6 +344,7 @@ namespace ResolverMaster.Core.UI.Screens
             _run = run;
             QueueFor(module).Reset(run.runSeed, run.changes);
             LoadChallengeLevel(resume: true);
+            if (run.lost) ShowRunOver(run, false);   // ErNa-008: closed on the end panel: the choice (Continue or not) is still open
         }
 
         /// <summary>The current level of the run (generated and saved first if new), with its saved moves when resuming.</summary>
@@ -387,19 +394,35 @@ namespace ResolverMaster.Core.UI.Screens
             Refresh();
         }
 
-        /// <summary>A failed opening ends the run: the score goes to the record, the run is removed, the end panel opens.</summary>
+        /// <summary>
+        /// A failed opening stops the run. ErNa-008: with the lifeline unused the run stays saved and the end panel offers "Continue";
+        /// otherwise the run is over at once (score to the record, run removed).
+        /// </summary>
         void OnRunLost()
         {
-            if (_run == null || _run.over) return;
+            if (_run == null || _run.over || _run.lost) return;
             _run.OnFailed();
+            _lastNewRecord = false;
+            if (_run.over) FinishRun();
+            else _ctx.Save();
+            ShowRunOver(_run, _lastNewRecord);
+        }
+
+        /// <summary>The run is over for good: the score goes to the record and the run is removed from the save.</summary>
+        void FinishRun()
+        {
+            if (_run == null) return;
+            _run.Finish();
             var block = _ctx.Data.challenge;
             _lastNewRecord = block.SubmitScore(Module.Info.Id, _run.stars, _run.levelsCleared);
             block.EndRun(Module.Info.Id);
             _ctx.Save();
-            ShowRunOver(_run, _lastNewRecord);
         }
 
-        /// <summary>End of the run: stars, levels cleared, record (highlighted when new), New run / Home.</summary>
+        /// <summary>
+        /// End of the run: stars, levels cleared, record (highlighted when new), New run / Home; ErNa-008: "Continue" (rewarded ad)
+        /// while the lifeline is unused (disabled without an ad). Leaving the panel without continuing ends the run.
+        /// </summary>
         public void ShowRunOver(ChallengeRunState run, bool newRecord)
         {
             var loc = _ctx.Loc;
@@ -408,8 +431,27 @@ namespace ResolverMaster.Core.UI.Screens
             _end.SetLine(1, string.Format(loc.Get(LocKeys.ChallengeLevels), run.levelsCleared));
             _end.SetLine(2, newRecord ? loc.Get(LocKeys.ChallengeNewRecord)
                 : string.Format(loc.Get(LocKeys.ChallengeRecord), record?.stars ?? 0, record?.levels ?? 0), newRecord ? _ctx.Style.primary : (Color?)null);
+            _end.SetExtra(run.CanContinue, RewardedAds.CanOffer(_ctx.Ads, run.CanContinue), ContinueRun);
             Refresh();
-            _end.Show(() => ChallengeLauncher.Open(_ctx, Module, forceNew: true), GoHome);
+            _end.Show(() =>
+            {
+                if (_run != null && !_run.over) FinishRun();
+                ChallengeLauncher.Open(_ctx, Module, forceNew: true);
+            }, GoHome);
+        }
+
+        /// <summary>ErNa-008, the lifeline: a rewarded ad, then (if watched) the same level from the start, 0 moves, 3 undos.</summary>
+        void ContinueRun()
+        {
+            if (_run == null || !RewardedAds.CanOffer(_ctx.Ads, _run.CanContinue)) return;
+            var run = _run;
+            _ctx.Ads.Show(() =>
+            {
+                if (run != _run || !run.Continue()) return;
+                _ctx.Save();
+                _end.Hide();
+                LoadChallengeLevel(resume: false);
+            }, Refresh);
         }
 
         void ShowPause()
@@ -418,9 +460,10 @@ namespace ResolverMaster.Core.UI.Screens
             _pause.Show(() => _pause.Hide(), GoHome);
         }
 
-        /// <summary>Back to Home (the run is already saved).</summary>
+        /// <summary>Back to Home (the run is already saved; a lost run left without "Continue" is over).</summary>
         void GoHome()
         {
+            if (_end.Visible && _run != null && _run.lost && !_run.over) FinishRun();
             _pause.Hide();
             _end.Hide();
             _ctx.Save();

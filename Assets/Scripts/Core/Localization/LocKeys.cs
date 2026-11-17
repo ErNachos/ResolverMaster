@@ -80,6 +80,10 @@ namespace ResolverMaster.Core.Localization
         public const string HomeChallenge = "home.challenge";
         public const string HomeChallengeResume = "home.challenge.resume";
 
+        // ErNa-008: lifeline, change level, daily challenge
+        /// <summary>"Continue" (end of a run, rewarded ad).</summary>
+        public const string ChallengeContinue = "challenge.continue";
+
         /// <summary>Language display name key: "language.it", "language.en".</summary>
         public static string LanguageName(Language language) => "language." + LanguageCodes.ToCode(language);
     }

@@ -38,8 +38,10 @@ namespace ResolverMaster.Core.Challenge
 
         // ---- the whole run
         public int undosLeft = UndosPerRun;
-        /// <summary>Reserved for the lifeline of ErNa-008 ("Continue" after a loss).</summary>
+        /// <summary>ErNa-008: the lifeline ("Continue" after a loss, with a rewarded ad) was used: one per run.</summary>
         public bool lifelineUsed;
+        /// <summary>ErNa-008: the water failed and the run waits for the player (Continue, or the end). Saved: closing the app here keeps the choice.</summary>
+        public bool lost;
         public int stars;
         public int levelsCleared;
         public bool over;
@@ -64,7 +66,7 @@ namespace ResolverMaster.Core.Challenge
         }
 
         /// <summary>At the maximum the pieces no longer turn: only undo or opening the water are left.</summary>
-        public bool CanMove => !over && moves < maxMoves;
+        public bool CanMove => !over && !lost && moves < maxMoves;
 
         /// <summary>Moves left before the maximum.</summary>
         public int MovesLeft => Math.Max(0, maxMoves - moves);
@@ -76,7 +78,7 @@ namespace ResolverMaster.Core.Challenge
         }
 
         /// <summary>3 undos per run; an undo also takes the move off the counter.</summary>
-        public bool CanUndo => !over && undosLeft > 0 && undoHistory.Count > 0;
+        public bool CanUndo => !over && !lost && undosLeft > 0 && undoHistory.Count > 0;
 
         public bool TryUndo(out int move)
         {
@@ -101,8 +103,38 @@ namespace ResolverMaster.Core.Challenge
             undoHistory.Clear();
         }
 
-        /// <summary>Any failure of the water (leak, mixed colors, wrong color, dry fountain) ends the run: no lives.</summary>
-        public void OnFailed() => over = true;
+        /// <summary>
+        /// Any failure of the water (leak, mixed colors, wrong color, dry fountain) stops the run. ErNa-008: with the lifeline still
+        /// unused the run waits for "Continue" (<see cref="lost"/>); otherwise it is over at once.
+        /// </summary>
+        public void OnFailed()
+        {
+            if (over) return;
+            lost = true;
+            if (lifelineUsed) over = true;
+        }
+
+        /// <summary>ErNa-008: "Continue" is offered (lost, lifeline unused).</summary>
+        public bool CanContinue => lost && !over && !lifelineUsed;
+
+        /// <summary>
+        /// ErNa-008, the lifeline (after the ad was watched): the same level again from the start (0 moves), the undos back to
+        /// <see cref="UndosPerRun"/>; stars and levels cleared stay. Once per run.
+        /// </summary>
+        public bool Continue()
+        {
+            if (!CanContinue) return false;
+            lifelineUsed = true;
+            lost = false;
+            undosLeft = UndosPerRun;
+            rotations = "";
+            moves = 0;
+            undoHistory.Clear();
+            return true;
+        }
+
+        /// <summary>The player gave up the lifeline (Home, New run) or had none: the run is over.</summary>
+        public void Finish() => over = true;
     }
 
     /// <summary>The best run of a game (kept on the phone).</summary>

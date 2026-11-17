@@ -42,6 +42,10 @@ ICONS = {
     "landscape": "landscape",
     "science": "science",
     "castle": "castle",
+    # ErNa-008: rewarded ad, change level, daily streak (placeholders)
+    "ad_video": "smart_display",
+    "change_level": "shuffle",
+    "streak": "local_fire_department",
 }
 
 

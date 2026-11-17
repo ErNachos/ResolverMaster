@@ -13,10 +13,14 @@ MonoBehaviour:
   m_Name: IconLibrary
   m_EditorClassIdentifier: 
   entries:
+  - name: ad_video
+    sprite: {fileID: 21300000, guid: e587d81c2e663d4428d443422e802b71, type: 3}
   - name: anchor
     sprite: {fileID: 21300000, guid: 6dc9f6019ac77c144a7a4370d64e86b5, type: 3}
   - name: castle
     sprite: {fileID: 21300000, guid: 3550e109b32a366439d3fff3ed4b6108, type: 3}
+  - name: change_level
+    sprite: {fileID: 21300000, guid: 0d859fc26152ac342bbea199f19e8f61, type: 3}
   - name: construction
     sprite: {fileID: 21300000, guid: 0607fea329804b4498f11eb85675fd1a, type: 3}
   - name: factory
@@ -71,5 +75,7 @@ MonoBehaviour:
     sprite: {fileID: 21300000, guid: bb822737ce1cc2f48a39228f57fa4183, type: 3}
   - name: story
     sprite: {fileID: 21300000, guid: 3c04ea1a62ef2e44ca01cd30ba37eba5, type: 3}
+  - name: streak
+    sprite: {fileID: 21300000, guid: 8596d61c842a9844f879f4fb6d6f6ffa, type: 3}
   - name: water_drop
     sprite: {fileID: 21300000, guid: 6e961f6d84a49364a8622158636f0c27, type: 3}
