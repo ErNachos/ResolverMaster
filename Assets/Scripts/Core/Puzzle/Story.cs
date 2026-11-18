@@ -84,6 +84,30 @@ namespace ResolverMaster.Core.Puzzle
         }
 
         public int GlobalIndex(LevelId id) => Chapter(id.Chapter).FirstLevel + id.Index;
+
+        /// <summary>
+        /// TJ-001 (moved here from the Plumber, shared by every game): groups the numbered levels by their chapter field
+        /// (<paramref name="levelChapters"/>[i] = 1-based chapter of level i+1); chapter n takes <paramref name="themes"/>[n-1], or a grey
+        /// placeholder ("&lt;game&gt;.chapterN.name", <paramref name="fallbackIcon"/>) when missing. Stops at the first level out of order
+        /// (the game's validator reports it).
+        /// </summary>
+        public static StoryBook Build(string game, IReadOnlyList<int> levelChapters, IReadOnlyList<ChapterTheme> themes, string fallbackIcon)
+        {
+            var book = new StoryBook(game);
+            int i = 0;
+            for (int chapter = 1; i < levelChapters.Count; chapter++)
+            {
+                int count = 0;
+                while (i + count < levelChapters.Count && levelChapters[i + count] == chapter) count++;
+                if (count == 0) break;
+                var theme = themes != null && chapter - 1 < themes.Count
+                    ? themes[chapter - 1]
+                    : new ChapterTheme(game + ".chapter" + chapter + ".name", fallbackIcon, UnityEngine.Color.gray);
+                book.AddChapter(theme, count);
+                i += count;
+            }
+            return book;
+        }
     }
 
     /// <summary>

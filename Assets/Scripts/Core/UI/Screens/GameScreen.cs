@@ -46,7 +46,7 @@ namespace ResolverMaster.Core.UI.Screens
         GameMode _mode = GameMode.Story;
         ChallengeRunState _run;
         readonly Dictionary<string, ChallengeQueue> _queues = new Dictionary<string, ChallengeQueue>();
-        DialogPanel _pause, _end, _dailyEnd;
+        DialogPanel _pause, _end, _dailyEnd, _outOfMoves;
         Image _undoBadge;
         TextMeshProUGUI _undoCount;
         bool _lastNewRecord;
@@ -69,6 +69,8 @@ namespace ResolverMaster.Core.UI.Screens
         public ChallengeRunState Run => _run;
         public bool PauseVisible => _pause.Visible;
         public bool EndVisible => _end.Visible || _dailyEnd.Visible;
+        /// <summary>TJ-001: the "Out of moves" panel (undo or end the run) is open.</summary>
+        public bool OutOfMovesVisible => _outOfMoves.Visible;
 
         public static GameScreen Create(AppServices ctx, Transform parent)
         {
@@ -166,6 +168,8 @@ namespace ResolverMaster.Core.UI.Screens
             // ErNa-008: end of the daily challenge (result, stars out of 15, streak), "Continue" while the lifeline is unused
             screen._dailyEnd = new DialogPanel(ctx, layout.Root, "DailyOver", LocKeys.DailyTitle, 3, null, LocKeys.ChallengeHome,
                 extraKey: LocKeys.ChallengeContinue, extraIcon: AdIcon);
+            // TJ-001: out of moves in a game with no final check (Traffic jam): undo to free moves, or end the run
+            screen._outOfMoves = new DialogPanel(ctx, layout.Root, "OutOfMoves", LocKeys.ChallengeOutOfMoves, 1, LocKeys.ChallengeEnd, LocKeys.ChallengeUndo);
             return screen;
         }
 
@@ -205,6 +209,7 @@ namespace ResolverMaster.Core.UI.Screens
             _pause.Hide();
             _end.Hide();
             _dailyEnd.Hide();
+            _outOfMoves.Hide();
         }
 
         /// <summary>Loads Story level <paramref name="index"/> (0-based, whole Story) of <paramref name="module"/>; creates its board the first time.</summary>
@@ -283,6 +288,7 @@ namespace ResolverMaster.Core.UI.Screens
                 _dailyEnd.SetExtraInteractable(RewardedAds.CanOffer(_ctx.Ads, _run.CanContinue));
                 _lastBusy = busy;
                 _lastAds = _ctx.Ads != null && _ctx.Ads.IsAvailable;
+                CheckOutOfMoves(session, busy);
                 return;
             }
             _moves.color = _ctx.Style.text;
@@ -413,6 +419,40 @@ namespace ResolverMaster.Core.UI.Screens
             _run.undoHistory.AddRange(Board.MoveHistory);
             _run.rotations = Board.CaptureState();
             _ctx.Save();
+        }
+
+        /// <summary>
+        /// TJ-001, a game with no final check (<see cref="PuzzleBoard.LosesWhenOutOfMoves"/>): at the maximum without the solution the
+        /// pieces are locked and "Out of moves" opens (undo, or end the run); with no undo left the run is lost at once.
+        /// </summary>
+        void CheckOutOfMoves(IPuzzleSession session, bool busy)
+        {
+            bool stuck = Board.LosesWhenOutOfMoves && _run.IsOutOfMoves(session.IsSolved) && session.MovesMade >= _run.maxMoves;
+            if (!stuck)
+            {
+                _outOfMoves.Hide();
+                return;
+            }
+            if (busy || _pause.Visible || EndVisible || _win.Visible) return;
+            if (_run.OutOfMovesIsLost(session.IsSolved))
+            {
+                _outOfMoves.Hide();
+                OnRunLost();
+                return;
+            }
+            if (_outOfMoves.Visible) return;
+            _outOfMoves.SetLine(0, string.Format(_ctx.Loc.Get(LocKeys.ChallengeOutOfMovesHint), _run.undosLeft));
+            _outOfMoves.Show(() =>
+            {
+                // "Undo" (the green button): one move back, the run goes on
+                _outOfMoves.Hide();
+                UndoPressed();
+            }, () =>
+            {
+                // "End": the run is lost as after any failure (the end panel offers "Continue" while the lifeline is unused)
+                _outOfMoves.Hide();
+                OnRunLost();
+            });
         }
 
         void UndoPressed()
@@ -551,6 +591,7 @@ namespace ResolverMaster.Core.UI.Screens
             _pause.Hide();
             _end.Hide();
             _dailyEnd.Hide();
+            _outOfMoves.Hide();
             _ctx.Save();
             _ctx.Screens.ShowRoot(ScreenIds.Home);
         }

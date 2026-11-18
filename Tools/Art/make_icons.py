@@ -46,6 +46,13 @@ ICONS = {
     "ad_video": "smart_display",
     "change_level": "shuffle",
     "streak": "local_fire_department",
+    # TJ-001: Traffic jam chapter themes (construction is shared with the Plumber)
+    "parking": "local_parking",
+    "storefront": "storefront",
+    "location_city": "location_city",
+    "flight": "flight",
+    "traffic": "traffic",
+    "schedule": "schedule",
 }
 
 

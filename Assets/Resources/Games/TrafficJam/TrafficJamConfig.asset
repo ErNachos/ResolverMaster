@@ -1,0 +1,2312 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ba57aa7b5ea4bce4391d004a62e70d82, type: 3}
+  m_Name: TrafficJamConfig
+  m_EditorClassIdentifier: 
+  targetColors:
+  - {r: 0.8784314, g: 0.16862746, b: 0.1254902, a: 1}
+  - {r: 0.18431373, g: 0.49803922, b: 0.9098039, a: 1}
+  vehicleColors:
+  - {r: 0.95686275, g: 0.76862746, b: 0.1882353, a: 1}
+  - {r: 0.95686275, g: 0.94509804, b: 0.91764706, a: 1}
+  - {r: 0.8509804, g: 0.7607843, b: 0.6039216, a: 1}
+  - {r: 0.6039216, g: 0.627451, b: 0.65882355, a: 1}
+  - {r: 0.7254902, g: 0.6392157, b: 0.8901961, a: 1}
+  minTargetDeltaE: 20
+  barrierColorA: {r: 0.9607843, g: 0.72156864, b: 0.23921569, a: 1}
+  barrierColorB: {r: 0.2, g: 0.21176471, b: 0.23921569, a: 1}
+  glassColor: {r: 0.23137255, g: 0.2901961, b: 0.3529412, a: 1}
+  wheelColor: {r: 0.13333334, g: 0.13333334, b: 0.14901961, a: 1}
+  stripeColor: {r: 1, g: 1, b: 1, a: 1}
+  hintArrowColor: {r: 1, g: 1, b: 1, a: 1}
+  vehicleInset: 0.07
+  vehicleCorner: 0.22
+  outline: 0.035
+  spritePixelsPerCell: 256
+  exitDepth: 0.26
+  exitWidth: 0.86
+  boardInset: 30
+  compactCellBelow: 150
+  compactFrameScale: 0.5
+  compactOverflow: 16
+  snapDuration: 0.09
+  exitDuration: 0.38
+  winPause: 0.25
+  hintArrowTime: 0.55
+  hintMoveDuration: 0.28
+  shakeDuration: 0.28
+  shakeAmplitude: 0.06
+  shakeCycles: 3
+  exitThreshold: 0.45
+  maxStates: 2000000
+  storyMaxStates: 20000
+  storyMaxAttempts: 4000
+  climbSteps: 60
+  maxMinMoves: 40
+  storySeedBase: 3611000
+  chapters:
+  - nameKey: trafficjam.chapter1.name
+    icon: parking
+    color: {r: 0.56078434, g: 0.7019608, b: 0.6039216, a: 1}
+    theme: parking
+  - nameKey: trafficjam.chapter2.name
+    icon: storefront
+    color: {r: 0.78039217, g: 0.6039216, b: 0.41960785, a: 1}
+    theme: market
+  - nameKey: trafficjam.chapter3.name
+    icon: location_city
+    color: {r: 0.7254902, g: 0.7607843, b: 0.8, a: 1}
+    theme: city
+  - nameKey: trafficjam.chapter4.name
+    icon: construction
+    color: {r: 0.72156864, g: 0.5803922, b: 0.4, a: 1}
+    theme: site
+  - nameKey: trafficjam.chapter5.name
+    icon: flight
+    color: {r: 0.6156863, g: 0.6901961, b: 0.6392157, a: 1}
+    theme: airport
+  - nameKey: trafficjam.chapter6.name
+    icon: traffic
+    color: {r: 0.65882355, g: 0.6117647, b: 0.5411765, a: 1}
+    theme: crossroads
+  - nameKey: trafficjam.chapter7.name
+    icon: schedule
+    color: {r: 0.6117647, g: 0.5764706, b: 0.68235296, a: 1}
+    theme: rushhour
+  storyDifficulty:
+    tiers:
+    - id: c1-1
+      firstLevel: 1
+      lastLevel: 1
+      values:
+      - key: cols
+        min: 4
+        max: 4
+      - key: rows
+        min: 6
+        max: 6
+      - key: minMoves
+        min: 1
+        max: 2
+      - key: cars
+        min: 2
+        max: 2
+      - key: trucks
+        min: 0
+        max: 0
+      - key: obstacles
+        min: 0
+        max: 0
+      - key: targets
+        min: 1
+        max: 1
+      - key: sideExits
+        min: 0
+        max: 0
+    - id: c1-2
+      firstLevel: 2
+      lastLevel: 2
+      values:
+      - key: cols
+        min: 4
+        max: 4
+      - key: rows
+        min: 6
+        max: 6
+      - key: minMoves
+        min: 2
+        max: 3
+      - key: cars
+        min: 3
+        max: 3
+      - key: trucks
+        min: 0
+        max: 0
+      - key: obstacles
+        min: 0
+        max: 0
+      - key: targets
+        min: 1
+        max: 1
+      - key: sideExits
+        min: 0
+        max: 0
+    - id: c1-3
+      firstLevel: 3
+      lastLevel: 3
+      values:
+      - key: cols
+        min: 4
+        max: 4
+      - key: rows
+        min: 6
+        max: 6
+      - key: minMoves
+        min: 3
+        max: 4
+      - key: cars
+        min: 4
+        max: 4
+      - key: trucks
+        min: 0
+        max: 0
+      - key: obstacles
+        min: 0
+        max: 0
+      - key: targets
+        min: 1
+        max: 1
+      - key: sideExits
+        min: 0
+        max: 0
+    - id: c1-4
+      firstLevel: 4
+      lastLevel: 4
+      values:
+      - key: cols
+        min: 4
+        max: 4
+      - key: rows
+        min: 6
+        max: 6
+      - key: minMoves
+        min: 4
+        max: 5
+      - key: cars
+        min: 4
+        max: 5
+      - key: trucks
+        min: 0
+        max: 0
+      - key: obstacles
+        min: 0
+        max: 0
+      - key: targets
+        min: 1
+        max: 1
+      - key: sideExits
+        min: 0
+        max: 0
+    - id: c1-5
+      firstLevel: 5
+      lastLevel: 5
+      values:
+      - key: cols
+        min: 4
+        max: 4
+      - key: rows
+        min: 6
+        max: 6
+      - key: minMoves
+        min: 5
+        max: 6
+      - key: cars
+        min: 5
+        max: 6
+      - key: trucks
+        min: 0
+        max: 0
+      - key: obstacles
+        min: 0
+        max: 0
+      - key: targets
+        min: 1
+        max: 1
+      - key: sideExits
+        min: 0
+        max: 0
+    - id: c1-6
+      firstLevel: 6
+      lastLevel: 6
+      values:
+      - key: cols
+        min: 5
+        max: 5
+      - key: rows
+        min: 7
+        max: 7
+      - key: minMoves
+        min: 5
+        max: 6
+      - key: cars
+        min: 6
+        max: 7
+      - key: trucks
+        min: 0
+        max: 0
+      - key: obstacles
+        min: 0
+        max: 0
+      - key: targets
+        min: 1
+        max: 1
+      - key: sideExits
+        min: 0
+        max: 0
+    - id: c1-7
+      firstLevel: 7
+      lastLevel: 7
+      values:
+      - key: cols
+        min: 5
+        max: 5
+      - key: rows
+        min: 7
+        max: 7
+      - key: minMoves
+        min: 6
+        max: 7
+      - key: cars
+        min: 7
+        max: 8
+      - key: trucks
+        min: 0
+        max: 0
+      - key: obstacles
+        min: 0
+        max: 0
+      - key: targets
+        min: 1
+        max: 1
+      - key: sideExits
+        min: 0
+        max: 0
+    - id: c1-8
+      firstLevel: 8
+      lastLevel: 8
+      values:
+      - key: cols
+        min: 5
+        max: 5
+      - key: rows
+        min: 7
+        max: 7
+      - key: minMoves
+        min: 7
+        max: 8
+      - key: cars
+        min: 8
+        max: 9
+      - key: trucks
+        min: 0
+        max: 0
+      - key: obstacles
+        min: 0
+        max: 0
+      - key: targets
+        min: 1
+        max: 1
+      - key: sideExits
+        min: 0
+        max: 0
+    - id: c1-9
+      firstLevel: 9
+      lastLevel: 9
+      values:
+      - key: cols
+        min: 5
+        max: 5
+      - key: rows
+        min: 7
+        max: 7
+      - key: minMoves
+        min: 8
+        max: 10
+      - key: cars
+        min: 9
+        max: 10
+      - key: trucks
+        min: 0
+        max: 0
+      - key: obstacles
+        min: 0
+        max: 0
+      - key: targets
+        min: 1
+        max: 1
+      - key: sideExits
+        min: 0
+        max: 0
+    - id: c2-1
+      firstLevel: 10
+      lastLevel: 10
+      values:
+      - key: cols
+        min: 5
+        max: 5
+      - key: rows
+        min: 7
+        max: 7
+      - key: minMoves
+        min: 4
+        max: 5
+      - key: cars
+        min: 4
+        max: 6
+      - key: trucks
+        min: 1
+        max: 1
+      - key: obstacles
+        min: 0
+        max: 0
+      - key: targets
+        min: 1
+        max: 1
+      - key: sideExits
+        min: 0
+        max: 0
+    - id: c2-2
+      firstLevel: 11
+      lastLevel: 11
+      values:
+      - key: cols
+        min: 5
+        max: 5
+      - key: rows
+        min: 7
+        max: 7
+      - key: minMoves
+        min: 5
+        max: 6
+      - key: cars
+        min: 5
+        max: 6
+      - key: trucks
+        min: 1
+        max: 1
+      - key: obstacles
+        min: 0
+        max: 0
+      - key: targets
+        min: 1
+        max: 1
+      - key: sideExits
+        min: 0
+        max: 0
+    - id: c2-3
+      firstLevel: 12
+      lastLevel: 12
+      values:
+      - key: cols
+        min: 5
+        max: 5
+      - key: rows
+        min: 7
+        max: 7
+      - key: minMoves
+        min: 6
+        max: 7
+      - key: cars
+        min: 5
+        max: 7
+      - key: trucks
+        min: 1
+        max: 2
+      - key: obstacles
+        min: 0
+        max: 0
+      - key: targets
+        min: 1
+        max: 1
+      - key: sideExits
+        min: 0
+        max: 0
+    - id: c2-4
+      firstLevel: 13
+      lastLevel: 13
+      values:
+      - key: cols
+        min: 5
+        max: 5
+      - key: rows
+        min: 7
+        max: 7
+      - key: minMoves
+        min: 7
+        max: 8
+      - key: cars
+        min: 6
+        max: 7
+      - key: trucks
+        min: 1
+        max: 2
+      - key: obstacles
+        min: 0
+        max: 0
+      - key: targets
+        min: 1
+        max: 1
+      - key: sideExits
+        min: 0
+        max: 0
+    - id: c2-5
+      firstLevel: 14
+      lastLevel: 14
+      values:
+      - key: cols
+        min: 5
+        max: 5
+      - key: rows
+        min: 7
+        max: 7
+      - key: minMoves
+        min: 8
+        max: 9
+      - key: cars
+        min: 6
+        max: 8
+      - key: trucks
+        min: 2
+        max: 2
+      - key: obstacles
+        min: 0
+        max: 0
+      - key: targets
+        min: 1
+        max: 1
+      - key: sideExits
+        min: 0
+        max: 0
+    - id: c2-6
+      firstLevel: 15
+      lastLevel: 15
+      values:
+      - key: cols
+        min: 5
+        max: 5
+      - key: rows
+        min: 7
+        max: 7
+      - key: minMoves
+        min: 9
+        max: 10
+      - key: cars
+        min: 6
+        max: 8
+      - key: trucks
+        min: 2
+        max: 2
+      - key: obstacles
+        min: 0
+        max: 0
+      - key: targets
+        min: 1
+        max: 1
+      - key: sideExits
+        min: 0
+        max: 0
+    - id: c2-7
+      firstLevel: 16
+      lastLevel: 16
+      values:
+      - key: cols
+        min: 5
+        max: 5
+      - key: rows
+        min: 7
+        max: 7
+      - key: minMoves
+        min: 10
+        max: 11
+      - key: cars
+        min: 7
+        max: 8
+      - key: trucks
+        min: 2
+        max: 3
+      - key: obstacles
+        min: 0
+        max: 0
+      - key: targets
+        min: 1
+        max: 1
+      - key: sideExits
+        min: 0
+        max: 0
+    - id: c2-8
+      firstLevel: 17
+      lastLevel: 17
+      values:
+      - key: cols
+        min: 5
+        max: 5
+      - key: rows
+        min: 7
+        max: 7
+      - key: minMoves
+        min: 11
+        max: 12
+      - key: cars
+        min: 7
+        max: 9
+      - key: trucks
+        min: 2
+        max: 3
+      - key: obstacles
+        min: 0
+        max: 0
+      - key: targets
+        min: 1
+        max: 1
+      - key: sideExits
+        min: 0
+        max: 0
+    - id: c2-9
+      firstLevel: 18
+      lastLevel: 18
+      values:
+      - key: cols
+        min: 5
+        max: 5
+      - key: rows
+        min: 7
+        max: 7
+      - key: minMoves
+        min: 12
+        max: 14
+      - key: cars
+        min: 7
+        max: 9
+      - key: trucks
+        min: 2
+        max: 3
+      - key: obstacles
+        min: 0
+        max: 0
+      - key: targets
+        min: 1
+        max: 1
+      - key: sideExits
+        min: 0
+        max: 0
+    - id: c3-1
+      firstLevel: 19
+      lastLevel: 19
+      values:
+      - key: cols
+        min: 6
+        max: 6
+      - key: rows
+        min: 8
+        max: 8
+      - key: minMoves
+        min: 7
+        max: 8
+      - key: cars
+        min: 8
+        max: 10
+      - key: trucks
+        min: 2
+        max: 3
+      - key: obstacles
+        min: 0
+        max: 0
+      - key: targets
+        min: 1
+        max: 1
+      - key: sideExits
+        min: 0
+        max: 0
+    - id: c3-2
+      firstLevel: 20
+      lastLevel: 20
+      values:
+      - key: cols
+        min: 6
+        max: 6
+      - key: rows
+        min: 8
+        max: 8
+      - key: minMoves
+        min: 8
+        max: 9
+      - key: cars
+        min: 8
+        max: 10
+      - key: trucks
+        min: 2
+        max: 3
+      - key: obstacles
+        min: 0
+        max: 0
+      - key: targets
+        min: 1
+        max: 1
+      - key: sideExits
+        min: 0
+        max: 0
+    - id: c3-3
+      firstLevel: 21
+      lastLevel: 21
+      values:
+      - key: cols
+        min: 6
+        max: 6
+      - key: rows
+        min: 8
+        max: 8
+      - key: minMoves
+        min: 9
+        max: 10
+      - key: cars
+        min: 9
+        max: 11
+      - key: trucks
+        min: 2
+        max: 3
+      - key: obstacles
+        min: 0
+        max: 0
+      - key: targets
+        min: 1
+        max: 1
+      - key: sideExits
+        min: 0
+        max: 0
+    - id: c3-4
+      firstLevel: 22
+      lastLevel: 22
+      values:
+      - key: cols
+        min: 6
+        max: 6
+      - key: rows
+        min: 8
+        max: 8
+      - key: minMoves
+        min: 10
+        max: 11
+      - key: cars
+        min: 9
+        max: 11
+      - key: trucks
+        min: 3
+        max: 3
+      - key: obstacles
+        min: 0
+        max: 0
+      - key: targets
+        min: 1
+        max: 1
+      - key: sideExits
+        min: 0
+        max: 0
+    - id: c3-5
+      firstLevel: 23
+      lastLevel: 23
+      values:
+      - key: cols
+        min: 6
+        max: 6
+      - key: rows
+        min: 8
+        max: 8
+      - key: minMoves
+        min: 11
+        max: 12
+      - key: cars
+        min: 10
+        max: 12
+      - key: trucks
+        min: 3
+        max: 3
+      - key: obstacles
+        min: 0
+        max: 0
+      - key: targets
+        min: 1
+        max: 1
+      - key: sideExits
+        min: 0
+        max: 0
+    - id: c3-6
+      firstLevel: 24
+      lastLevel: 24
+      values:
+      - key: cols
+        min: 6
+        max: 6
+      - key: rows
+        min: 8
+        max: 8
+      - key: minMoves
+        min: 12
+        max: 13
+      - key: cars
+        min: 10
+        max: 12
+      - key: trucks
+        min: 3
+        max: 4
+      - key: obstacles
+        min: 0
+        max: 0
+      - key: targets
+        min: 1
+        max: 1
+      - key: sideExits
+        min: 0
+        max: 0
+    - id: c3-7
+      firstLevel: 25
+      lastLevel: 25
+      values:
+      - key: cols
+        min: 6
+        max: 6
+      - key: rows
+        min: 8
+        max: 8
+      - key: minMoves
+        min: 13
+        max: 14
+      - key: cars
+        min: 11
+        max: 12
+      - key: trucks
+        min: 3
+        max: 4
+      - key: obstacles
+        min: 0
+        max: 0
+      - key: targets
+        min: 1
+        max: 1
+      - key: sideExits
+        min: 0
+        max: 0
+    - id: c3-8
+      firstLevel: 26
+      lastLevel: 26
+      values:
+      - key: cols
+        min: 6
+        max: 6
+      - key: rows
+        min: 8
+        max: 8
+      - key: minMoves
+        min: 14
+        max: 15
+      - key: cars
+        min: 11
+        max: 13
+      - key: trucks
+        min: 3
+        max: 4
+      - key: obstacles
+        min: 0
+        max: 0
+      - key: targets
+        min: 1
+        max: 1
+      - key: sideExits
+        min: 0
+        max: 0
+    - id: c3-9
+      firstLevel: 27
+      lastLevel: 27
+      values:
+      - key: cols
+        min: 6
+        max: 6
+      - key: rows
+        min: 8
+        max: 8
+      - key: minMoves
+        min: 15
+        max: 17
+      - key: cars
+        min: 11
+        max: 13
+      - key: trucks
+        min: 3
+        max: 4
+      - key: obstacles
+        min: 0
+        max: 0
+      - key: targets
+        min: 1
+        max: 1
+      - key: sideExits
+        min: 0
+        max: 0
+    - id: c4-1
+      firstLevel: 28
+      lastLevel: 28
+      values:
+      - key: cols
+        min: 6
+        max: 6
+      - key: rows
+        min: 8
+        max: 8
+      - key: minMoves
+        min: 9
+        max: 10
+      - key: cars
+        min: 8
+        max: 10
+      - key: trucks
+        min: 2
+        max: 3
+      - key: obstacles
+        min: 2
+        max: 2
+      - key: targets
+        min: 1
+        max: 1
+      - key: sideExits
+        min: 0
+        max: 0
+    - id: c4-2
+      firstLevel: 29
+      lastLevel: 29
+      values:
+      - key: cols
+        min: 6
+        max: 6
+      - key: rows
+        min: 8
+        max: 8
+      - key: minMoves
+        min: 10
+        max: 11
+      - key: cars
+        min: 8
+        max: 10
+      - key: trucks
+        min: 2
+        max: 3
+      - key: obstacles
+        min: 2
+        max: 3
+      - key: targets
+        min: 1
+        max: 1
+      - key: sideExits
+        min: 0
+        max: 0
+    - id: c4-3
+      firstLevel: 30
+      lastLevel: 30
+      values:
+      - key: cols
+        min: 6
+        max: 6
+      - key: rows
+        min: 8
+        max: 8
+      - key: minMoves
+        min: 11
+        max: 12
+      - key: cars
+        min: 9
+        max: 11
+      - key: trucks
+        min: 2
+        max: 3
+      - key: obstacles
+        min: 2
+        max: 3
+      - key: targets
+        min: 1
+        max: 1
+      - key: sideExits
+        min: 0
+        max: 0
+    - id: c4-4
+      firstLevel: 31
+      lastLevel: 31
+      values:
+      - key: cols
+        min: 6
+        max: 6
+      - key: rows
+        min: 8
+        max: 8
+      - key: minMoves
+        min: 12
+        max: 13
+      - key: cars
+        min: 9
+        max: 11
+      - key: trucks
+        min: 3
+        max: 3
+      - key: obstacles
+        min: 3
+        max: 4
+      - key: targets
+        min: 1
+        max: 1
+      - key: sideExits
+        min: 0
+        max: 0
+    - id: c4-5
+      firstLevel: 32
+      lastLevel: 32
+      values:
+      - key: cols
+        min: 6
+        max: 6
+      - key: rows
+        min: 8
+        max: 8
+      - key: minMoves
+        min: 13
+        max: 14
+      - key: cars
+        min: 9
+        max: 11
+      - key: trucks
+        min: 3
+        max: 3
+      - key: obstacles
+        min: 3
+        max: 4
+      - key: targets
+        min: 1
+        max: 1
+      - key: sideExits
+        min: 0
+        max: 0
+    - id: c4-6
+      firstLevel: 33
+      lastLevel: 33
+      values:
+      - key: cols
+        min: 6
+        max: 6
+      - key: rows
+        min: 8
+        max: 8
+      - key: minMoves
+        min: 14
+        max: 15
+      - key: cars
+        min: 10
+        max: 12
+      - key: trucks
+        min: 3
+        max: 4
+      - key: obstacles
+        min: 3
+        max: 4
+      - key: targets
+        min: 1
+        max: 1
+      - key: sideExits
+        min: 0
+        max: 0
+    - id: c4-7
+      firstLevel: 34
+      lastLevel: 34
+      values:
+      - key: cols
+        min: 6
+        max: 6
+      - key: rows
+        min: 8
+        max: 8
+      - key: minMoves
+        min: 15
+        max: 16
+      - key: cars
+        min: 10
+        max: 12
+      - key: trucks
+        min: 3
+        max: 4
+      - key: obstacles
+        min: 3
+        max: 5
+      - key: targets
+        min: 1
+        max: 1
+      - key: sideExits
+        min: 0
+        max: 0
+    - id: c4-8
+      firstLevel: 35
+      lastLevel: 35
+      values:
+      - key: cols
+        min: 6
+        max: 6
+      - key: rows
+        min: 8
+        max: 8
+      - key: minMoves
+        min: 16
+        max: 17
+      - key: cars
+        min: 10
+        max: 12
+      - key: trucks
+        min: 3
+        max: 4
+      - key: obstacles
+        min: 4
+        max: 5
+      - key: targets
+        min: 1
+        max: 1
+      - key: sideExits
+        min: 0
+        max: 0
+    - id: c4-9
+      firstLevel: 36
+      lastLevel: 36
+      values:
+      - key: cols
+        min: 6
+        max: 6
+      - key: rows
+        min: 8
+        max: 8
+      - key: minMoves
+        min: 17
+        max: 19
+      - key: cars
+        min: 10
+        max: 12
+      - key: trucks
+        min: 3
+        max: 4
+      - key: obstacles
+        min: 4
+        max: 5
+      - key: targets
+        min: 1
+        max: 1
+      - key: sideExits
+        min: 0
+        max: 0
+    - id: c5-1
+      firstLevel: 37
+      lastLevel: 37
+      values:
+      - key: cols
+        min: 6
+        max: 6
+      - key: rows
+        min: 8
+        max: 8
+      - key: minMoves
+        min: 10
+        max: 11
+      - key: cars
+        min: 8
+        max: 10
+      - key: trucks
+        min: 2
+        max: 3
+      - key: obstacles
+        min: 0
+        max: 1
+      - key: targets
+        min: 2
+        max: 2
+      - key: sideExits
+        min: 0
+        max: 0
+    - id: c5-2
+      firstLevel: 38
+      lastLevel: 38
+      values:
+      - key: cols
+        min: 6
+        max: 6
+      - key: rows
+        min: 8
+        max: 8
+      - key: minMoves
+        min: 11
+        max: 12
+      - key: cars
+        min: 8
+        max: 10
+      - key: trucks
+        min: 2
+        max: 3
+      - key: obstacles
+        min: 0
+        max: 1
+      - key: targets
+        min: 2
+        max: 2
+      - key: sideExits
+        min: 0
+        max: 0
+    - id: c5-3
+      firstLevel: 39
+      lastLevel: 39
+      values:
+      - key: cols
+        min: 6
+        max: 6
+      - key: rows
+        min: 8
+        max: 8
+      - key: minMoves
+        min: 12
+        max: 13
+      - key: cars
+        min: 9
+        max: 11
+      - key: trucks
+        min: 2
+        max: 3
+      - key: obstacles
+        min: 0
+        max: 2
+      - key: targets
+        min: 2
+        max: 2
+      - key: sideExits
+        min: 0
+        max: 0
+    - id: c5-4
+      firstLevel: 40
+      lastLevel: 40
+      values:
+      - key: cols
+        min: 6
+        max: 6
+      - key: rows
+        min: 8
+        max: 8
+      - key: minMoves
+        min: 13
+        max: 14
+      - key: cars
+        min: 9
+        max: 11
+      - key: trucks
+        min: 3
+        max: 3
+      - key: obstacles
+        min: 0
+        max: 2
+      - key: targets
+        min: 2
+        max: 2
+      - key: sideExits
+        min: 0
+        max: 0
+    - id: c5-5
+      firstLevel: 41
+      lastLevel: 41
+      values:
+      - key: cols
+        min: 6
+        max: 6
+      - key: rows
+        min: 8
+        max: 8
+      - key: minMoves
+        min: 14
+        max: 15
+      - key: cars
+        min: 9
+        max: 11
+      - key: trucks
+        min: 3
+        max: 3
+      - key: obstacles
+        min: 1
+        max: 2
+      - key: targets
+        min: 2
+        max: 2
+      - key: sideExits
+        min: 0
+        max: 0
+    - id: c5-6
+      firstLevel: 42
+      lastLevel: 42
+      values:
+      - key: cols
+        min: 6
+        max: 6
+      - key: rows
+        min: 8
+        max: 8
+      - key: minMoves
+        min: 15
+        max: 16
+      - key: cars
+        min: 10
+        max: 12
+      - key: trucks
+        min: 3
+        max: 4
+      - key: obstacles
+        min: 1
+        max: 2
+      - key: targets
+        min: 2
+        max: 2
+      - key: sideExits
+        min: 0
+        max: 0
+    - id: c5-7
+      firstLevel: 43
+      lastLevel: 43
+      values:
+      - key: cols
+        min: 6
+        max: 6
+      - key: rows
+        min: 8
+        max: 8
+      - key: minMoves
+        min: 16
+        max: 17
+      - key: cars
+        min: 10
+        max: 12
+      - key: trucks
+        min: 3
+        max: 4
+      - key: obstacles
+        min: 1
+        max: 3
+      - key: targets
+        min: 2
+        max: 2
+      - key: sideExits
+        min: 0
+        max: 0
+    - id: c5-8
+      firstLevel: 44
+      lastLevel: 44
+      values:
+      - key: cols
+        min: 6
+        max: 6
+      - key: rows
+        min: 8
+        max: 8
+      - key: minMoves
+        min: 17
+        max: 18
+      - key: cars
+        min: 10
+        max: 12
+      - key: trucks
+        min: 3
+        max: 4
+      - key: obstacles
+        min: 1
+        max: 3
+      - key: targets
+        min: 2
+        max: 2
+      - key: sideExits
+        min: 0
+        max: 0
+    - id: c5-9
+      firstLevel: 45
+      lastLevel: 45
+      values:
+      - key: cols
+        min: 6
+        max: 6
+      - key: rows
+        min: 8
+        max: 8
+      - key: minMoves
+        min: 18
+        max: 20
+      - key: cars
+        min: 10
+        max: 12
+      - key: trucks
+        min: 3
+        max: 4
+      - key: obstacles
+        min: 2
+        max: 3
+      - key: targets
+        min: 2
+        max: 2
+      - key: sideExits
+        min: 0
+        max: 0
+    - id: c6-1
+      firstLevel: 46
+      lastLevel: 46
+      values:
+      - key: cols
+        min: 6
+        max: 6
+      - key: rows
+        min: 8
+        max: 8
+      - key: minMoves
+        min: 11
+        max: 12
+      - key: cars
+        min: 8
+        max: 10
+      - key: trucks
+        min: 2
+        max: 3
+      - key: obstacles
+        min: 0
+        max: 1
+      - key: targets
+        min: 1
+        max: 1
+      - key: sideExits
+        min: 1
+        max: 1
+    - id: c6-2
+      firstLevel: 47
+      lastLevel: 47
+      values:
+      - key: cols
+        min: 6
+        max: 6
+      - key: rows
+        min: 8
+        max: 8
+      - key: minMoves
+        min: 12
+        max: 13
+      - key: cars
+        min: 8
+        max: 10
+      - key: trucks
+        min: 2
+        max: 3
+      - key: obstacles
+        min: 0
+        max: 1
+      - key: targets
+        min: 1
+        max: 1
+      - key: sideExits
+        min: 1
+        max: 1
+    - id: c6-3
+      firstLevel: 48
+      lastLevel: 48
+      values:
+      - key: cols
+        min: 6
+        max: 6
+      - key: rows
+        min: 8
+        max: 8
+      - key: minMoves
+        min: 13
+        max: 14
+      - key: cars
+        min: 9
+        max: 11
+      - key: trucks
+        min: 2
+        max: 3
+      - key: obstacles
+        min: 0
+        max: 2
+      - key: targets
+        min: 2
+        max: 2
+      - key: sideExits
+        min: 1
+        max: 1
+    - id: c6-4
+      firstLevel: 49
+      lastLevel: 49
+      values:
+      - key: cols
+        min: 6
+        max: 6
+      - key: rows
+        min: 8
+        max: 8
+      - key: minMoves
+        min: 14
+        max: 15
+      - key: cars
+        min: 9
+        max: 11
+      - key: trucks
+        min: 3
+        max: 3
+      - key: obstacles
+        min: 0
+        max: 2
+      - key: targets
+        min: 2
+        max: 2
+      - key: sideExits
+        min: 1
+        max: 2
+    - id: c6-5
+      firstLevel: 50
+      lastLevel: 50
+      values:
+      - key: cols
+        min: 6
+        max: 6
+      - key: rows
+        min: 8
+        max: 8
+      - key: minMoves
+        min: 15
+        max: 16
+      - key: cars
+        min: 10
+        max: 12
+      - key: trucks
+        min: 3
+        max: 4
+      - key: obstacles
+        min: 0
+        max: 2
+      - key: targets
+        min: 2
+        max: 2
+      - key: sideExits
+        min: 1
+        max: 2
+    - id: c6-6
+      firstLevel: 51
+      lastLevel: 51
+      values:
+      - key: cols
+        min: 7
+        max: 7
+      - key: rows
+        min: 9
+        max: 9
+      - key: minMoves
+        min: 15
+        max: 16
+      - key: cars
+        min: 12
+        max: 13
+      - key: trucks
+        min: 4
+        max: 5
+      - key: obstacles
+        min: 4
+        max: 6
+      - key: targets
+        min: 1
+        max: 1
+      - key: sideExits
+        min: 1
+        max: 1
+    - id: c6-7
+      firstLevel: 52
+      lastLevel: 52
+      values:
+      - key: cols
+        min: 7
+        max: 7
+      - key: rows
+        min: 9
+        max: 9
+      - key: minMoves
+        min: 16
+        max: 17
+      - key: cars
+        min: 10
+        max: 11
+      - key: trucks
+        min: 5
+        max: 6
+      - key: obstacles
+        min: 5
+        max: 7
+      - key: targets
+        min: 2
+        max: 2
+      - key: sideExits
+        min: 1
+        max: 2
+    - id: c6-8
+      firstLevel: 53
+      lastLevel: 53
+      values:
+      - key: cols
+        min: 7
+        max: 7
+      - key: rows
+        min: 9
+        max: 9
+      - key: minMoves
+        min: 17
+        max: 18
+      - key: cars
+        min: 10
+        max: 11
+      - key: trucks
+        min: 5
+        max: 6
+      - key: obstacles
+        min: 5
+        max: 7
+      - key: targets
+        min: 2
+        max: 2
+      - key: sideExits
+        min: 1
+        max: 2
+    - id: c6-9
+      firstLevel: 54
+      lastLevel: 54
+      values:
+      - key: cols
+        min: 7
+        max: 7
+      - key: rows
+        min: 9
+        max: 9
+      - key: minMoves
+        min: 18
+        max: 20
+      - key: cars
+        min: 10
+        max: 11
+      - key: trucks
+        min: 5
+        max: 6
+      - key: obstacles
+        min: 6
+        max: 8
+      - key: targets
+        min: 2
+        max: 2
+      - key: sideExits
+        min: 2
+        max: 2
+    - id: c7-1
+      firstLevel: 55
+      lastLevel: 55
+      values:
+      - key: cols
+        min: 7
+        max: 7
+      - key: rows
+        min: 9
+        max: 9
+      - key: minMoves
+        min: 13
+        max: 14
+      - key: cars
+        min: 12
+        max: 13
+      - key: trucks
+        min: 4
+        max: 5
+      - key: obstacles
+        min: 5
+        max: 7
+      - key: targets
+        min: 1
+        max: 1
+      - key: sideExits
+        min: 0
+        max: 1
+    - id: c7-2
+      firstLevel: 56
+      lastLevel: 56
+      values:
+      - key: cols
+        min: 7
+        max: 7
+      - key: rows
+        min: 9
+        max: 9
+      - key: minMoves
+        min: 14
+        max: 15
+      - key: cars
+        min: 10
+        max: 11
+      - key: trucks
+        min: 5
+        max: 6
+      - key: obstacles
+        min: 5
+        max: 7
+      - key: targets
+        min: 2
+        max: 2
+      - key: sideExits
+        min: 0
+        max: 1
+    - id: c7-3
+      firstLevel: 57
+      lastLevel: 57
+      values:
+      - key: cols
+        min: 7
+        max: 7
+      - key: rows
+        min: 9
+        max: 9
+      - key: minMoves
+        min: 15
+        max: 16
+      - key: cars
+        min: 12
+        max: 13
+      - key: trucks
+        min: 4
+        max: 5
+      - key: obstacles
+        min: 5
+        max: 7
+      - key: targets
+        min: 1
+        max: 1
+      - key: sideExits
+        min: 1
+        max: 1
+    - id: c7-4
+      firstLevel: 58
+      lastLevel: 58
+      values:
+      - key: cols
+        min: 7
+        max: 7
+      - key: rows
+        min: 9
+        max: 9
+      - key: minMoves
+        min: 16
+        max: 17
+      - key: cars
+        min: 10
+        max: 11
+      - key: trucks
+        min: 5
+        max: 6
+      - key: obstacles
+        min: 6
+        max: 8
+      - key: targets
+        min: 2
+        max: 2
+      - key: sideExits
+        min: 1
+        max: 2
+    - id: c7-5
+      firstLevel: 59
+      lastLevel: 59
+      values:
+      - key: cols
+        min: 7
+        max: 7
+      - key: rows
+        min: 9
+        max: 9
+      - key: minMoves
+        min: 17
+        max: 18
+      - key: cars
+        min: 10
+        max: 11
+      - key: trucks
+        min: 5
+        max: 6
+      - key: obstacles
+        min: 6
+        max: 8
+      - key: targets
+        min: 2
+        max: 2
+      - key: sideExits
+        min: 0
+        max: 2
+    - id: c7-6
+      firstLevel: 60
+      lastLevel: 60
+      values:
+      - key: cols
+        min: 7
+        max: 7
+      - key: rows
+        min: 9
+        max: 9
+      - key: minMoves
+        min: 18
+        max: 19
+      - key: cars
+        min: 12
+        max: 13
+      - key: trucks
+        min: 5
+        max: 5
+      - key: obstacles
+        min: 6
+        max: 8
+      - key: targets
+        min: 1
+        max: 1
+      - key: sideExits
+        min: 1
+        max: 1
+    - id: c7-7
+      firstLevel: 61
+      lastLevel: 61
+      values:
+      - key: cols
+        min: 7
+        max: 7
+      - key: rows
+        min: 9
+        max: 9
+      - key: minMoves
+        min: 19
+        max: 20
+      - key: cars
+        min: 10
+        max: 11
+      - key: trucks
+        min: 5
+        max: 6
+      - key: obstacles
+        min: 6
+        max: 8
+      - key: targets
+        min: 2
+        max: 2
+      - key: sideExits
+        min: 1
+        max: 2
+    - id: c7-8
+      firstLevel: 62
+      lastLevel: 62
+      values:
+      - key: cols
+        min: 7
+        max: 7
+      - key: rows
+        min: 9
+        max: 9
+      - key: minMoves
+        min: 20
+        max: 21
+      - key: cars
+        min: 10
+        max: 11
+      - key: trucks
+        min: 5
+        max: 6
+      - key: obstacles
+        min: 6
+        max: 8
+      - key: targets
+        min: 2
+        max: 2
+      - key: sideExits
+        min: 1
+        max: 2
+    - id: c7-9
+      firstLevel: 63
+      lastLevel: 63
+      values:
+      - key: cols
+        min: 7
+        max: 7
+      - key: rows
+        min: 9
+        max: 9
+      - key: minMoves
+        min: 21
+        max: 23
+      - key: cars
+        min: 10
+        max: 11
+      - key: trucks
+        min: 5
+        max: 6
+      - key: obstacles
+        min: 6
+        max: 8
+      - key: targets
+        min: 2
+        max: 2
+      - key: sideExits
+        min: 2
+        max: 2
+  challengeDifficulty:
+    tiers:
+    - id: ch-1
+      firstLevel: 1
+      lastLevel: 3
+      values:
+      - key: cols
+        min: 4
+        max: 4
+      - key: rows
+        min: 6
+        max: 6
+      - key: minMoves
+        min: 2
+        max: 4
+      - key: cars
+        min: 3
+        max: 4
+      - key: trucks
+        min: 0
+        max: 0
+      - key: obstacles
+        min: 0
+        max: 0
+      - key: targets
+        min: 1
+        max: 1
+      - key: sideExits
+        min: 0
+        max: 0
+    - id: ch-2
+      firstLevel: 4
+      lastLevel: 6
+      values:
+      - key: cols
+        min: 4
+        max: 4
+      - key: rows
+        min: 6
+        max: 6
+      - key: minMoves
+        min: 4
+        max: 6
+      - key: cars
+        min: 4
+        max: 6
+      - key: trucks
+        min: 0
+        max: 0
+      - key: obstacles
+        min: 0
+        max: 0
+      - key: targets
+        min: 1
+        max: 1
+      - key: sideExits
+        min: 0
+        max: 0
+    - id: ch-3
+      firstLevel: 7
+      lastLevel: 9
+      values:
+      - key: cols
+        min: 5
+        max: 5
+      - key: rows
+        min: 7
+        max: 7
+      - key: minMoves
+        min: 5
+        max: 8
+      - key: cars
+        min: 6
+        max: 8
+      - key: trucks
+        min: 0
+        max: 0
+      - key: obstacles
+        min: 0
+        max: 0
+      - key: targets
+        min: 1
+        max: 1
+      - key: sideExits
+        min: 0
+        max: 0
+    - id: ch-4
+      firstLevel: 10
+      lastLevel: 12
+      values:
+      - key: cols
+        min: 5
+        max: 5
+      - key: rows
+        min: 7
+        max: 7
+      - key: minMoves
+        min: 5
+        max: 8
+      - key: cars
+        min: 5
+        max: 7
+      - key: trucks
+        min: 1
+        max: 2
+      - key: obstacles
+        min: 0
+        max: 0
+      - key: targets
+        min: 1
+        max: 1
+      - key: sideExits
+        min: 0
+        max: 0
+    - id: ch-5
+      firstLevel: 13
+      lastLevel: 15
+      values:
+      - key: cols
+        min: 5
+        max: 5
+      - key: rows
+        min: 7
+        max: 7
+      - key: minMoves
+        min: 8
+        max: 11
+      - key: cars
+        min: 6
+        max: 8
+      - key: trucks
+        min: 2
+        max: 3
+      - key: obstacles
+        min: 0
+        max: 0
+      - key: targets
+        min: 1
+        max: 1
+      - key: sideExits
+        min: 0
+        max: 0
+    - id: ch-6
+      firstLevel: 16
+      lastLevel: 20
+      values:
+      - key: cols
+        min: 6
+        max: 6
+      - key: rows
+        min: 8
+        max: 8
+      - key: minMoves
+        min: 7
+        max: 10
+      - key: cars
+        min: 11
+        max: 12
+      - key: trucks
+        min: 3
+        max: 4
+      - key: obstacles
+        min: 0
+        max: 0
+      - key: targets
+        min: 1
+        max: 1
+      - key: sideExits
+        min: 0
+        max: 0
+    - id: ch-7
+      firstLevel: 21
+      lastLevel: 25
+      values:
+      - key: cols
+        min: 6
+        max: 6
+      - key: rows
+        min: 8
+        max: 8
+      - key: minMoves
+        min: 10
+        max: 13
+      - key: cars
+        min: 12
+        max: 12
+      - key: trucks
+        min: 4
+        max: 4
+      - key: obstacles
+        min: 0
+        max: 0
+      - key: targets
+        min: 1
+        max: 1
+      - key: sideExits
+        min: 0
+        max: 0
+    - id: ch-8
+      firstLevel: 26
+      lastLevel: 30
+      values:
+      - key: cols
+        min: 6
+        max: 6
+      - key: rows
+        min: 8
+        max: 8
+      - key: minMoves
+        min: 8
+        max: 11
+      - key: cars
+        min: 10
+        max: 11
+      - key: trucks
+        min: 3
+        max: 4
+      - key: obstacles
+        min: 2
+        max: 3
+      - key: targets
+        min: 1
+        max: 1
+      - key: sideExits
+        min: 0
+        max: 0
+    - id: ch-9
+      firstLevel: 31
+      lastLevel: 35
+      values:
+      - key: cols
+        min: 6
+        max: 6
+      - key: rows
+        min: 8
+        max: 8
+      - key: minMoves
+        min: 11
+        max: 14
+      - key: cars
+        min: 11
+        max: 11
+      - key: trucks
+        min: 4
+        max: 4
+      - key: obstacles
+        min: 3
+        max: 4
+      - key: targets
+        min: 1
+        max: 1
+      - key: sideExits
+        min: 0
+        max: 0
+    - id: ch-10
+      firstLevel: 36
+      lastLevel: 40
+      values:
+      - key: cols
+        min: 6
+        max: 6
+      - key: rows
+        min: 8
+        max: 8
+      - key: minMoves
+        min: 9
+        max: 12
+      - key: cars
+        min: 10
+        max: 10
+      - key: trucks
+        min: 4
+        max: 4
+      - key: obstacles
+        min: 2
+        max: 3
+      - key: targets
+        min: 2
+        max: 2
+      - key: sideExits
+        min: 0
+        max: 0
+    - id: ch-11
+      firstLevel: 41
+      lastLevel: 45
+      values:
+      - key: cols
+        min: 6
+        max: 6
+      - key: rows
+        min: 8
+        max: 8
+      - key: minMoves
+        min: 10
+        max: 13
+      - key: cars
+        min: 10
+        max: 10
+      - key: trucks
+        min: 4
+        max: 4
+      - key: obstacles
+        min: 3
+        max: 3
+      - key: targets
+        min: 2
+        max: 2
+      - key: sideExits
+        min: 0
+        max: 0
+    - id: ch-12
+      firstLevel: 46
+      lastLevel: 50
+      values:
+      - key: cols
+        min: 6
+        max: 6
+      - key: rows
+        min: 8
+        max: 8
+      - key: minMoves
+        min: 10
+        max: 13
+      - key: cars
+        min: 11
+        max: 11
+      - key: trucks
+        min: 4
+        max: 4
+      - key: obstacles
+        min: 1
+        max: 2
+      - key: targets
+        min: 1
+        max: 1
+      - key: sideExits
+        min: 1
+        max: 1
+    - id: ch-13
+      firstLevel: 51
+      lastLevel: 55
+      values:
+      - key: cols
+        min: 7
+        max: 7
+      - key: rows
+        min: 9
+        max: 9
+      - key: minMoves
+        min: 10
+        max: 13
+      - key: cars
+        min: 13
+        max: 13
+      - key: trucks
+        min: 5
+        max: 5
+      - key: obstacles
+        min: 7
+        max: 7
+      - key: targets
+        min: 1
+        max: 1
+      - key: sideExits
+        min: 1
+        max: 1
+    - id: ch-14
+      firstLevel: 56
+      lastLevel: 60
+      values:
+      - key: cols
+        min: 7
+        max: 7
+      - key: rows
+        min: 9
+        max: 9
+      - key: minMoves
+        min: 9
+        max: 12
+      - key: cars
+        min: 10
+        max: 10
+      - key: trucks
+        min: 6
+        max: 6
+      - key: obstacles
+        min: 8
+        max: 8
+      - key: targets
+        min: 2
+        max: 2
+      - key: sideExits
+        min: 1
+        max: 1
+    - id: ch-15
+      firstLevel: 61
+      lastLevel: 65
+      values:
+      - key: cols
+        min: 7
+        max: 7
+      - key: rows
+        min: 9
+        max: 9
+      - key: minMoves
+        min: 9
+        max: 12
+      - key: cars
+        min: 10
+        max: 10
+      - key: trucks
+        min: 6
+        max: 6
+      - key: obstacles
+        min: 8
+        max: 8
+      - key: targets
+        min: 2
+        max: 2
+      - key: sideExits
+        min: 1
+        max: 2
+    - id: ch-16
+      firstLevel: 66
+      lastLevel: 70
+      values:
+      - key: cols
+        min: 7
+        max: 7
+      - key: rows
+        min: 9
+        max: 9
+      - key: minMoves
+        min: 10
+        max: 13
+      - key: cars
+        min: 10
+        max: 10
+      - key: trucks
+        min: 6
+        max: 6
+      - key: obstacles
+        min: 8
+        max: 8
+      - key: targets
+        min: 2
+        max: 2
+      - key: sideExits
+        min: 2
+        max: 2
+  challenge:
+    marginStartPercent: 60
+    marginEndPercent: 10
+    maxSeedRetries: 30
+    dailyTiers:
+    - ch-6
+    - ch-8
+    - ch-10
+    - ch-12
+    - ch-14
+  challengeMaxAttempts: 1200
+  challengeMaxStates: 4000

@@ -290,3 +290,37 @@
 - AdMob non integrato: in rilascio Continua, Cambia livello e lampadina restano disattivati.
 - Icone della pubblicità, del cambio e della serie: segnaposto.
 - La data è quella del telefono: cambiandola si può anticipare la sfida.
+
+## Update TJ-001 — Traffic jam: il gioco completo (2026-11-18)
+
+**Fatto** (dettagli, scelte e tempi in `Prompt/Note-TJ-001.md`)
+- **A — Regole**: griglie verticali 4x6–7x9, auto e camion che scorrono solo nel loro verso, barriere, auto obiettivo rossa (e blu) con la sua uscita colorata; 1 mossa = uno scorrimento, rilascio sul posto = nessuna mossa, la spinta d'uscita conta (`docs/trafficjam-regole.md`).
+- **B — Risolutore esatto** (ricerca in ampiezza avanti + indietro, tabella delle distanze, tetto 2 milioni) e **generatore** deterministico (disposizione casuale + salita, partenza più lontana, limite in tentativi).
+- **C — Gioco**: trascinamento a tempo reale con aggancio, uscita animata, Annulla; grafica provvisoria dal codice; scheda della Home attiva.
+- **D — Storia**: 7 capitoli, 63 livelli (`docs/trafficjam-livelli.md`), menu *Traffic jam > Genera livelli Storia* (in parallelo); 5 temi nuovi nel Core.
+- **E — Lampadina**: freccia + mossa gratuita, al massimo 2 stelle.
+- **F — Challenge e Sfida del giorno**: 16 gradini in `TrafficJamConfig`, "Mosse finite" (Annulla / Termina, sconfitta senza annullamenti, poi Continua), menu *Traffic jam > Prova Challenge* (`docs/trafficjam-challenge.md`).
+- **Spostato nel Core**: `StoryBook.Build`, `BoardFrame`, `PuzzleBase.ApplyFreeMove`, "Mosse finite" (`LosesWhenOutOfMoves`, `IsOutOfMoves`), `StateIndex`, temi nuovi (`ConfigAssets.AddMissingThemes`).
+- Validatore: controlli `TrafficJam` e `TrafficJamPalette` (rosso e blu riservati). Anteprime Traffic jam (anche daltonismo).
+- **Test**: 5 nuovi (regole e uscite; mosse minime esatte e stesso seed; lampadina; Mosse finite, salvataggio e ripresa; 63 livelli).
+
+**Risultati**
+- Compilazione: 0 errori, 0 warning. Test: 40/40 verdi. Validatore: OK (11 controlli, 0 errori, 0 warning).
+- Anteprime: 312 immagini, nessun problema misurato (le misure hanno fatto accorciare il testo di "Mosse finite"). Celle: 4x6 213 px, 6x8 157 px, 7x9 136 px. Misure dell'Idraulico invariate.
+- Tempi: risolutore 7x9 12 ms in media; lampadina 13 ms; generatore Challenge da 1 ms (4x6) a 1,5 s in media (7x9 con due auto obiettivo, in sottofondo).
+
+| Cap. | Livelli | Griglie | Mosse minime |
+|---|---|---|---|
+| 1 | 1–9 | 4x6 → 5x7 | 2, 2, 4, 4, 5, 5, 7, 8, 8 |
+| 2 | 10–18 | 5x7 | 4, 5, 6, 7, 8, 10, 11, 11, 12 |
+| 3 | 19–27 | 6x8 | 8, 8, 9, 10, 12, 13, 14, 15, 17 |
+| 4 | 28–36 | 6x8 | 10, 11, 11, 13, 14, 15, 16, 17, 19 |
+| 5 | 37–45 | 6x8 | 10, 12, 12, 13, 15, 15, 16, 17, 19 |
+| 6 | 46–54 | 6x8 → 7x9 | 11, 12, 14, 15, 16, 16, 17, 18, 19 |
+| 7 | 55–63 | 7x9 | 14, 15, 16, 16, 18, 18, 19, 20, 21 |
+
+**Da provare a mano sul telefono**
+- Trascinamento e uscite (anche laterali e in basso), lampadina, "Mosse finite", ripresa di una run chiusa a metà, tempi dei livelli 7x9 della Challenge.
+
+**Problemi aperti / prossimi passi**
+- Generazione Challenge 7x9 con due auto obiettivo sopra 1 s (in sottofondo). Grafica e icone provvisorie.

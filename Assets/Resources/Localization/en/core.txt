@@ -43,6 +43,11 @@ theme.harbor.name = Harbour
 theme.mountain.name = Mountain
 theme.lab.name = Laboratory
 theme.castle.name = Castle
+theme.parking.name = Parking
+theme.market.name = Market
+theme.airport.name = Airport
+theme.crossroads.name = Crossroads
+theme.rushhour.name = Rush hour
 
 # rewarded ads, test version (ErNa-007)
 ad.test.title = Test ad
@@ -85,3 +90,9 @@ daily.failed = Not completed
 daily.stars = Stars: {0}/{1}
 daily.streak = Streak: {0} · best {1}
 daily.summary = Level {0}/{1} · {2} stars
+
+# TJ-001: out of moves (games with no final check)
+challenge.out_of_moves = Out of moves
+challenge.out_of_moves.hint = Undo to free moves ({0} left).
+challenge.undo = Undo
+challenge.end = End

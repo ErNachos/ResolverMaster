@@ -51,6 +51,13 @@ Dopo lo script: *Resolver Master > Setup > Apply All* (o `ConfigAssets.ResetVisu
 - **Acqua** (`WaterGraphic`): una striscia dentro il tubo (`waterWidth` 78% dell'interno) disegnata fino al fronte, con il **fronte arrotondato**; segue i dritti, gli archi delle curve, T e croci. I tempi vengono dalla logica pura (`WaterTiming`, `WaterMotion`): velocità costante `waterSpeed` (4 celle/s) con una leggera accelerazione iniziale (`waterAccelTime` 0,35 s, partenza al 35%); tutto con il tempo reale (uguale a 30 e 60 fps).
 - **Fonti e arrivi**: disegni (4 + 4) scelti dal seed, alti `endpointSize` 78% della cella e sollevati di `endpointLift` 0,08: il moncone di tubo entra **sotto** l'oggetto. Sotto ogni oggetto una **ombra morbida** (`shadowWidth`, `shadowHeight`, `shadowAlpha`, `shadowOffset`). La fontana si riempie (`fountainFill`) quando l'acqua arriva, poi gli spruzzi (`winSpray`).
 
+## Traffic jam (TJ-001, provvisoria)
+- Tutta dal codice (`Games/TrafficJam/View/TrafficSprites.cs`), stile cartoon con contorno nero: veicoli visti dall'alto (ruote, carrozzeria bianca tinta col colore del veicolo, vetri e fari), camion con cabina e cassone, due strisce bianche sulle auto obiettivo, barriere a strisce ambra e antracite, uscite come varco nel bordo colorato come la sua auto (con frecce), freccia della lampadina.
+- Colori in `TrafficJamConfig`: rosso e blu riservati alle auto obiettivo; gli altri veicoli giallo, bianco, beige, grigio, viola chiaro (scelti dal seed del livello).
+- 256 pixel per cella: mai ingranditi (le celle più grandi, 4x6, sono circa 240 unità).
+- Temi dei capitoli (Core): Parcheggio, Mercato, Città, Cantiere, Aeroporto, Incrocio, Ora di punta; icone Material segnaposto in `Assets/Art/Icons` (`make_icons.py`).
+- La grafica definitiva arriverà da Gemini: le immagini sostituiranno gli sprite di `TrafficSprites`.
+
 ## Come aggiungere o cambiare un'immagine
 - **Elemento dell'interfaccia**: cambia il foglio in `ArtSource/UI/` mantenendo ordine e numero degli elementi, poi `python Tools/Art/make_ui_art.py` e *Setup > Apply All*. Un elemento nuovo: una riga in `SHEETS` (nome e tipo di taglio) e in `UiArtSetup.Elements`.
 - **Fonte o arrivo**: originale in `ArtSource/Plumber/`, `python Tools/Art/make_plumber_art.py`, *UI Kit > Rebuild Sprite Libraries*; se cambia il numero di disegni, `PlumberConfig.artVariants`.

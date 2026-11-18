@@ -91,6 +91,15 @@ namespace ResolverMaster.Core.Challenge
         /// <summary>Moves left before the maximum.</summary>
         public int MovesLeft => Math.Max(0, maxMoves - moves);
 
+        /// <summary>
+        /// TJ-001, games without a final check (Traffic jam): the maximum is reached and the level is not solved, so the pieces are
+        /// locked and "Out of moves" shows. The player can still undo (to free moves) or end the run.
+        /// </summary>
+        public bool IsOutOfMoves(bool solved) => !over && !lost && HasLevel && !solved && maxMoves > 0 && moves >= maxMoves;
+
+        /// <summary>TJ-001: out of moves with no undo left: the run is lost at once (then "Continue" as after any loss).</summary>
+        public bool OutOfMovesIsLost(bool solved) => IsOutOfMoves(solved) && undosLeft <= 0;
+
         public void OnMove(int move)
         {
             moves++;

@@ -1,2 +1,10 @@
-# Traffic jam minigame texts (Italian)
+# Traffic jam minigame texts (Italian). Keys used by code: Scripts/Games/TrafficJam/TrafficJamKeys.cs
 game.trafficjam.name = Traffic jam
+
+trafficjam.chapter1.name = Parcheggio
+trafficjam.chapter2.name = Al mercato
+trafficjam.chapter3.name = Centro città
+trafficjam.chapter4.name = Lavori in corso
+trafficjam.chapter5.name = Aeroporto
+trafficjam.chapter6.name = Incrocio
+trafficjam.chapter7.name = Ora di punta

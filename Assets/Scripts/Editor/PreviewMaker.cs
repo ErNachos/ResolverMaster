@@ -11,6 +11,7 @@ using ResolverMaster.Core.Save;
 using ResolverMaster.Core.UI;
 using ResolverMaster.Core.UI.Screens;
 using ResolverMaster.Games.Plumber;
+using ResolverMaster.Games.TrafficJam;
 using ResolverMaster.Core.UI.Themes;
 using TMPro;
 using UnityEditor;
@@ -30,6 +31,8 @@ namespace ResolverMaster.Editor
     /// and measures the layout: safe-area margins, elements off screen or outside the safe area, clipped texts (TextMesh Pro),
     /// overlapping elements, the smallest button, UI sprites drawn bigger than their resolution; on the game screen also the cell size,
     /// the free space above and below the grid, the size of the fountain drawings and the position of the main action button.
+    /// TJ-001: Traffic jam too (mode, chapters, levels, two levels per chapter, light bulb, drag, win, Challenge with "Out of moves",
+    /// daily challenge, Home with the record) and the short side of the vehicles.
     /// Report: Previews/previews_report.txt (also in the log). Batch: -executeMethod ResolverMaster.Editor.PreviewMaker.MakePreviewsBatch
     /// </summary>
     public static class PreviewMaker
@@ -243,6 +246,152 @@ namespace ResolverMaster.Editor
             // the lock plate on the other terrains (garden, farm)
             CustomShot("game_locked_c1", BridgeLevel, BoardPreview.Start, storyIndex: 0),
             CustomShot("game_locked_c2", BridgeLevel, BoardPreview.Start, storyIndex: 9),
+
+            // TJ-001: Traffic jam: mode choice, chapters, levels, two levels per chapter (also color-blind), partial, light bulb, drag, win
+            new Shot
+            {
+                Name = "tj_mode_select",
+                Setup = (ctx, m) =>
+                {
+                    m.Get<ModeSelectScreen>(ScreenIds.ModeSelect).SetGame(ctx.Games.Find(TrafficJamModule.Id));
+                    m.PushImmediate(ScreenIds.ModeSelect);
+                },
+            },
+            new Shot
+            {
+                Name = "tj_chapters",
+                Setup = (ctx, m) =>
+                {
+                    TjSampleProgress(ctx);
+                    m.Get<ChapterSelectScreen>(ScreenIds.ChapterSelect).Open(ctx.Games.FindModule(TrafficJamModule.Id));
+                    m.PushImmediate(ScreenIds.ChapterSelect);
+                },
+            },
+            TjLevelsShot(1), TjLevelsShot(4), TjLevelsShot(7),
+            TjGameShot("game_tj_c1_1", 0), TjGameShot("game_tj_c1_9", 8),
+            TjGameShot("game_tj_c2_10", 9), TjGameShot("game_tj_c2_18", 17),
+            TjGameShot("game_tj_c3_19", 18), TjGameShot("game_tj_c3_27", 26),
+            TjGameShot("game_tj_c4_28", 27), TjGameShot("game_tj_c4_36", 35),
+            TjGameShot("game_tj_c5_37", 36), TjGameShot("game_tj_c5_45", 44),
+            TjGameShot("game_tj_c6_46", 45), TjGameShot("game_tj_c6_54", 53),
+            TjGameShot("game_tj_c7_55", 54), TjGameShot("game_tj_c7_63", 62),
+            TjGameShot("game_tj_partial", 40, BoardPreview.Partial),
+            TjGameShot("game_tj_hint", 20, after: b => ((ResolverMaster.Games.TrafficJam.View.TrafficBoardView)b).PreviewHintArrow()),
+            TjGameShot("game_tj_drag", 12, after: b => ((ResolverMaster.Games.TrafficJam.View.TrafficBoardView)b).PreviewDrag()),
+            TjGameShot("game_tj_win", 2, BoardPreview.Solved, win: true),
+            // TJ-001: Traffic jam Challenge: playing, out of moves with undos left (panel), out of moves without (run over), daily challenge, Home
+            TjChallengeShot("challenge_tj_game", 3, 2),
+            TjChallengeShot("challenge_tj_out_of_moves", 0, 2),
+            TjChallengeShot("challenge_tj_lost", 0, 0),
+            new Shot
+            {
+                Name = "daily_tj_game",
+                Setup = (ctx, m) =>
+                {
+                    var module = ctx.Games.FindModule(TrafficJamModule.Id);
+                    var run = ResolverMaster.Core.Challenge.DailyChallenge.Begin(ctx.Data.challenge, TrafficJamModule.Id, ctx.Today,
+                        ResolverMaster.Core.Challenge.DailyChallenge.Steps(module.Challenge));
+                    run.OnSolved(3);
+                    m.Get<GameScreen>(ScreenIds.Game).StartChallenge(module, run);
+                    m.PushImmediate(ScreenIds.Game);
+                },
+                AfterLayout = (ctx, m) =>
+                {
+                    var game = m.Get<GameScreen>(ScreenIds.Game);
+                    game.Board.Refit();
+                    game.Board.SnapVisuals();
+                },
+            },
+            new Shot
+            {
+                Name = "home_tj_challenge",
+                Setup = (ctx, m) => TjSampleRun(ctx, 5, 2),
+                AfterLayout = (ctx, m) =>
+                {
+                    var home = m.Get<HomeScreen>(ScreenIds.Home);
+                    home.OnShow();
+                    home.ShowCard(Math.Max(0, ctx.Games.Games.ToList().FindIndex(g => g.Id == TrafficJamModule.Id)));
+                },
+            },
+        };
+
+        // ------------------------------------------------------------------ Traffic jam shots (TJ-001)
+
+        static Shot TjGameShot(string name, int levelIndex, BoardPreview state = BoardPreview.Start, bool win = false, Action<PuzzleBoard> after = null) => new Shot
+        {
+            Name = name,
+            Setup = (ctx, m) =>
+            {
+                m.Get<GameScreen>(ScreenIds.Game).StartLevel(ctx.Games.FindModule(TrafficJamModule.Id), levelIndex);
+                m.PushImmediate(ScreenIds.Game);
+            },
+            AfterLayout = (ctx, m) =>
+            {
+                var game = m.Get<GameScreen>(ScreenIds.Game);
+                game.Board.Refit();
+                game.Board.SnapVisuals();
+                game.Board.PreparePreview(state);
+                after?.Invoke(game.Board);
+                if (win) game.ShowWin(animate: false);
+            },
+        };
+
+        static Shot TjLevelsShot(int chapter) => new Shot
+        {
+            Name = "tj_levels_c" + chapter,
+            Setup = (ctx, m) =>
+            {
+                TjSampleProgress(ctx);
+                m.Get<LevelSelectScreen>(ScreenIds.LevelSelect).Open(ctx.Games.FindModule(TrafficJamModule.Id), chapter);
+                m.PushImmediate(ScreenIds.LevelSelect);
+            },
+        };
+
+        /// <summary>Sample progress: chapters 1-6 complete with mixed stars (chapter 7 open), so every chapter shows its levels.</summary>
+        static void TjSampleProgress(AppServices ctx)
+        {
+            var book = ctx.Games.FindModule(TrafficJamModule.Id).Story;
+            for (int i = 0; i < book.LevelCount - 9; i++) ctx.Data.progress.SetBest(StoryProgress.Mode, book.IdOf(i), 1 + (i * 7 % 3));
+        }
+
+        /// <summary>
+        /// A sample Traffic jam run (fixed seed) at level 23 with a record; <paramref name="movesLeft"/> before the maximum (real moves:
+        /// one vehicle slid back and forth), <paramref name="undosLeft"/> undos.
+        /// </summary>
+        static ResolverMaster.Core.Challenge.ChallengeRunState TjSampleRun(AppServices ctx, int movesLeft, int undosLeft)
+        {
+            var module = ctx.Games.FindModule(TrafficJamModule.Id);
+            var run = ResolverMaster.Core.Challenge.ChallengeRunState.Start(TrafficJamModule.Id, 4242);
+            run.SetLevel(ResolverMaster.Core.Challenge.ChallengeRules.Generate(module.Challenge, run.runSeed, 23, 0));
+            run.stars = 50;
+            run.levelsCleared = 22;
+            run.undosLeft = undosLeft;
+            var layout = TrafficLayout.Parse(run.levelData, out ulong state);
+            var buffer = new TrafficMove[layout.MaxMovesPerState];
+            layout.Moves(state, buffer, exits: false);
+            var there = buffer[0];
+            var back = new TrafficMove(there.Vehicle, there.To, there.From);
+            for (int i = 0; i < run.maxMoves - movesLeft; i++) run.OnMove((i % 2 == 0 ? there : back).Encode());
+            ctx.Data.challenge.SetRun(run);
+            ctx.Data.challenge.SubmitScore(TrafficJamModule.Id, 31, 14);
+            return run;
+        }
+
+        static Shot TjChallengeShot(string name, int movesLeft, int undosLeft) => new Shot
+        {
+            Name = name,
+            Setup = (ctx, m) =>
+            {
+                var run = TjSampleRun(ctx, movesLeft, undosLeft);
+                m.Get<GameScreen>(ScreenIds.Game).StartChallenge(ctx.Games.FindModule(TrafficJamModule.Id), run);
+                m.PushImmediate(ScreenIds.Game);
+            },
+            AfterLayout = (ctx, m) =>
+            {
+                var game = m.Get<GameScreen>(ScreenIds.Game);
+                game.Board.Refit();
+                game.Board.SnapVisuals();
+            },
         };
 
         const string BridgeLevel = "C1 S2 C0 I0 C3/S1@1 B0 I0 I1# E3@1/T0 I1 C2 X0 I0/C3 E0 I1 C1# T2/I0 C0 C1 I1 C2/C2 T1 I0 C0 X0/C1 I1 C3 T3 C0";
@@ -583,6 +732,16 @@ namespace ResolverMaster.Editor
                    $"below (to the {(action != null ? "main action" : "bottom bar")}) {below:0} px; gap to screen left {grid.xMin:0} / right {d.Width - grid.xMax:0} px, " +
                    $"to safe area left {grid.xMin - d.Safe.x:0} / right {d.Safe.xMax - grid.xMax:0} px; gap to the bottom bar {grid.yMin - bottom.yMax:0} px");
             // fountain drawings (sources and sinks): drawn size of the square they sit in
+            // TJ-001: the vehicles: drawn size of a car (short side) as a share of the cell
+            if (game.Board is ResolverMaster.Games.TrafficJam.View.TrafficBoardView traffic && traffic.Vehicles.Count > 0)
+            {
+                var shown = traffic.Vehicles.Where(v => v.gameObject.activeInHierarchy).Select(v => PixelRect((RectTransform)v.transform, d)).ToList();
+                if (shown.Count > 0)
+                {
+                    float shortSide = shown.Min(r => Mathf.Min(r.width, r.height));
+                    sb.Append($"; {shown.Count} vehicles, short side {shortSide:0.0} px ({shortSide / cell * 100:0}% of a cell)");
+                }
+            }
             if (game.Board is ResolverMaster.Games.Plumber.View.PlumberBoardView plumber)
             {
                 var ends = plumber.EndpointRects.Select(r => PixelRect(r, d)).ToList();

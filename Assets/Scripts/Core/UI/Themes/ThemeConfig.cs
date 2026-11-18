@@ -6,7 +6,7 @@ namespace ResolverMaster.Core.UI.Themes
 {
     /// <summary>
     /// The single parameter file of the chapter themes (Core, shared by every game): Garden, Farm, City; ErNa-006: Factory, Building site,
-    /// Harbour, Mountain, Laboratory, Castle.
+    /// Harbour, Mountain, Laboratory, Castle; TJ-001: Parking, Market, Airport, Crossroads, Rush hour.
     /// Asset: Assets/Resources/ResolverMaster/ThemeConfig.asset (created by Resolver Master > Setup > Ensure Config Assets).
     /// Each game's chapters name one of these ids (e.g. PlumberConfig.chapters[i].theme).
     /// </summary>
@@ -17,6 +17,8 @@ namespace ResolverMaster.Core.UI.Themes
         public const string Garden = "garden", Farm = "farm", City = "city";
         /// <summary>ErNa-006 (Plumber chapters 4-9).</summary>
         public const string Factory = "factory", Site = "site", Harbor = "harbor", Mountain = "mountain", Lab = "lab", Castle = "castle";
+        /// <summary>TJ-001 (Traffic jam chapters; city and site are shared).</summary>
+        public const string Parking = "parking", Market = "market", Airport = "airport", Crossroads = "crossroads", RushHour = "rushhour";
 
         /// <summary>Used by a chapter with no theme or an unknown one.</summary>
         public string defaultTheme = Garden;
@@ -104,6 +106,52 @@ namespace ResolverMaster.Core.UI.Themes
                 slab = C(0xD3C8B9), slabDetail = C(0xBAAE9D), slabEdge = C(0x988B79),
                 backdrop = BackdropPattern.Castle,
                 skyTop = C(0xDAD5E3), skyBottom = C(0xF1EFF3), landA = C(0xA69D90), landB = C(0x4D6A3B), landDetail = C(0x5E554B),
+            },
+            // TJ-001: never close to the water colors nor to the red and blue of the Traffic jam target cars (checked by the validator)
+            new VisualTheme
+            {
+                id = Parking, nameKey = "theme.parking.name", accent = C(0x8FB39A), seed = 1101,
+                terrain = TerrainPattern.Pavement,
+                ground = C(0x747C76), groundDetail = C(0x636B65),
+                slab = C(0xDCDDD8), slabDetail = C(0xC4C6C0), slabEdge = C(0xA3A69F),
+                backdrop = BackdropPattern.Meadow,
+                skyTop = C(0xDCEBE6), skyBottom = C(0xF3F7F2), landA = C(0xA9C9A0), landB = C(0x7FA77A), landDetail = C(0xF3EBD2),
+            },
+            new VisualTheme
+            {
+                id = Market, nameKey = "theme.market.name", accent = C(0xC79A6B), seed = 1202,
+                terrain = TerrainPattern.Dirt,
+                ground = C(0x9B7B5C), groundDetail = C(0xC9AE84),
+                slab = C(0xE3D3B8), slabDetail = C(0xCDBB9B), slabEdge = C(0xA8916F),
+                backdrop = BackdropPattern.Fields,
+                skyTop = C(0xF5E9D8), skyBottom = C(0xFBF6EE), landA = C(0xD9B98A), landB = C(0xA37E58), landDetail = C(0x6F5A44),
+            },
+            new VisualTheme
+            {
+                id = Airport, nameKey = "theme.airport.name", accent = C(0x9DB0A3), seed = 1303,
+                terrain = TerrainPattern.Pavement,
+                ground = C(0x8D9396), groundDetail = C(0x7B8184),
+                slab = C(0xECEDEE), slabDetail = C(0xD5D8DB), slabEdge = C(0xAEB3B8),
+                backdrop = BackdropPattern.Meadow,
+                skyTop = C(0xD9E6EC), skyBottom = C(0xF2F6F4), landA = C(0xA8C98A), landB = C(0x84AD6B), landDetail = C(0xF4F1E6),
+            },
+            new VisualTheme
+            {
+                id = Crossroads, nameKey = "theme.crossroads.name", accent = C(0xA89C8A), seed = 1404,
+                terrain = TerrainPattern.Pavement,
+                ground = C(0x5F6366), groundDetail = C(0x6F7377),
+                slab = C(0xCFCFCB), slabDetail = C(0xB8B8B3), slabEdge = C(0x979792),
+                backdrop = BackdropPattern.Skyline,
+                skyTop = C(0xE3DCCF), skyBottom = C(0xF5F1EA), landA = C(0xA79F93), landB = C(0x857D72), landDetail = C(0xF1E3B9),
+            },
+            new VisualTheme
+            {
+                id = RushHour, nameKey = "theme.rushhour.name", accent = C(0x9C93AE), seed = 1505,
+                terrain = TerrainPattern.Pavement,
+                ground = C(0x55585E), groundDetail = C(0x6A6E74),
+                slab = C(0xD3D0CC), slabDetail = C(0xBCB8B3), slabEdge = C(0x9A958F),
+                backdrop = BackdropPattern.Skyline,
+                skyTop = C(0xD9CFE0), skyBottom = C(0xF2E9E4), landA = C(0x8E8A9A), landB = C(0x6E6A7A), landDetail = C(0xF6DFA6),
             },
         };
 

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using ResolverMaster.Core.App;
 using ResolverMaster.Core.Challenge;
 using ResolverMaster.Core.Games;
@@ -57,21 +58,8 @@ namespace ResolverMaster.Games.Plumber
         }
 
         /// <summary>Groups the numbered levels by their chapter field; the chapter themes come from PlumberConfig.</summary>
-        public static StoryBook BuildBook(IReadOnlyList<PlumberLevel> levels, IReadOnlyList<ChapterTheme> themes)
-        {
-            var book = new StoryBook(Id);
-            int i = 0;
-            for (int chapter = 1; i < levels.Count; chapter++)
-            {
-                int count = 0;
-                while (i + count < levels.Count && levels[i + count].chapter == chapter) count++;
-                if (count == 0) break;   // levels out of order: the validator reports it
-                var theme = chapter - 1 < themes.Count ? themes[chapter - 1] : new ChapterTheme("plumber.chapter" + chapter + ".name", "game_plumber", Color.gray);
-                book.AddChapter(theme, count);
-                i += count;
-            }
-            return book;
-        }
+        public static StoryBook BuildBook(IReadOnlyList<PlumberLevel> levels, IReadOnlyList<ChapterTheme> themes) =>
+            StoryBook.Build(Id, levels.Select(l => l.chapter).ToList(), themes, "game_plumber");   // TJ-001: the grouping is Core
 
         static List<PlumberLevel> LoadStory()
         {

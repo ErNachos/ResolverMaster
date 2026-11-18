@@ -35,8 +35,8 @@ namespace ResolverMaster.Games.Plumber.View
         PipeSprites _sprites;
         PlumberArt _art;
         UiFactory _ui;
-        RectTransform _frame, _cells, _effects;
-        Image _ground, _frameImage;
+        BoardFrame _board;   // TJ-001: the window around the grid is Core
+        RectTransform _cells, _effects;
         ComponentPool<PipeCellView> _pool;
         readonly List<PipeCellView> _views = new List<PipeCellView>();
         readonly List<int> _sinks = new List<int>();
@@ -93,18 +93,9 @@ namespace ResolverMaster.Games.Plumber.View
             _cfg = PlumberConfig.LoadOrDefault();
             _sprites = PipeSprites.For(_cfg);
             _art = PlumberArt.Load();
-            var frame = _ui.Panel("Frame", transform);
-            _frameImage = frame;
-            _frame = frame.rectTransform;
-            UiFactory.Place(_frame, 0.5f, 0.5f, new Vector2(100, 100), Vector2.zero);
-            float inset = _cfg.boardInset;
-            _ground = _ui.Image("Ground", _frame, null, Color.white);
-            UiFactory.Stretch(_ground.rectTransform, inset, inset, inset, inset);
-            _ground.gameObject.AddComponent<Decoration>();   // the terrain under the cells
-            _cells = _ui.Rect("Cells", _frame);
-            UiFactory.Stretch(_cells, inset, inset, inset, inset);
-            _effects = _ui.Rect("Effects", _frame);
-            UiFactory.Stretch(_effects, inset, inset, inset, inset);
+            _board = BoardFrame.Create(_ui, transform, _cfg.boardInset, _cfg.compactCellBelow, _cfg.compactFrameScale, _cfg.compactOverflow);
+            _cells = _board.Cells;
+            _effects = _board.Effects;
             for (int i = 0; i < _drops.Length; i++)
             {
                 _drops[i] = _ui.Image("Drop" + (i + 1), _effects, _sprites.Drop, _cfg.WaterColor(0));
@@ -263,9 +254,7 @@ namespace ResolverMaster.Games.Plumber.View
             int seed = _puzzle.Level.seed, variants = Mathf.Max(1, _cfg.artVariants);
             int sources = 0, sinks = 0;
             var theme = Theme;
-            _ground.sprite = theme != null ? ThemeArt.Ground(theme) : null;
-            _ground.type = Image.Type.Tiled;
-            _ground.gameObject.SetActive(theme != null);
+            _board.SetTheme(theme);
             var waterWidth = (_cfg.PipeWidth - 2f * _cfg.pipeOutline) * _cfg.waterWidth;
             for (int c = 0; c < grid.CellCount; c++)
             {
@@ -345,29 +334,14 @@ namespace ResolverMaster.Games.Plumber.View
         }
 
         /// <summary>
-        /// The biggest square cells that fit the area (columns and rows may differ), the window around them, centred.
-        /// Big grids (cells below <see cref="PlumberConfig.compactCellBelow"/>): thinner window frame and a little of the screen margin.
+        /// The biggest square cells that fit the area, the window around them, centred (Core <see cref="BoardFrame"/>; big grids:
+        /// thinner window frame, <see cref="PlumberConfig.compactCellBelow"/>).
         /// </summary>
         public override void Refit()
         {
             var size = ((RectTransform)transform).rect.size;
             var grid = _puzzle.Grid;
-            if (grid == null || size.x <= 0 || size.y <= 0) return;
-            float inset = _cfg.boardInset, extra = 0f, frameScale = 1f;
-            float cell = Mathf.Floor(Mathf.Min((size.x - 2 * inset) / grid.Width, (size.y - 2 * inset) / grid.Height));
-            if (cell < _cfg.compactCellBelow)
-            {
-                frameScale = Mathf.Clamp(_cfg.compactFrameScale, 0.3f, 1f);
-                inset = Mathf.Round(_cfg.boardInset * frameScale);
-                extra = Mathf.Max(0f, _cfg.compactOverflow);
-                cell = Mathf.Floor(Mathf.Min((size.x + 2 * extra - 2 * inset) / grid.Width, (size.y + 2 * extra - 2 * inset) / grid.Height));
-            }
-            if (cell <= 0) return;
-            _frameImage.pixelsPerUnitMultiplier = 1f / frameScale;   // the sliced frame drawn thinner, never bigger
-            UiFactory.Stretch(_ground.rectTransform, inset, inset, inset, inset);
-            UiFactory.Stretch(_cells, inset, inset, inset, inset);
-            UiFactory.Stretch(_effects, inset, inset, inset, inset);
-            _frame.sizeDelta = new Vector2(cell * grid.Width + 2 * inset, cell * grid.Height + 2 * inset);
+            if (grid == null || !_board.Fit(size, grid.Width, grid.Height)) return;
             _fittedSize = size;
         }
 

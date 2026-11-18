@@ -26,10 +26,14 @@ namespace ResolverMaster.Core.Puzzle
     public abstract class PuzzleBase<TLevel, TMove> : IPuzzle<TLevel, TMove>
     {
         readonly UndoStack<TMove> _undo = new UndoStack<TMove>();
+        /// <summary>TJ-001: one flag per move on the undo stack, true = a free move (made by a hint: it does not count).</summary>
+        readonly UndoStack<bool> _free = new UndoStack<bool>();
+        int _freeCount;
 
         public TLevel Level { get; private set; }
         public bool IsLoaded { get; private set; }
-        public int MovesMade => _undo.Count;
+        /// <summary>Moves on the undo stack, without the free ones (TJ-001: a move made by the light bulb does not count).</summary>
+        public int MovesMade => _undo.Count - _freeCount;
         public abstract int MinMoves { get; }
         public bool IsSolved { get; private set; }
         public bool CanUndo => _undo.Count > 0;
@@ -41,7 +45,7 @@ namespace ResolverMaster.Core.Puzzle
         {
             Level = level;
             IsLoaded = true;
-            _undo.Clear();
+            ClearUndo();
             OnFreshLoad();
             OnLoad(level);
             IsSolved = CheckSolved();
@@ -52,13 +56,39 @@ namespace ResolverMaster.Core.Puzzle
         {
             if (!IsLoaded || IsSolved || (MoveLimit > 0 && MovesMade >= MoveLimit) || !TryApply(move)) return false;
             _undo.Push(move);
+            _free.Push(false);
             IsSolved = CheckSolved();
             return true;
+        }
+
+        /// <summary>
+        /// TJ-001: a move that does not count (e.g. made by the light bulb): it goes on the undo stack, so undo stays consistent, but not
+        /// in <see cref="MovesMade"/>; the move limit does not apply.
+        /// </summary>
+        protected bool ApplyFreeMove(TMove move)
+        {
+            if (!IsLoaded || IsSolved || !TryApply(move)) return false;
+            _undo.Push(move);
+            _free.Push(true);
+            _freeCount++;
+            IsSolved = CheckSolved();
+            return true;
+        }
+
+        /// <summary>The move on top of the undo stack is a free one (<see cref="ApplyFreeMove"/>).</summary>
+        public bool LastMoveIsFree => _free.TryPeek(out bool f) && f;
+
+        void ClearUndo()
+        {
+            _undo.Clear();
+            _free.Clear();
+            _freeCount = 0;
         }
 
         public bool Undo(out TMove move)
         {
             if (!_undo.TryPop(out move)) return false;
+            if (_free.TryPop(out bool free) && free) _freeCount--;
             Revert(move);
             IsSolved = CheckSolved();
             return true;
@@ -79,7 +109,7 @@ namespace ResolverMaster.Core.Puzzle
         public void Restart()
         {
             if (!IsLoaded) return;
-            _undo.Clear();
+            ClearUndo();
             OnLoad(Level);
             IsSolved = CheckSolved();
         }

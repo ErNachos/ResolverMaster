@@ -104,6 +104,15 @@ namespace ResolverMaster.Core.Localization
         /// <summary>"Level {0}/{1} · {2} stars" (pause).</summary>
         public const string DailySummary = "daily.summary";
 
+        // TJ-001: out of moves (games with no final check)
+        /// <summary>Panel title: "Out of moves".</summary>
+        public const string ChallengeOutOfMoves = "challenge.out_of_moves";
+        /// <summary>"Undo to free moves ({0} undos left) or end the run."</summary>
+        public const string ChallengeOutOfMovesHint = "challenge.out_of_moves.hint";
+        public const string ChallengeUndo = "challenge.undo";
+        /// <summary>"End" (the run is lost).</summary>
+        public const string ChallengeEnd = "challenge.end";
+
         /// <summary>Language display name key: "language.it", "language.en".</summary>
         public static string LanguageName(Language language) => "language." + LanguageCodes.ToCode(language);
     }

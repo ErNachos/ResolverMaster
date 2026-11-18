@@ -4,6 +4,7 @@ using ResolverMaster.Core.Puzzle;
 using ResolverMaster.Core.UI;
 using ResolverMaster.Core.UI.Themes;
 using ResolverMaster.Games.Plumber;
+using ResolverMaster.Games.TrafficJam;
 using UnityEditor;
 using UnityEngine;
 using Object = UnityEngine.Object;
@@ -12,7 +13,9 @@ namespace ResolverMaster.Editor
 {
     /// <summary>
     /// Creates the parameter files that do not exist yet, with the default values written in their classes
-    /// (Core <see cref="PuzzleConfig"/> and <see cref="ThemeConfig"/>, Plumber <see cref="PlumberConfig"/>). Existing files are never overwritten.
+    /// (Core <see cref="PuzzleConfig"/> and <see cref="ThemeConfig"/>, Plumber <see cref="PlumberConfig"/>, Traffic jam
+    /// <see cref="TrafficJamConfig"/>). Existing files are never overwritten; TJ-001: themes added to the classes later are appended to
+    /// the existing ThemeConfig (the themes already there are not touched).
     /// Batch: -executeMethod ResolverMaster.Editor.ConfigAssets.EnsureAllBatch
     /// </summary>
     public static class ConfigAssets
@@ -23,6 +26,9 @@ namespace ResolverMaster.Editor
         public const string PlumberDir = "Assets/Resources/Games/Plumber";
         public const string PlumberConfigPath = PlumberDir + "/PlumberConfig.asset";
         public const string PlumberStoryPath = PlumberDir + "/plumber_story.json";
+        public const string TrafficJamDir = "Assets/Resources/Games/TrafficJam";
+        public const string TrafficJamConfigPath = TrafficJamDir + "/TrafficJamConfig.asset";
+        public const string TrafficJamStoryPath = TrafficJamDir + "/trafficjam_story.json";
 
         [MenuItem("Resolver Master/Setup/Ensure Config Assets")]
         public static void EnsureAll()
@@ -31,7 +37,32 @@ namespace ResolverMaster.Editor
             Ensure<ResolverMaster.Core.Ads.AdConfig>(AdConfigPath);
             Ensure<ThemeConfig>(ThemeConfigPath);
             Ensure<PlumberConfig>(PlumberConfigPath);
+            Ensure<TrafficJamConfig>(TrafficJamConfigPath);
+            AddMissingThemes();
             AssetDatabase.SaveAssets();
+        }
+
+        /// <summary>
+        /// TJ-001: appends to ThemeConfig.asset every theme of the class defaults whose id it does not have yet (new games bring new
+        /// themes); the themes already in the asset, edited or not, stay as they are.
+        /// </summary>
+        public static void AddMissingThemes()
+        {
+            var asset = AssetDatabase.LoadAssetAtPath<ThemeConfig>(ThemeConfigPath);
+            if (asset == null) return;
+            var defaults = ScriptableObject.CreateInstance<ThemeConfig>();
+            int added = 0;
+            foreach (var t in defaults.themes)
+            {
+                if (asset.themes.Exists(x => x != null && x.id == t.id)) continue;
+                asset.themes.Add(t);
+                added++;
+            }
+            Object.DestroyImmediate(defaults);
+            if (added == 0) return;
+            asset.Invalidate();
+            EditorUtility.SetDirty(asset);
+            Debug.Log($"ConfigAssets: {added} new theme(s) added to {ThemeConfigPath}");
         }
 
         public static void EnsureAllBatch()

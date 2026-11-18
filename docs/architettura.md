@@ -14,14 +14,16 @@ Assets/
                                SeededRandom (PCG32), PuzzleBase/IPuzzle/IPuzzleSession, UndoStack, StarRating/StarRules,
                                DifficultyTable, BucketQueue, GameMode/LevelRequest, PuzzleConfig (asset delle stelle),
                                Story (LevelId, StoryChapter, StoryBook, StoryProgress: capitoli e sblocco), ChapterTheme,
-                               ArtVariants (disegno scelto dal seed del livello), Grid/CellLocks (elementi bloccati o fissati, ErNa-006)
+                               ArtVariants (disegno scelto dal seed del livello), Grid/CellLocks (elementi bloccati o fissati, ErNa-006),
+                               StateIndex (indice degli stati impacchettati per le ricerche esaustive, TJ-001)
       Localization/            Language, LanguagePicker, LocalizationTable, Localizer, LocKeys, LocalizationLoader, LocalizedText
       Save/                    SaveData (+SettingsBlock, ProgressBlock, HomeBlock), SaveSerializer, SaveStore
       UI/                      UiKitStyle, IconLibrary (libreria di sprite: icone, schede, disegni dei giochi), UiFactory (TextMeshPro),
                                PressableButton (scende e si scurisce; disattivato = desaturato), VertexOffset, SlicedFit (pillole a 9 fette),
                                CardCarousel (logica delle schede della Home), SafeArea, UiScreen, ScreenManager,
                                PuzzleBoard (board di un gioco + MainActionInfo, GridRows, Theme), ComponentPool, ModalOverlay, Decoration,
-                               ColorVision (Lab, delta E, simulazione del daltonismo), ShakeMotion (scossa di un elemento bloccato)
+                               ColorVision (Lab, delta E, simulazione del daltonismo), ShakeMotion (scossa di un elemento bloccato),
+                               BoardFrame (finestra della griglia adattata all'area, terreno del tema, cornice sottile per le griglie grandi; TJ-001)
         Themes/                VisualTheme + ThemeCatalog (tema di un capitolo, C# puro), ThemeConfig (asset dei temi), ThemeArt (terreni e sfondi generati)
         Screens/               Home (schede a scorrimento), ModeSelect, Settings, ChapterSelect (capitoli), LevelSelect (griglia 3x3 di un capitolo),
                                Game (+ pulsante d'azione, messaggio breve, pannello di vittoria), ScreenLayout, ScreenIds
@@ -32,13 +34,19 @@ Assets/
                                PipeNodes (ponte = due nodi), PlumberPalette (regole dei colori dell'acqua)
         View/                  PlumberBoardView (: PuzzleBoard), PipeCellView, PipeSprites (tubi generati), WaterGraphic (acqua nei tubi),
                                PlumberArt (fonti e arrivi)
-      TrafficJam/              TrafficJamModule (Traffic jam)
+      TrafficJam/              TrafficJamModule, TrafficJamConfig, TrafficJamKeys (Traffic jam, TJ-001)
+        Logic/                 TrafficLayout (veicoli, ostacoli, uscite, stato impacchettato, forma testuale), TrafficSpace (risolutore:
+                               ricerca in ampiezza in avanti e all'indietro, tabella delle distanze), TrafficGenerator (disposizione casuale +
+                               salita, partenza più lontana), TrafficPuzzle (: PuzzleBase), TrafficDifficulty, TrafficLevel(+Set), TrafficChallenge
+        View/                  TrafficBoardView (: PuzzleBoard; trascinamento, uscita, lampadina), TrafficVehicleView, TrafficSprites (grafica dal codice)
     Editor/                    ResolverMaster.Editor: ProjectSetup, MainSceneBuilder, UiKitGenerator, UiKitAssets, UiArtSetup (TMP, sprite di Gemini),
                                ArtImportRules, ReleaseBuild, VersionTools, PreviewMaker, ConfigAssets, Validation/,
-                               Plumber/PlumberLevelTools (menu Idraulico > Genera livelli Storia)
+                               Plumber/PlumberLevelTools (menu Idraulico > Genera livelli Storia),
+                               TrafficJam/TrafficJamLevelTools (menu Traffic jam > Genera livelli Storia, Prova Challenge, Misura risolutore)
   Tests/EditMode/              ResolverMaster.Tests.EditMode
   Resources/ResolverMaster/    UiKitStyle.asset, IconLibrary.asset, CardLibrary.asset, PuzzleConfig.asset, ThemeConfig.asset
   Resources/Games/Plumber/     PlumberConfig.asset, PlumberArt.asset (libreria dei disegni), plumber_story.json (livelli della Storia)
+  Resources/Games/TrafficJam/  TrafficJamConfig.asset, trafficjam_story.json (63 livelli della Storia)
   Resources/Localization/      it/*.txt, en/*.txt (core.txt + un file per gioco)
   Art/UI/                      interfaccia di Gemini (Tools/Art/make_ui_art.py) + Generated/ (cornice delle schede, pillole)
   Art/Icons/                   icone Material segnaposto ancora usate
@@ -72,12 +80,20 @@ Release/Site, Release/PlayStore  materiale di pubblicazione
   - i tempi dell'acqua continua (`WaterTiming`: distanza lungo i tubi di ogni punto, dove avviene ogni problema);
   - la grafica dei tubi, i suoi disegni di fonti e arrivi e la sua board (`PlumberBoardView : PuzzleBoard`).
   - Regole complete: `docs/idraulico-regole.md`.
+- **Cosa resta in Traffic jam (TJ-001)**: le regole (`TrafficLayout`, `TrafficPuzzle`), il risolutore e la tabella delle distanze
+  (`TrafficSpace`), il generatore, i valori dei gradini (`cols`, `rows`, `minMoves`, `cars`, `trucks`, `obstacles`, `targets`, `sideExits`),
+  i capitoli in `TrafficJamConfig` e la grafica (`TrafficBoardView`, `TrafficSprites`). Regole complete: `docs/trafficjam-regole.md`.
+- **Spostato nel Core con TJ-001**: costruzione dei capitoli dai livelli (`StoryBook.Build`), finestra della griglia (`BoardFrame`),
+  mosse gratuite della lampadina (`PuzzleBase.ApplyFreeMove`), "Mosse finite" della Challenge (`PuzzleBoard.LosesWhenOutOfMoves`,
+  `ChallengeRunState.IsOutOfMoves`, pannello nella `GameScreen`), indice degli stati (`StateIndex`), temi Parcheggio, Mercato, Aeroporto,
+  Incrocio, Ora di punta.
 - **Contratto gioco ↔ Core**:
   - Il gioco fornisce `MinigameModule.Story` (uno `StoryBook`: capitoli di 9 livelli numerati di seguito) e `CreateBoard(ctx, area)`.
   - La `GameScreen` del Core possiede barre, contatori, annulla/ricomincia, il pulsante d'azione **opzionale**, i messaggi brevi, stelle, salvataggio e pannello.
   - La board disegna, riceve i tocchi, anima e segnala `Changed`, `Completed` e `MessageRequested(chiave)`.
   - Se vuole il pulsante, la board dichiara `MainAction` (testo e icona) e riceve `RunMainAction()`. Con `IsBusy` blocca pulsante, annulla e ricomincia durante le animazioni.
   - Un gioco senza `MainAction` (Traffic jam) non ha il pulsante e la sua area del puzzle è più alta.
+  - Un gioco senza controllo finale (Traffic jam) dichiara `LosesWhenOutOfMoves`: nella Challenge, al massimo senza soluzione compare "Mosse finite" (Annulla / Termina); senza annullamenti la run è persa.
   - `LevelRequest` (modalità, indice, seed) prepara già la Challenge.
 - **Minigioco**: una cartella in `Games/` con una sottoclasse di `MinigameModule` che espone `GameInfo` (id, chiave del nome, icona, disponibilità, ordine, immagine e colore della scheda della Home). In seguito aggiungerà regole, pezzi, generatore/risolutore e grafica, appoggiandosi alle astrazioni del Core.
 - Registrazione: `GameRegistry.Discover()` scandisce gli assembly `ResolverMaster*` e crea un'istanza di ogni `MinigameModule`. Il Core non referenzia mai un gioco.

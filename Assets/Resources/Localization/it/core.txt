@@ -43,6 +43,11 @@ theme.harbor.name = Porto
 theme.mountain.name = Montagna
 theme.lab.name = Laboratorio
 theme.castle.name = Castello
+theme.parking.name = Parcheggio
+theme.market.name = Mercato
+theme.airport.name = Aeroporto
+theme.crossroads.name = Incrocio
+theme.rushhour.name = Ora di punta
 
 # rewarded ads, test version (ErNa-007)
 ad.test.title = Annuncio di prova
@@ -85,3 +90,9 @@ daily.failed = Non completata
 daily.stars = Stelle: {0}/{1}
 daily.streak = Serie: {0} · migliore {1}
 daily.summary = Livello {0}/{1} · {2} stelle
+
+# TJ-001: mosse finite (giochi senza controllo finale)
+challenge.out_of_moves = Mosse finite
+challenge.out_of_moves.hint = Annulla per liberare mosse (ne hai {0}).
+challenge.undo = Annulla
+challenge.end = Termina

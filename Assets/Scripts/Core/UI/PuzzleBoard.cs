@@ -53,6 +53,13 @@ namespace ResolverMaster.Core.UI
         /// <summary>ErNa-007, Challenge: moves allowed on this level (0 = no limit). Set before or after <see cref="Load"/>.</summary>
         public virtual void SetMoveLimit(int limit) { }
 
+        /// <summary>
+        /// TJ-001, Challenge: true for games with no final check after the moves (Traffic jam): reaching the maximum without solving shows
+        /// "Out of moves" (undo to free moves, or end the run); with no undo left the run is lost. False (default): the maximum only
+        /// stops the moves (the Plumber can still open the water).
+        /// </summary>
+        public virtual bool LosesWhenOutOfMoves => false;
+
         /// <summary>ErNa-007, Challenge save: the moves on the undo stack (oldest first) as integers in the game's format.</summary>
         public virtual IReadOnlyList<int> MoveHistory => Array.Empty<int>();
 
