@@ -34,6 +34,11 @@ Assets/
                                PipeNodes (ponte = due nodi), PlumberPalette (regole dei colori dell'acqua)
         View/                  PlumberBoardView (: PuzzleBoard), PipeCellView, PipeSprites (tubi generati), WaterGraphic (acqua nei tubi),
                                PlumberArt (fonti e arrivi)
+      Penguin/                 PenguinModule, PenguinConfig, PenguinKeys (Pingù, PG-001)
+        Logic/                 PenguinLayout (campo, stato impacchettato, forma testuale), PenguinSimulator (regole dello swipe, PenguinTrace con i tempi),
+                               PenguinSpace (risolutore: tutti gli stati, distanze, "Sei bloccato", lampadina), PenguinPuzzle (: PuzzleBase) + PenguinPlay
+                               (swipe solo da fermo, orologio dell'animazione), PenguinGenerator, PenguinDifficulty, PenguinLevel(+Set), PenguinChallenge
+        View/                  PenguinBoardView (: PuzzleBoard; swipe, animazioni, lampadina), PenguinSprites (grafica dal codice)
       TrafficJam/              TrafficJamModule, TrafficJamConfig, TrafficJamKeys (Traffic jam, TJ-001)
         Logic/                 TrafficLayout (veicoli, ostacoli, uscite, stato impacchettato, forma testuale), TrafficSpace (risolutore:
                                ricerca in ampiezza in avanti e all'indietro, tabella delle distanze), TrafficGenerator (disposizione casuale +
@@ -42,11 +47,13 @@ Assets/
     Editor/                    ResolverMaster.Editor: ProjectSetup, MainSceneBuilder, UiKitGenerator, UiKitAssets, UiArtSetup (TMP, sprite di Gemini),
                                ArtImportRules, ReleaseBuild, VersionTools, PreviewMaker, ConfigAssets, Validation/,
                                Plumber/PlumberLevelTools (menu Idraulico > Genera livelli Storia),
-                               TrafficJam/TrafficJamLevelTools (menu Traffic jam > Genera livelli Storia, Prova Challenge, Misura risolutore)
+                               TrafficJam/TrafficJamLevelTools (menu Traffic jam > Genera livelli Storia, Prova Challenge, Misura risolutore),
+                               Penguin/PenguinLevelTools (menu Pingù > Genera livelli Storia, Prova Challenge, Misura risolutore)
   Tests/EditMode/              ResolverMaster.Tests.EditMode
   Resources/ResolverMaster/    UiKitStyle.asset, IconLibrary.asset, CardLibrary.asset, PuzzleConfig.asset, ThemeConfig.asset
   Resources/Games/Plumber/     PlumberConfig.asset, PlumberArt.asset (libreria dei disegni), plumber_story.json (livelli della Storia)
   Resources/Games/TrafficJam/  TrafficJamConfig.asset, trafficjam_story.json (63 livelli della Storia)
+  Resources/Games/Penguin/     PenguinConfig.asset, penguin_story.json (63 livelli della Storia, PG-001)
   Resources/Localization/      it/*.txt, en/*.txt (core.txt + un file per gioco)
   Art/UI/                      interfaccia di Gemini (Tools/Art/make_ui_art.py) + Generated/ (cornice delle schede, pillole)
   Art/Icons/                   icone Material segnaposto ancora usate
@@ -83,6 +90,8 @@ Release/Site, Release/PlayStore  materiale di pubblicazione
 - **Cosa resta in Traffic jam (TJ-001)**: le regole (`TrafficLayout`, `TrafficPuzzle`), il risolutore e la tabella delle distanze
   (`TrafficSpace`), il generatore, i valori dei gradini (`cols`, `rows`, `minMoves`, `cars`, `trucks`, `obstacles`, `targets`, `sideExits`),
   i capitoli in `TrafficJamConfig` e la grafica (`TrafficBoardView`, `TrafficSprites`). Regole complete: `docs/trafficjam-regole.md`.
+- **Cosa resta in Pingù (PG-001)**: regole (`PenguinLayout`, `PenguinSimulator`, `PenguinPuzzle`), risolutore (`PenguinSpace`), generatore, gradini, capitoli in `PenguinConfig`, grafica (`PenguinBoardView`, `PenguinSprites`). Regole: `docs/penguin-regole.md`.
+- **Spostato/aggiunto nel Core con PG-001**: "Sei bloccato" (`PuzzleBoard.IsStuck`, `ChallengeRunState.StuckIsLost`, pannelli nella `GameScreen`), `PuzzleBoard.ShowsMessages`, `SwipeGesture` e `SwipeArea`, `SdfArt` (disegno dal codice, prima in Traffic jam), terreno `Snow` e sfondi `Icefield`/`Aurora`, temi Lago ghiacciato, Banchisa, Bufera, Disgelo, Ghiacciaio, Polo, Aurora.
 - **Spostato nel Core con TJ-001**: costruzione dei capitoli dai livelli (`StoryBook.Build`), finestra della griglia (`BoardFrame`),
   mosse gratuite della lampadina (`PuzzleBase.ApplyFreeMove`), "Mosse finite" della Challenge (`PuzzleBoard.LosesWhenOutOfMoves`,
   `ChallengeRunState.IsOutOfMoves`, pannello nella `GameScreen`), indice degli stati (`StateIndex`), temi Parcheggio, Mercato, Aeroporto,

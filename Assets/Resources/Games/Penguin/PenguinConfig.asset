@@ -1,0 +1,4214 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c10c0d3e251949daafe60c8819b15b3a, type: 3}
+  m_Name: PenguinConfig
+  m_EditorClassIdentifier: 
+  scarfColors:
+  - {r: 0.9490196, g: 0.54901963, b: 0.15686275, a: 1}
+  - {r: 0.5568628, g: 0.35686275, b: 0.70980394, a: 1}
+  penguinBody: {r: 0.16862746, g: 0.18431373, b: 0.22745098, a: 1}
+  penguinBelly: {r: 0.98039216, g: 0.98039216, b: 0.9607843, a: 1}
+  penguinBeak: {r: 0.9647059, g: 0.69803923, b: 0.23529412, a: 1}
+  fishColor: {r: 0.9490196, g: 0.56078434, b: 0.47843137, a: 1}
+  fishFin: {r: 0.8784314, g: 0.41568628, b: 0.34509805, a: 1}
+  rockColor: {r: 0.5411765, g: 0.56078434, b: 0.5882353, a: 1}
+  rockShade: {r: 0.41960785, g: 0.4392157, b: 0.47058824, a: 1}
+  snowColor: {r: 1, g: 1, b: 1, a: 1}
+  snowShade: {r: 0.84705883, g: 0.89411765, b: 0.9254902, a: 1}
+  waterColor: {r: 0.24313726, g: 0.5568628, b: 0.7882353, a: 1}
+  waterDeep: {r: 0.17254902, g: 0.42352942, b: 0.6509804, a: 1}
+  blockColor: {r: 0.7490196, g: 0.9098039, b: 0.95686275, a: 1}
+  blockShade: {r: 0.54901963, g: 0.7882353, b: 0.87058824, a: 1}
+  iglooColor: {r: 0.96862745, g: 0.98039216, b: 0.9882353, a: 1}
+  iglooShade: {r: 0.7882353, g: 0.8509804, b: 0.89411765, a: 1}
+  iglooDoor: {r: 0.16862746, g: 0.2, b: 0.2509804, a: 1}
+  iglooClosed: {r: 0.6627451, g: 0.83137256, b: 0.9019608, a: 1}
+  hintArrowColor: {r: 1, g: 1, b: 1, a: 1}
+  outline: 0.035
+  spritePixelsPerCell: 256
+  borderDepth: 0.24
+  boardInset: 30
+  compactCellBelow: 150
+  compactFrameScale: 0.5
+  compactOverflow: 16
+  swipeThreshold: 0.3
+  swipeMinUnits: 40
+  slideSpeed: 7
+  bumpDuration: 0.18
+  dizzyTime: 0.6
+  fishPop: 0.3
+  iglooOpen: 0.35
+  enterDuration: 0.3
+  fallDuration: 0.55
+  failPause: 0.6
+  sinkDuration: 0.35
+  winPause: 0.35
+  hintArrowTime: 0.55
+  maxStates: 150000
+  storyMaxStates: 40000
+  storyMaxAttempts: 3000
+  climbSteps: 40
+  maxMinMoves: 30
+  storySeedBase: 5101000
+  chapters:
+  - nameKey: penguin.chapter1.name
+    icon: ice_skating
+    color: {r: 0.6627451, g: 0.7882353, b: 0.8235294, a: 1}
+    theme: lake
+  - nameKey: penguin.chapter2.name
+    icon: set_meal
+    color: {r: 0.62352943, g: 0.7647059, b: 0.7372549, a: 1}
+    theme: packice
+  - nameKey: penguin.chapter3.name
+    icon: weather_snowy
+    color: {r: 0.72156864, g: 0.7607843, b: 0.7921569, a: 1}
+    theme: blizzard
+  - nameKey: penguin.chapter4.name
+    icon: waves
+    color: {r: 0.65882355, g: 0.7647059, b: 0.627451, a: 1}
+    theme: thaw
+  - nameKey: penguin.chapter5.name
+    icon: terrain
+    color: {r: 0.6156863, g: 0.7176471, b: 0.76862746, a: 1}
+    theme: glacier
+  - nameKey: penguin.chapter6.name
+    icon: diversity_1
+    color: {r: 0.76862746, g: 0.72156864, b: 0.6901961, a: 1}
+    theme: pole
+  - nameKey: penguin.chapter7.name
+    icon: auto_awesome
+    color: {r: 0.56078434, g: 0.79607844, b: 0.6901961, a: 1}
+    theme: aurora
+  storyDifficulty:
+    tiers:
+    - id: c1-1
+      firstLevel: 1
+      lastLevel: 1
+      values:
+      - key: cols
+        min: 4
+        max: 4
+      - key: rows
+        min: 6
+        max: 6
+      - key: minMoves
+        min: 1
+        max: 2
+      - key: rocks
+        min: 2
+        max: 3
+      - key: snow
+        min: 0
+        max: 0
+      - key: holes
+        min: 0
+        max: 0
+      - key: waterEdges
+        min: 0
+        max: 0
+      - key: fish
+        min: 0
+        max: 0
+      - key: blocks
+        min: 0
+        max: 0
+      - key: penguins
+        min: 1
+        max: 1
+      - key: needSnow
+        min: 0
+        max: 0
+      - key: danger
+        min: 0
+        max: 0
+      - key: needPush
+        min: 0
+        max: 0
+      - key: needFill
+        min: 0
+        max: 0
+      - key: fishOnPath
+        min: 0
+        max: 0
+      - key: useless
+        min: 2
+        max: 2
+    - id: c1-2
+      firstLevel: 2
+      lastLevel: 2
+      values:
+      - key: cols
+        min: 4
+        max: 4
+      - key: rows
+        min: 6
+        max: 6
+      - key: minMoves
+        min: 2
+        max: 3
+      - key: rocks
+        min: 2
+        max: 4
+      - key: snow
+        min: 0
+        max: 0
+      - key: holes
+        min: 0
+        max: 0
+      - key: waterEdges
+        min: 0
+        max: 0
+      - key: fish
+        min: 0
+        max: 0
+      - key: blocks
+        min: 0
+        max: 0
+      - key: penguins
+        min: 1
+        max: 1
+      - key: needSnow
+        min: 0
+        max: 0
+      - key: danger
+        min: 0
+        max: 0
+      - key: needPush
+        min: 0
+        max: 0
+      - key: needFill
+        min: 0
+        max: 0
+      - key: fishOnPath
+        min: 0
+        max: 0
+      - key: useless
+        min: 2
+        max: 2
+    - id: c1-3
+      firstLevel: 3
+      lastLevel: 3
+      values:
+      - key: cols
+        min: 4
+        max: 4
+      - key: rows
+        min: 6
+        max: 6
+      - key: minMoves
+        min: 3
+        max: 3
+      - key: rocks
+        min: 3
+        max: 4
+      - key: snow
+        min: 0
+        max: 0
+      - key: holes
+        min: 0
+        max: 0
+      - key: waterEdges
+        min: 0
+        max: 0
+      - key: fish
+        min: 0
+        max: 0
+      - key: blocks
+        min: 0
+        max: 0
+      - key: penguins
+        min: 1
+        max: 1
+      - key: needSnow
+        min: 0
+        max: 0
+      - key: danger
+        min: 0
+        max: 0
+      - key: needPush
+        min: 0
+        max: 0
+      - key: needFill
+        min: 0
+        max: 0
+      - key: fishOnPath
+        min: 0
+        max: 0
+      - key: useless
+        min: 2
+        max: 2
+    - id: c1-4
+      firstLevel: 4
+      lastLevel: 4
+      values:
+      - key: cols
+        min: 4
+        max: 4
+      - key: rows
+        min: 6
+        max: 6
+      - key: minMoves
+        min: 3
+        max: 4
+      - key: rocks
+        min: 3
+        max: 5
+      - key: snow
+        min: 0
+        max: 0
+      - key: holes
+        min: 0
+        max: 0
+      - key: waterEdges
+        min: 0
+        max: 0
+      - key: fish
+        min: 0
+        max: 0
+      - key: blocks
+        min: 0
+        max: 0
+      - key: penguins
+        min: 1
+        max: 1
+      - key: needSnow
+        min: 0
+        max: 0
+      - key: danger
+        min: 0
+        max: 0
+      - key: needPush
+        min: 0
+        max: 0
+      - key: needFill
+        min: 0
+        max: 0
+      - key: fishOnPath
+        min: 0
+        max: 0
+      - key: useless
+        min: 2
+        max: 2
+    - id: c1-5
+      firstLevel: 5
+      lastLevel: 5
+      values:
+      - key: cols
+        min: 4
+        max: 4
+      - key: rows
+        min: 6
+        max: 6
+      - key: minMoves
+        min: 4
+        max: 4
+      - key: rocks
+        min: 3
+        max: 5
+      - key: snow
+        min: 0
+        max: 0
+      - key: holes
+        min: 0
+        max: 0
+      - key: waterEdges
+        min: 0
+        max: 0
+      - key: fish
+        min: 0
+        max: 0
+      - key: blocks
+        min: 0
+        max: 0
+      - key: penguins
+        min: 1
+        max: 1
+      - key: needSnow
+        min: 0
+        max: 0
+      - key: danger
+        min: 0
+        max: 0
+      - key: needPush
+        min: 0
+        max: 0
+      - key: needFill
+        min: 0
+        max: 0
+      - key: fishOnPath
+        min: 0
+        max: 0
+      - key: useless
+        min: 2
+        max: 2
+    - id: c1-6
+      firstLevel: 6
+      lastLevel: 6
+      values:
+      - key: cols
+        min: 5
+        max: 5
+      - key: rows
+        min: 7
+        max: 7
+      - key: minMoves
+        min: 4
+        max: 5
+      - key: rocks
+        min: 4
+        max: 6
+      - key: snow
+        min: 0
+        max: 0
+      - key: holes
+        min: 0
+        max: 0
+      - key: waterEdges
+        min: 0
+        max: 0
+      - key: fish
+        min: 0
+        max: 0
+      - key: blocks
+        min: 0
+        max: 0
+      - key: penguins
+        min: 1
+        max: 1
+      - key: needSnow
+        min: 0
+        max: 0
+      - key: danger
+        min: 0
+        max: 0
+      - key: needPush
+        min: 0
+        max: 0
+      - key: needFill
+        min: 0
+        max: 0
+      - key: fishOnPath
+        min: 0
+        max: 0
+      - key: useless
+        min: 2
+        max: 2
+    - id: c1-7
+      firstLevel: 7
+      lastLevel: 7
+      values:
+      - key: cols
+        min: 5
+        max: 5
+      - key: rows
+        min: 7
+        max: 7
+      - key: minMoves
+        min: 5
+        max: 5
+      - key: rocks
+        min: 4
+        max: 6
+      - key: snow
+        min: 0
+        max: 0
+      - key: holes
+        min: 0
+        max: 0
+      - key: waterEdges
+        min: 0
+        max: 0
+      - key: fish
+        min: 0
+        max: 0
+      - key: blocks
+        min: 0
+        max: 0
+      - key: penguins
+        min: 1
+        max: 1
+      - key: needSnow
+        min: 0
+        max: 0
+      - key: danger
+        min: 0
+        max: 0
+      - key: needPush
+        min: 0
+        max: 0
+      - key: needFill
+        min: 0
+        max: 0
+      - key: fishOnPath
+        min: 0
+        max: 0
+      - key: useless
+        min: 2
+        max: 2
+    - id: c1-8
+      firstLevel: 8
+      lastLevel: 8
+      values:
+      - key: cols
+        min: 5
+        max: 5
+      - key: rows
+        min: 7
+        max: 7
+      - key: minMoves
+        min: 5
+        max: 6
+      - key: rocks
+        min: 5
+        max: 7
+      - key: snow
+        min: 0
+        max: 0
+      - key: holes
+        min: 0
+        max: 0
+      - key: waterEdges
+        min: 0
+        max: 0
+      - key: fish
+        min: 0
+        max: 0
+      - key: blocks
+        min: 0
+        max: 0
+      - key: penguins
+        min: 1
+        max: 1
+      - key: needSnow
+        min: 0
+        max: 0
+      - key: danger
+        min: 0
+        max: 0
+      - key: needPush
+        min: 0
+        max: 0
+      - key: needFill
+        min: 0
+        max: 0
+      - key: fishOnPath
+        min: 0
+        max: 0
+      - key: useless
+        min: 2
+        max: 2
+    - id: c1-9
+      firstLevel: 9
+      lastLevel: 9
+      values:
+      - key: cols
+        min: 5
+        max: 5
+      - key: rows
+        min: 7
+        max: 7
+      - key: minMoves
+        min: 6
+        max: 7
+      - key: rocks
+        min: 5
+        max: 7
+      - key: snow
+        min: 0
+        max: 0
+      - key: holes
+        min: 0
+        max: 0
+      - key: waterEdges
+        min: 0
+        max: 0
+      - key: fish
+        min: 0
+        max: 0
+      - key: blocks
+        min: 0
+        max: 0
+      - key: penguins
+        min: 1
+        max: 1
+      - key: needSnow
+        min: 0
+        max: 0
+      - key: danger
+        min: 0
+        max: 0
+      - key: needPush
+        min: 0
+        max: 0
+      - key: needFill
+        min: 0
+        max: 0
+      - key: fishOnPath
+        min: 0
+        max: 0
+      - key: useless
+        min: 2
+        max: 2
+    - id: c2-1
+      firstLevel: 10
+      lastLevel: 10
+      values:
+      - key: cols
+        min: 5
+        max: 5
+      - key: rows
+        min: 7
+        max: 7
+      - key: minMoves
+        min: 2
+        max: 3
+      - key: rocks
+        min: 3
+        max: 5
+      - key: snow
+        min: 0
+        max: 0
+      - key: holes
+        min: 0
+        max: 0
+      - key: waterEdges
+        min: 0
+        max: 0
+      - key: fish
+        min: 1
+        max: 1
+      - key: blocks
+        min: 0
+        max: 0
+      - key: penguins
+        min: 1
+        max: 1
+      - key: needSnow
+        min: 0
+        max: 0
+      - key: danger
+        min: 0
+        max: 0
+      - key: needPush
+        min: 0
+        max: 0
+      - key: needFill
+        min: 0
+        max: 0
+      - key: fishOnPath
+        min: 1
+        max: 1
+      - key: useless
+        min: 2
+        max: 2
+    - id: c2-2
+      firstLevel: 11
+      lastLevel: 11
+      values:
+      - key: cols
+        min: 5
+        max: 5
+      - key: rows
+        min: 7
+        max: 7
+      - key: minMoves
+        min: 3
+        max: 3
+      - key: rocks
+        min: 3
+        max: 5
+      - key: snow
+        min: 0
+        max: 0
+      - key: holes
+        min: 0
+        max: 0
+      - key: waterEdges
+        min: 0
+        max: 0
+      - key: fish
+        min: 1
+        max: 1
+      - key: blocks
+        min: 0
+        max: 0
+      - key: penguins
+        min: 1
+        max: 1
+      - key: needSnow
+        min: 0
+        max: 0
+      - key: danger
+        min: 0
+        max: 0
+      - key: needPush
+        min: 0
+        max: 0
+      - key: needFill
+        min: 0
+        max: 0
+      - key: fishOnPath
+        min: 1
+        max: 1
+      - key: useless
+        min: 2
+        max: 2
+    - id: c2-3
+      firstLevel: 12
+      lastLevel: 12
+      values:
+      - key: cols
+        min: 5
+        max: 5
+      - key: rows
+        min: 7
+        max: 7
+      - key: minMoves
+        min: 3
+        max: 4
+      - key: rocks
+        min: 3
+        max: 5
+      - key: snow
+        min: 0
+        max: 0
+      - key: holes
+        min: 0
+        max: 0
+      - key: waterEdges
+        min: 0
+        max: 0
+      - key: fish
+        min: 2
+        max: 2
+      - key: blocks
+        min: 0
+        max: 0
+      - key: penguins
+        min: 1
+        max: 1
+      - key: needSnow
+        min: 0
+        max: 0
+      - key: danger
+        min: 0
+        max: 0
+      - key: needPush
+        min: 0
+        max: 0
+      - key: needFill
+        min: 0
+        max: 0
+      - key: fishOnPath
+        min: 1
+        max: 1
+      - key: useless
+        min: 2
+        max: 2
+    - id: c2-4
+      firstLevel: 13
+      lastLevel: 13
+      values:
+      - key: cols
+        min: 5
+        max: 5
+      - key: rows
+        min: 7
+        max: 7
+      - key: minMoves
+        min: 4
+        max: 5
+      - key: rocks
+        min: 4
+        max: 6
+      - key: snow
+        min: 0
+        max: 0
+      - key: holes
+        min: 0
+        max: 0
+      - key: waterEdges
+        min: 0
+        max: 0
+      - key: fish
+        min: 1
+        max: 2
+      - key: blocks
+        min: 0
+        max: 0
+      - key: penguins
+        min: 1
+        max: 1
+      - key: needSnow
+        min: 0
+        max: 0
+      - key: danger
+        min: 0
+        max: 0
+      - key: needPush
+        min: 0
+        max: 0
+      - key: needFill
+        min: 0
+        max: 0
+      - key: fishOnPath
+        min: 0
+        max: 0
+      - key: useless
+        min: 2
+        max: 2
+    - id: c2-5
+      firstLevel: 14
+      lastLevel: 14
+      values:
+      - key: cols
+        min: 5
+        max: 5
+      - key: rows
+        min: 7
+        max: 7
+      - key: minMoves
+        min: 5
+        max: 5
+      - key: rocks
+        min: 4
+        max: 6
+      - key: snow
+        min: 0
+        max: 0
+      - key: holes
+        min: 0
+        max: 0
+      - key: waterEdges
+        min: 0
+        max: 0
+      - key: fish
+        min: 2
+        max: 2
+      - key: blocks
+        min: 0
+        max: 0
+      - key: penguins
+        min: 1
+        max: 1
+      - key: needSnow
+        min: 0
+        max: 0
+      - key: danger
+        min: 0
+        max: 0
+      - key: needPush
+        min: 0
+        max: 0
+      - key: needFill
+        min: 0
+        max: 0
+      - key: fishOnPath
+        min: 0
+        max: 0
+      - key: useless
+        min: 2
+        max: 2
+    - id: c2-6
+      firstLevel: 15
+      lastLevel: 15
+      values:
+      - key: cols
+        min: 5
+        max: 5
+      - key: rows
+        min: 7
+        max: 7
+      - key: minMoves
+        min: 5
+        max: 6
+      - key: rocks
+        min: 4
+        max: 6
+      - key: snow
+        min: 0
+        max: 0
+      - key: holes
+        min: 0
+        max: 0
+      - key: waterEdges
+        min: 0
+        max: 0
+      - key: fish
+        min: 2
+        max: 2
+      - key: blocks
+        min: 0
+        max: 0
+      - key: penguins
+        min: 1
+        max: 1
+      - key: needSnow
+        min: 0
+        max: 0
+      - key: danger
+        min: 0
+        max: 0
+      - key: needPush
+        min: 0
+        max: 0
+      - key: needFill
+        min: 0
+        max: 0
+      - key: fishOnPath
+        min: 0
+        max: 0
+      - key: useless
+        min: 2
+        max: 2
+    - id: c2-7
+      firstLevel: 16
+      lastLevel: 16
+      values:
+      - key: cols
+        min: 5
+        max: 5
+      - key: rows
+        min: 7
+        max: 7
+      - key: minMoves
+        min: 6
+        max: 7
+      - key: rocks
+        min: 4
+        max: 7
+      - key: snow
+        min: 0
+        max: 0
+      - key: holes
+        min: 0
+        max: 0
+      - key: waterEdges
+        min: 0
+        max: 0
+      - key: fish
+        min: 2
+        max: 3
+      - key: blocks
+        min: 0
+        max: 0
+      - key: penguins
+        min: 1
+        max: 1
+      - key: needSnow
+        min: 0
+        max: 0
+      - key: danger
+        min: 0
+        max: 0
+      - key: needPush
+        min: 0
+        max: 0
+      - key: needFill
+        min: 0
+        max: 0
+      - key: fishOnPath
+        min: 0
+        max: 0
+      - key: useless
+        min: 2
+        max: 2
+    - id: c2-8
+      firstLevel: 17
+      lastLevel: 17
+      values:
+      - key: cols
+        min: 5
+        max: 5
+      - key: rows
+        min: 7
+        max: 7
+      - key: minMoves
+        min: 7
+        max: 8
+      - key: rocks
+        min: 5
+        max: 7
+      - key: snow
+        min: 0
+        max: 0
+      - key: holes
+        min: 0
+        max: 0
+      - key: waterEdges
+        min: 0
+        max: 0
+      - key: fish
+        min: 2
+        max: 3
+      - key: blocks
+        min: 0
+        max: 0
+      - key: penguins
+        min: 1
+        max: 1
+      - key: needSnow
+        min: 0
+        max: 0
+      - key: danger
+        min: 0
+        max: 0
+      - key: needPush
+        min: 0
+        max: 0
+      - key: needFill
+        min: 0
+        max: 0
+      - key: fishOnPath
+        min: 0
+        max: 0
+      - key: useless
+        min: 2
+        max: 2
+    - id: c2-9
+      firstLevel: 18
+      lastLevel: 18
+      values:
+      - key: cols
+        min: 5
+        max: 5
+      - key: rows
+        min: 7
+        max: 7
+      - key: minMoves
+        min: 8
+        max: 9
+      - key: rocks
+        min: 5
+        max: 7
+      - key: snow
+        min: 0
+        max: 0
+      - key: holes
+        min: 0
+        max: 0
+      - key: waterEdges
+        min: 0
+        max: 0
+      - key: fish
+        min: 3
+        max: 3
+      - key: blocks
+        min: 0
+        max: 0
+      - key: penguins
+        min: 1
+        max: 1
+      - key: needSnow
+        min: 0
+        max: 0
+      - key: danger
+        min: 0
+        max: 0
+      - key: needPush
+        min: 0
+        max: 0
+      - key: needFill
+        min: 0
+        max: 0
+      - key: fishOnPath
+        min: 0
+        max: 0
+      - key: useless
+        min: 2
+        max: 2
+    - id: c3-1
+      firstLevel: 19
+      lastLevel: 19
+      values:
+      - key: cols
+        min: 5
+        max: 5
+      - key: rows
+        min: 7
+        max: 7
+      - key: minMoves
+        min: 3
+        max: 4
+      - key: rocks
+        min: 3
+        max: 5
+      - key: snow
+        min: 1
+        max: 1
+      - key: holes
+        min: 0
+        max: 0
+      - key: waterEdges
+        min: 0
+        max: 0
+      - key: fish
+        min: 0
+        max: 0
+      - key: blocks
+        min: 0
+        max: 0
+      - key: penguins
+        min: 1
+        max: 1
+      - key: needSnow
+        min: 1
+        max: 1
+      - key: danger
+        min: 0
+        max: 0
+      - key: needPush
+        min: 0
+        max: 0
+      - key: needFill
+        min: 0
+        max: 0
+      - key: fishOnPath
+        min: 0
+        max: 0
+      - key: useless
+        min: 2
+        max: 2
+    - id: c3-2
+      firstLevel: 20
+      lastLevel: 20
+      values:
+      - key: cols
+        min: 5
+        max: 5
+      - key: rows
+        min: 7
+        max: 7
+      - key: minMoves
+        min: 4
+        max: 4
+      - key: rocks
+        min: 3
+        max: 5
+      - key: snow
+        min: 1
+        max: 2
+      - key: holes
+        min: 0
+        max: 0
+      - key: waterEdges
+        min: 0
+        max: 0
+      - key: fish
+        min: 0
+        max: 0
+      - key: blocks
+        min: 0
+        max: 0
+      - key: penguins
+        min: 1
+        max: 1
+      - key: needSnow
+        min: 1
+        max: 1
+      - key: danger
+        min: 0
+        max: 0
+      - key: needPush
+        min: 0
+        max: 0
+      - key: needFill
+        min: 0
+        max: 0
+      - key: fishOnPath
+        min: 0
+        max: 0
+      - key: useless
+        min: 2
+        max: 2
+    - id: c3-3
+      firstLevel: 21
+      lastLevel: 21
+      values:
+      - key: cols
+        min: 5
+        max: 5
+      - key: rows
+        min: 7
+        max: 7
+      - key: minMoves
+        min: 4
+        max: 5
+      - key: rocks
+        min: 3
+        max: 5
+      - key: snow
+        min: 2
+        max: 2
+      - key: holes
+        min: 0
+        max: 0
+      - key: waterEdges
+        min: 0
+        max: 0
+      - key: fish
+        min: 0
+        max: 1
+      - key: blocks
+        min: 0
+        max: 0
+      - key: penguins
+        min: 1
+        max: 1
+      - key: needSnow
+        min: 1
+        max: 1
+      - key: danger
+        min: 0
+        max: 0
+      - key: needPush
+        min: 0
+        max: 0
+      - key: needFill
+        min: 0
+        max: 0
+      - key: fishOnPath
+        min: 0
+        max: 0
+      - key: useless
+        min: 2
+        max: 2
+    - id: c3-4
+      firstLevel: 22
+      lastLevel: 22
+      values:
+      - key: cols
+        min: 6
+        max: 6
+      - key: rows
+        min: 8
+        max: 8
+      - key: minMoves
+        min: 5
+        max: 6
+      - key: rocks
+        min: 4
+        max: 6
+      - key: snow
+        min: 2
+        max: 3
+      - key: holes
+        min: 0
+        max: 0
+      - key: waterEdges
+        min: 0
+        max: 0
+      - key: fish
+        min: 0
+        max: 1
+      - key: blocks
+        min: 0
+        max: 0
+      - key: penguins
+        min: 1
+        max: 1
+      - key: needSnow
+        min: 1
+        max: 1
+      - key: danger
+        min: 0
+        max: 0
+      - key: needPush
+        min: 0
+        max: 0
+      - key: needFill
+        min: 0
+        max: 0
+      - key: fishOnPath
+        min: 0
+        max: 0
+      - key: useless
+        min: 2
+        max: 2
+    - id: c3-5
+      firstLevel: 23
+      lastLevel: 23
+      values:
+      - key: cols
+        min: 6
+        max: 6
+      - key: rows
+        min: 8
+        max: 8
+      - key: minMoves
+        min: 6
+        max: 6
+      - key: rocks
+        min: 4
+        max: 7
+      - key: snow
+        min: 2
+        max: 3
+      - key: holes
+        min: 0
+        max: 0
+      - key: waterEdges
+        min: 0
+        max: 0
+      - key: fish
+        min: 1
+        max: 1
+      - key: blocks
+        min: 0
+        max: 0
+      - key: penguins
+        min: 1
+        max: 1
+      - key: needSnow
+        min: 1
+        max: 1
+      - key: danger
+        min: 0
+        max: 0
+      - key: needPush
+        min: 0
+        max: 0
+      - key: needFill
+        min: 0
+        max: 0
+      - key: fishOnPath
+        min: 0
+        max: 0
+      - key: useless
+        min: 2
+        max: 2
+    - id: c3-6
+      firstLevel: 24
+      lastLevel: 24
+      values:
+      - key: cols
+        min: 6
+        max: 6
+      - key: rows
+        min: 8
+        max: 8
+      - key: minMoves
+        min: 6
+        max: 7
+      - key: rocks
+        min: 5
+        max: 7
+      - key: snow
+        min: 2
+        max: 3
+      - key: holes
+        min: 0
+        max: 0
+      - key: waterEdges
+        min: 0
+        max: 0
+      - key: fish
+        min: 1
+        max: 2
+      - key: blocks
+        min: 0
+        max: 0
+      - key: penguins
+        min: 1
+        max: 1
+      - key: needSnow
+        min: 1
+        max: 1
+      - key: danger
+        min: 0
+        max: 0
+      - key: needPush
+        min: 0
+        max: 0
+      - key: needFill
+        min: 0
+        max: 0
+      - key: fishOnPath
+        min: 0
+        max: 0
+      - key: useless
+        min: 2
+        max: 2
+    - id: c3-7
+      firstLevel: 25
+      lastLevel: 25
+      values:
+      - key: cols
+        min: 6
+        max: 6
+      - key: rows
+        min: 8
+        max: 8
+      - key: minMoves
+        min: 7
+        max: 8
+      - key: rocks
+        min: 5
+        max: 8
+      - key: snow
+        min: 3
+        max: 4
+      - key: holes
+        min: 0
+        max: 0
+      - key: waterEdges
+        min: 0
+        max: 0
+      - key: fish
+        min: 1
+        max: 2
+      - key: blocks
+        min: 0
+        max: 0
+      - key: penguins
+        min: 1
+        max: 1
+      - key: needSnow
+        min: 1
+        max: 1
+      - key: danger
+        min: 0
+        max: 0
+      - key: needPush
+        min: 0
+        max: 0
+      - key: needFill
+        min: 0
+        max: 0
+      - key: fishOnPath
+        min: 0
+        max: 0
+      - key: useless
+        min: 2
+        max: 2
+    - id: c3-8
+      firstLevel: 26
+      lastLevel: 26
+      values:
+      - key: cols
+        min: 6
+        max: 6
+      - key: rows
+        min: 8
+        max: 8
+      - key: minMoves
+        min: 8
+        max: 9
+      - key: rocks
+        min: 5
+        max: 8
+      - key: snow
+        min: 3
+        max: 4
+      - key: holes
+        min: 0
+        max: 0
+      - key: waterEdges
+        min: 0
+        max: 0
+      - key: fish
+        min: 1
+        max: 2
+      - key: blocks
+        min: 0
+        max: 0
+      - key: penguins
+        min: 1
+        max: 1
+      - key: needSnow
+        min: 1
+        max: 1
+      - key: danger
+        min: 0
+        max: 0
+      - key: needPush
+        min: 0
+        max: 0
+      - key: needFill
+        min: 0
+        max: 0
+      - key: fishOnPath
+        min: 0
+        max: 0
+      - key: useless
+        min: 2
+        max: 2
+    - id: c3-9
+      firstLevel: 27
+      lastLevel: 27
+      values:
+      - key: cols
+        min: 6
+        max: 6
+      - key: rows
+        min: 8
+        max: 8
+      - key: minMoves
+        min: 9
+        max: 10
+      - key: rocks
+        min: 6
+        max: 8
+      - key: snow
+        min: 3
+        max: 4
+      - key: holes
+        min: 0
+        max: 0
+      - key: waterEdges
+        min: 0
+        max: 0
+      - key: fish
+        min: 2
+        max: 2
+      - key: blocks
+        min: 0
+        max: 0
+      - key: penguins
+        min: 1
+        max: 1
+      - key: needSnow
+        min: 1
+        max: 1
+      - key: danger
+        min: 0
+        max: 0
+      - key: needPush
+        min: 0
+        max: 0
+      - key: needFill
+        min: 0
+        max: 0
+      - key: fishOnPath
+        min: 0
+        max: 0
+      - key: useless
+        min: 2
+        max: 2
+    - id: c4-1
+      firstLevel: 28
+      lastLevel: 28
+      values:
+      - key: cols
+        min: 6
+        max: 6
+      - key: rows
+        min: 8
+        max: 8
+      - key: minMoves
+        min: 3
+        max: 4
+      - key: rocks
+        min: 4
+        max: 6
+      - key: snow
+        min: 0
+        max: 0
+      - key: holes
+        min: 1
+        max: 2
+      - key: waterEdges
+        min: 0
+        max: 1
+      - key: fish
+        min: 0
+        max: 0
+      - key: blocks
+        min: 0
+        max: 0
+      - key: penguins
+        min: 1
+        max: 1
+      - key: needSnow
+        min: 0
+        max: 0
+      - key: danger
+        min: 1
+        max: 1
+      - key: needPush
+        min: 0
+        max: 0
+      - key: needFill
+        min: 0
+        max: 0
+      - key: fishOnPath
+        min: 0
+        max: 0
+      - key: useless
+        min: 2
+        max: 2
+    - id: c4-2
+      firstLevel: 29
+      lastLevel: 29
+      values:
+      - key: cols
+        min: 6
+        max: 6
+      - key: rows
+        min: 8
+        max: 8
+      - key: minMoves
+        min: 4
+        max: 5
+      - key: rocks
+        min: 4
+        max: 6
+      - key: snow
+        min: 0
+        max: 0
+      - key: holes
+        min: 1
+        max: 2
+      - key: waterEdges
+        min: 1
+        max: 1
+      - key: fish
+        min: 0
+        max: 0
+      - key: blocks
+        min: 0
+        max: 0
+      - key: penguins
+        min: 1
+        max: 1
+      - key: needSnow
+        min: 0
+        max: 0
+      - key: danger
+        min: 1
+        max: 1
+      - key: needPush
+        min: 0
+        max: 0
+      - key: needFill
+        min: 0
+        max: 0
+      - key: fishOnPath
+        min: 0
+        max: 0
+      - key: useless
+        min: 2
+        max: 2
+    - id: c4-3
+      firstLevel: 30
+      lastLevel: 30
+      values:
+      - key: cols
+        min: 6
+        max: 6
+      - key: rows
+        min: 8
+        max: 8
+      - key: minMoves
+        min: 5
+        max: 5
+      - key: rocks
+        min: 4
+        max: 6
+      - key: snow
+        min: 0
+        max: 1
+      - key: holes
+        min: 2
+        max: 3
+      - key: waterEdges
+        min: 1
+        max: 1
+      - key: fish
+        min: 0
+        max: 1
+      - key: blocks
+        min: 0
+        max: 0
+      - key: penguins
+        min: 1
+        max: 1
+      - key: needSnow
+        min: 0
+        max: 0
+      - key: danger
+        min: 1
+        max: 1
+      - key: needPush
+        min: 0
+        max: 0
+      - key: needFill
+        min: 0
+        max: 0
+      - key: fishOnPath
+        min: 0
+        max: 0
+      - key: useless
+        min: 2
+        max: 2
+    - id: c4-4
+      firstLevel: 31
+      lastLevel: 31
+      values:
+      - key: cols
+        min: 6
+        max: 6
+      - key: rows
+        min: 8
+        max: 8
+      - key: minMoves
+        min: 5
+        max: 6
+      - key: rocks
+        min: 4
+        max: 7
+      - key: snow
+        min: 0
+        max: 1
+      - key: holes
+        min: 2
+        max: 3
+      - key: waterEdges
+        min: 1
+        max: 2
+      - key: fish
+        min: 0
+        max: 1
+      - key: blocks
+        min: 0
+        max: 0
+      - key: penguins
+        min: 1
+        max: 1
+      - key: needSnow
+        min: 0
+        max: 0
+      - key: danger
+        min: 1
+        max: 1
+      - key: needPush
+        min: 0
+        max: 0
+      - key: needFill
+        min: 0
+        max: 0
+      - key: fishOnPath
+        min: 0
+        max: 0
+      - key: useless
+        min: 2
+        max: 2
+    - id: c4-5
+      firstLevel: 32
+      lastLevel: 32
+      values:
+      - key: cols
+        min: 6
+        max: 6
+      - key: rows
+        min: 8
+        max: 8
+      - key: minMoves
+        min: 6
+        max: 7
+      - key: rocks
+        min: 4
+        max: 7
+      - key: snow
+        min: 0
+        max: 1
+      - key: holes
+        min: 2
+        max: 3
+      - key: waterEdges
+        min: 1
+        max: 2
+      - key: fish
+        min: 1
+        max: 1
+      - key: blocks
+        min: 0
+        max: 0
+      - key: penguins
+        min: 1
+        max: 1
+      - key: needSnow
+        min: 0
+        max: 0
+      - key: danger
+        min: 2
+        max: 2
+      - key: needPush
+        min: 0
+        max: 0
+      - key: needFill
+        min: 0
+        max: 0
+      - key: fishOnPath
+        min: 0
+        max: 0
+      - key: useless
+        min: 2
+        max: 2
+    - id: c4-6
+      firstLevel: 33
+      lastLevel: 33
+      values:
+      - key: cols
+        min: 6
+        max: 6
+      - key: rows
+        min: 8
+        max: 8
+      - key: minMoves
+        min: 7
+        max: 8
+      - key: rocks
+        min: 5
+        max: 7
+      - key: snow
+        min: 0
+        max: 2
+      - key: holes
+        min: 2
+        max: 4
+      - key: waterEdges
+        min: 1
+        max: 2
+      - key: fish
+        min: 1
+        max: 2
+      - key: blocks
+        min: 0
+        max: 0
+      - key: penguins
+        min: 1
+        max: 1
+      - key: needSnow
+        min: 0
+        max: 0
+      - key: danger
+        min: 2
+        max: 2
+      - key: needPush
+        min: 0
+        max: 0
+      - key: needFill
+        min: 0
+        max: 0
+      - key: fishOnPath
+        min: 0
+        max: 0
+      - key: useless
+        min: 2
+        max: 2
+    - id: c4-7
+      firstLevel: 34
+      lastLevel: 34
+      values:
+      - key: cols
+        min: 6
+        max: 6
+      - key: rows
+        min: 8
+        max: 8
+      - key: minMoves
+        min: 8
+        max: 9
+      - key: rocks
+        min: 5
+        max: 8
+      - key: snow
+        min: 0
+        max: 2
+      - key: holes
+        min: 3
+        max: 4
+      - key: waterEdges
+        min: 1
+        max: 2
+      - key: fish
+        min: 1
+        max: 2
+      - key: blocks
+        min: 0
+        max: 0
+      - key: penguins
+        min: 1
+        max: 1
+      - key: needSnow
+        min: 0
+        max: 0
+      - key: danger
+        min: 2
+        max: 2
+      - key: needPush
+        min: 0
+        max: 0
+      - key: needFill
+        min: 0
+        max: 0
+      - key: fishOnPath
+        min: 0
+        max: 0
+      - key: useless
+        min: 2
+        max: 2
+    - id: c4-8
+      firstLevel: 35
+      lastLevel: 35
+      values:
+      - key: cols
+        min: 6
+        max: 6
+      - key: rows
+        min: 8
+        max: 8
+      - key: minMoves
+        min: 9
+        max: 10
+      - key: rocks
+        min: 5
+        max: 8
+      - key: snow
+        min: 1
+        max: 2
+      - key: holes
+        min: 3
+        max: 4
+      - key: waterEdges
+        min: 2
+        max: 2
+      - key: fish
+        min: 1
+        max: 2
+      - key: blocks
+        min: 0
+        max: 0
+      - key: penguins
+        min: 1
+        max: 1
+      - key: needSnow
+        min: 0
+        max: 0
+      - key: danger
+        min: 2
+        max: 2
+      - key: needPush
+        min: 0
+        max: 0
+      - key: needFill
+        min: 0
+        max: 0
+      - key: fishOnPath
+        min: 0
+        max: 0
+      - key: useless
+        min: 2
+        max: 2
+    - id: c4-9
+      firstLevel: 36
+      lastLevel: 36
+      values:
+      - key: cols
+        min: 6
+        max: 6
+      - key: rows
+        min: 8
+        max: 8
+      - key: minMoves
+        min: 10
+        max: 11
+      - key: rocks
+        min: 5
+        max: 8
+      - key: snow
+        min: 1
+        max: 2
+      - key: holes
+        min: 3
+        max: 4
+      - key: waterEdges
+        min: 2
+        max: 3
+      - key: fish
+        min: 2
+        max: 2
+      - key: blocks
+        min: 0
+        max: 0
+      - key: penguins
+        min: 1
+        max: 1
+      - key: needSnow
+        min: 0
+        max: 0
+      - key: danger
+        min: 2
+        max: 2
+      - key: needPush
+        min: 0
+        max: 0
+      - key: needFill
+        min: 0
+        max: 0
+      - key: fishOnPath
+        min: 0
+        max: 0
+      - key: useless
+        min: 2
+        max: 2
+    - id: c5-1
+      firstLevel: 37
+      lastLevel: 37
+      values:
+      - key: cols
+        min: 6
+        max: 6
+      - key: rows
+        min: 8
+        max: 8
+      - key: minMoves
+        min: 3
+        max: 4
+      - key: rocks
+        min: 4
+        max: 6
+      - key: snow
+        min: 0
+        max: 0
+      - key: holes
+        min: 0
+        max: 0
+      - key: waterEdges
+        min: 0
+        max: 0
+      - key: fish
+        min: 0
+        max: 0
+      - key: blocks
+        min: 1
+        max: 1
+      - key: penguins
+        min: 1
+        max: 1
+      - key: needSnow
+        min: 0
+        max: 0
+      - key: danger
+        min: 0
+        max: 0
+      - key: needPush
+        min: 1
+        max: 1
+      - key: needFill
+        min: 0
+        max: 0
+      - key: fishOnPath
+        min: 0
+        max: 0
+      - key: useless
+        min: 2
+        max: 2
+    - id: c5-2
+      firstLevel: 38
+      lastLevel: 38
+      values:
+      - key: cols
+        min: 6
+        max: 6
+      - key: rows
+        min: 8
+        max: 8
+      - key: minMoves
+        min: 4
+        max: 5
+      - key: rocks
+        min: 4
+        max: 6
+      - key: snow
+        min: 0
+        max: 0
+      - key: holes
+        min: 0
+        max: 0
+      - key: waterEdges
+        min: 0
+        max: 0
+      - key: fish
+        min: 0
+        max: 0
+      - key: blocks
+        min: 1
+        max: 1
+      - key: penguins
+        min: 1
+        max: 1
+      - key: needSnow
+        min: 0
+        max: 0
+      - key: danger
+        min: 0
+        max: 0
+      - key: needPush
+        min: 1
+        max: 1
+      - key: needFill
+        min: 0
+        max: 0
+      - key: fishOnPath
+        min: 0
+        max: 0
+      - key: useless
+        min: 2
+        max: 2
+    - id: c5-3
+      firstLevel: 39
+      lastLevel: 39
+      values:
+      - key: cols
+        min: 6
+        max: 6
+      - key: rows
+        min: 8
+        max: 8
+      - key: minMoves
+        min: 5
+        max: 6
+      - key: rocks
+        min: 4
+        max: 6
+      - key: snow
+        min: 0
+        max: 0
+      - key: holes
+        min: 1
+        max: 1
+      - key: waterEdges
+        min: 0
+        max: 0
+      - key: fish
+        min: 0
+        max: 0
+      - key: blocks
+        min: 1
+        max: 1
+      - key: penguins
+        min: 1
+        max: 1
+      - key: needSnow
+        min: 0
+        max: 0
+      - key: danger
+        min: 0
+        max: 0
+      - key: needPush
+        min: 1
+        max: 1
+      - key: needFill
+        min: 1
+        max: 1
+      - key: fishOnPath
+        min: 0
+        max: 0
+      - key: useless
+        min: 2
+        max: 2
+    - id: c5-4
+      firstLevel: 40
+      lastLevel: 40
+      values:
+      - key: cols
+        min: 6
+        max: 6
+      - key: rows
+        min: 8
+        max: 8
+      - key: minMoves
+        min: 6
+        max: 7
+      - key: rocks
+        min: 4
+        max: 7
+      - key: snow
+        min: 0
+        max: 1
+      - key: holes
+        min: 1
+        max: 2
+      - key: waterEdges
+        min: 0
+        max: 1
+      - key: fish
+        min: 0
+        max: 1
+      - key: blocks
+        min: 1
+        max: 1
+      - key: penguins
+        min: 1
+        max: 1
+      - key: needSnow
+        min: 0
+        max: 0
+      - key: danger
+        min: 0
+        max: 0
+      - key: needPush
+        min: 1
+        max: 1
+      - key: needFill
+        min: 1
+        max: 1
+      - key: fishOnPath
+        min: 0
+        max: 0
+      - key: useless
+        min: 2
+        max: 2
+    - id: c5-5
+      firstLevel: 41
+      lastLevel: 41
+      values:
+      - key: cols
+        min: 6
+        max: 6
+      - key: rows
+        min: 8
+        max: 8
+      - key: minMoves
+        min: 7
+        max: 8
+      - key: rocks
+        min: 4
+        max: 7
+      - key: snow
+        min: 0
+        max: 1
+      - key: holes
+        min: 1
+        max: 2
+      - key: waterEdges
+        min: 0
+        max: 1
+      - key: fish
+        min: 0
+        max: 1
+      - key: blocks
+        min: 1
+        max: 1
+      - key: penguins
+        min: 1
+        max: 1
+      - key: needSnow
+        min: 0
+        max: 0
+      - key: danger
+        min: 0
+        max: 0
+      - key: needPush
+        min: 1
+        max: 1
+      - key: needFill
+        min: 1
+        max: 1
+      - key: fishOnPath
+        min: 0
+        max: 0
+      - key: useless
+        min: 2
+        max: 2
+    - id: c5-6
+      firstLevel: 42
+      lastLevel: 42
+      values:
+      - key: cols
+        min: 6
+        max: 6
+      - key: rows
+        min: 8
+        max: 8
+      - key: minMoves
+        min: 8
+        max: 9
+      - key: rocks
+        min: 5
+        max: 7
+      - key: snow
+        min: 0
+        max: 1
+      - key: holes
+        min: 1
+        max: 2
+      - key: waterEdges
+        min: 0
+        max: 1
+      - key: fish
+        min: 1
+        max: 1
+      - key: blocks
+        min: 2
+        max: 2
+      - key: penguins
+        min: 1
+        max: 1
+      - key: needSnow
+        min: 0
+        max: 0
+      - key: danger
+        min: 0
+        max: 0
+      - key: needPush
+        min: 1
+        max: 1
+      - key: needFill
+        min: 0
+        max: 0
+      - key: fishOnPath
+        min: 0
+        max: 0
+      - key: useless
+        min: 2
+        max: 2
+    - id: c5-7
+      firstLevel: 43
+      lastLevel: 43
+      values:
+      - key: cols
+        min: 6
+        max: 6
+      - key: rows
+        min: 8
+        max: 8
+      - key: minMoves
+        min: 9
+        max: 10
+      - key: rocks
+        min: 5
+        max: 8
+      - key: snow
+        min: 0
+        max: 2
+      - key: holes
+        min: 1
+        max: 2
+      - key: waterEdges
+        min: 0
+        max: 1
+      - key: fish
+        min: 1
+        max: 2
+      - key: blocks
+        min: 2
+        max: 2
+      - key: penguins
+        min: 1
+        max: 1
+      - key: needSnow
+        min: 0
+        max: 0
+      - key: danger
+        min: 0
+        max: 0
+      - key: needPush
+        min: 1
+        max: 1
+      - key: needFill
+        min: 1
+        max: 1
+      - key: fishOnPath
+        min: 0
+        max: 0
+      - key: useless
+        min: 2
+        max: 2
+    - id: c5-8
+      firstLevel: 44
+      lastLevel: 44
+      values:
+      - key: cols
+        min: 6
+        max: 6
+      - key: rows
+        min: 8
+        max: 8
+      - key: minMoves
+        min: 10
+        max: 11
+      - key: rocks
+        min: 5
+        max: 8
+      - key: snow
+        min: 0
+        max: 2
+      - key: holes
+        min: 1
+        max: 3
+      - key: waterEdges
+        min: 1
+        max: 1
+      - key: fish
+        min: 1
+        max: 2
+      - key: blocks
+        min: 2
+        max: 2
+      - key: penguins
+        min: 1
+        max: 1
+      - key: needSnow
+        min: 0
+        max: 0
+      - key: danger
+        min: 0
+        max: 0
+      - key: needPush
+        min: 1
+        max: 1
+      - key: needFill
+        min: 1
+        max: 1
+      - key: fishOnPath
+        min: 0
+        max: 0
+      - key: useless
+        min: 2
+        max: 2
+    - id: c5-9
+      firstLevel: 45
+      lastLevel: 45
+      values:
+      - key: cols
+        min: 6
+        max: 6
+      - key: rows
+        min: 8
+        max: 8
+      - key: minMoves
+        min: 11
+        max: 12
+      - key: rocks
+        min: 5
+        max: 8
+      - key: snow
+        min: 0
+        max: 2
+      - key: holes
+        min: 2
+        max: 3
+      - key: waterEdges
+        min: 1
+        max: 2
+      - key: fish
+        min: 1
+        max: 2
+      - key: blocks
+        min: 2
+        max: 2
+      - key: penguins
+        min: 1
+        max: 1
+      - key: needSnow
+        min: 0
+        max: 0
+      - key: danger
+        min: 0
+        max: 0
+      - key: needPush
+        min: 1
+        max: 1
+      - key: needFill
+        min: 1
+        max: 1
+      - key: fishOnPath
+        min: 0
+        max: 0
+      - key: useless
+        min: 2
+        max: 2
+    - id: c6-1
+      firstLevel: 46
+      lastLevel: 46
+      values:
+      - key: cols
+        min: 6
+        max: 6
+      - key: rows
+        min: 8
+        max: 8
+      - key: minMoves
+        min: 3
+        max: 4
+      - key: rocks
+        min: 4
+        max: 6
+      - key: snow
+        min: 0
+        max: 0
+      - key: holes
+        min: 0
+        max: 0
+      - key: waterEdges
+        min: 0
+        max: 0
+      - key: fish
+        min: 0
+        max: 0
+      - key: blocks
+        min: 0
+        max: 0
+      - key: penguins
+        min: 2
+        max: 2
+      - key: needSnow
+        min: 0
+        max: 0
+      - key: danger
+        min: 0
+        max: 0
+      - key: needPush
+        min: 0
+        max: 0
+      - key: needFill
+        min: 0
+        max: 0
+      - key: fishOnPath
+        min: 0
+        max: 0
+      - key: useless
+        min: 2
+        max: 2
+    - id: c6-2
+      firstLevel: 47
+      lastLevel: 47
+      values:
+      - key: cols
+        min: 6
+        max: 6
+      - key: rows
+        min: 8
+        max: 8
+      - key: minMoves
+        min: 4
+        max: 5
+      - key: rocks
+        min: 4
+        max: 6
+      - key: snow
+        min: 0
+        max: 0
+      - key: holes
+        min: 0
+        max: 0
+      - key: waterEdges
+        min: 0
+        max: 0
+      - key: fish
+        min: 0
+        max: 0
+      - key: blocks
+        min: 0
+        max: 0
+      - key: penguins
+        min: 2
+        max: 2
+      - key: needSnow
+        min: 0
+        max: 0
+      - key: danger
+        min: 0
+        max: 0
+      - key: needPush
+        min: 0
+        max: 0
+      - key: needFill
+        min: 0
+        max: 0
+      - key: fishOnPath
+        min: 0
+        max: 0
+      - key: useless
+        min: 2
+        max: 2
+    - id: c6-3
+      firstLevel: 48
+      lastLevel: 48
+      values:
+      - key: cols
+        min: 6
+        max: 6
+      - key: rows
+        min: 8
+        max: 8
+      - key: minMoves
+        min: 5
+        max: 6
+      - key: rocks
+        min: 4
+        max: 7
+      - key: snow
+        min: 0
+        max: 1
+      - key: holes
+        min: 0
+        max: 0
+      - key: waterEdges
+        min: 0
+        max: 0
+      - key: fish
+        min: 0
+        max: 1
+      - key: blocks
+        min: 0
+        max: 0
+      - key: penguins
+        min: 2
+        max: 2
+      - key: needSnow
+        min: 0
+        max: 0
+      - key: danger
+        min: 0
+        max: 0
+      - key: needPush
+        min: 0
+        max: 0
+      - key: needFill
+        min: 0
+        max: 0
+      - key: fishOnPath
+        min: 0
+        max: 0
+      - key: useless
+        min: 2
+        max: 2
+    - id: c6-4
+      firstLevel: 49
+      lastLevel: 49
+      values:
+      - key: cols
+        min: 6
+        max: 6
+      - key: rows
+        min: 8
+        max: 8
+      - key: minMoves
+        min: 6
+        max: 7
+      - key: rocks
+        min: 5
+        max: 7
+      - key: snow
+        min: 0
+        max: 1
+      - key: holes
+        min: 0
+        max: 1
+      - key: waterEdges
+        min: 0
+        max: 1
+      - key: fish
+        min: 0
+        max: 1
+      - key: blocks
+        min: 0
+        max: 0
+      - key: penguins
+        min: 2
+        max: 2
+      - key: needSnow
+        min: 0
+        max: 0
+      - key: danger
+        min: 0
+        max: 0
+      - key: needPush
+        min: 0
+        max: 0
+      - key: needFill
+        min: 0
+        max: 0
+      - key: fishOnPath
+        min: 0
+        max: 0
+      - key: useless
+        min: 2
+        max: 2
+    - id: c6-5
+      firstLevel: 50
+      lastLevel: 50
+      values:
+      - key: cols
+        min: 6
+        max: 6
+      - key: rows
+        min: 8
+        max: 8
+      - key: minMoves
+        min: 7
+        max: 7
+      - key: rocks
+        min: 5
+        max: 8
+      - key: snow
+        min: 0
+        max: 1
+      - key: holes
+        min: 0
+        max: 1
+      - key: waterEdges
+        min: 0
+        max: 1
+      - key: fish
+        min: 1
+        max: 1
+      - key: blocks
+        min: 0
+        max: 0
+      - key: penguins
+        min: 2
+        max: 2
+      - key: needSnow
+        min: 0
+        max: 0
+      - key: danger
+        min: 0
+        max: 0
+      - key: needPush
+        min: 0
+        max: 0
+      - key: needFill
+        min: 0
+        max: 0
+      - key: fishOnPath
+        min: 0
+        max: 0
+      - key: useless
+        min: 2
+        max: 2
+    - id: c6-6
+      firstLevel: 51
+      lastLevel: 51
+      values:
+      - key: cols
+        min: 7
+        max: 7
+      - key: rows
+        min: 9
+        max: 9
+      - key: minMoves
+        min: 7
+        max: 8
+      - key: rocks
+        min: 6
+        max: 9
+      - key: snow
+        min: 0
+        max: 2
+      - key: holes
+        min: 0
+        max: 2
+      - key: waterEdges
+        min: 0
+        max: 1
+      - key: fish
+        min: 1
+        max: 2
+      - key: blocks
+        min: 0
+        max: 0
+      - key: penguins
+        min: 2
+        max: 2
+      - key: needSnow
+        min: 0
+        max: 0
+      - key: danger
+        min: 0
+        max: 0
+      - key: needPush
+        min: 0
+        max: 0
+      - key: needFill
+        min: 0
+        max: 0
+      - key: fishOnPath
+        min: 0
+        max: 0
+      - key: useless
+        min: 2
+        max: 2
+    - id: c6-7
+      firstLevel: 52
+      lastLevel: 52
+      values:
+      - key: cols
+        min: 7
+        max: 7
+      - key: rows
+        min: 9
+        max: 9
+      - key: minMoves
+        min: 8
+        max: 9
+      - key: rocks
+        min: 6
+        max: 9
+      - key: snow
+        min: 0
+        max: 2
+      - key: holes
+        min: 0
+        max: 2
+      - key: waterEdges
+        min: 1
+        max: 1
+      - key: fish
+        min: 1
+        max: 2
+      - key: blocks
+        min: 1
+        max: 1
+      - key: penguins
+        min: 2
+        max: 2
+      - key: needSnow
+        min: 0
+        max: 0
+      - key: danger
+        min: 0
+        max: 0
+      - key: needPush
+        min: 0
+        max: 0
+      - key: needFill
+        min: 0
+        max: 0
+      - key: fishOnPath
+        min: 0
+        max: 0
+      - key: useless
+        min: 2
+        max: 2
+    - id: c6-8
+      firstLevel: 53
+      lastLevel: 53
+      values:
+      - key: cols
+        min: 7
+        max: 7
+      - key: rows
+        min: 9
+        max: 9
+      - key: minMoves
+        min: 9
+        max: 10
+      - key: rocks
+        min: 6
+        max: 9
+      - key: snow
+        min: 1
+        max: 2
+      - key: holes
+        min: 1
+        max: 2
+      - key: waterEdges
+        min: 1
+        max: 1
+      - key: fish
+        min: 1
+        max: 2
+      - key: blocks
+        min: 1
+        max: 1
+      - key: penguins
+        min: 2
+        max: 2
+      - key: needSnow
+        min: 0
+        max: 0
+      - key: danger
+        min: 0
+        max: 0
+      - key: needPush
+        min: 0
+        max: 0
+      - key: needFill
+        min: 0
+        max: 0
+      - key: fishOnPath
+        min: 0
+        max: 0
+      - key: useless
+        min: 2
+        max: 2
+    - id: c6-9
+      firstLevel: 54
+      lastLevel: 54
+      values:
+      - key: cols
+        min: 7
+        max: 7
+      - key: rows
+        min: 9
+        max: 9
+      - key: minMoves
+        min: 10
+        max: 12
+      - key: rocks
+        min: 6
+        max: 9
+      - key: snow
+        min: 1
+        max: 2
+      - key: holes
+        min: 1
+        max: 2
+      - key: waterEdges
+        min: 1
+        max: 2
+      - key: fish
+        min: 2
+        max: 2
+      - key: blocks
+        min: 1
+        max: 1
+      - key: penguins
+        min: 2
+        max: 2
+      - key: needSnow
+        min: 0
+        max: 0
+      - key: danger
+        min: 0
+        max: 0
+      - key: needPush
+        min: 0
+        max: 0
+      - key: needFill
+        min: 0
+        max: 0
+      - key: fishOnPath
+        min: 0
+        max: 0
+      - key: useless
+        min: 2
+        max: 2
+    - id: c7-1
+      firstLevel: 55
+      lastLevel: 55
+      values:
+      - key: cols
+        min: 7
+        max: 7
+      - key: rows
+        min: 9
+        max: 9
+      - key: minMoves
+        min: 7
+        max: 8
+      - key: rocks
+        min: 6
+        max: 9
+      - key: snow
+        min: 1
+        max: 2
+      - key: holes
+        min: 1
+        max: 2
+      - key: waterEdges
+        min: 1
+        max: 1
+      - key: fish
+        min: 1
+        max: 2
+      - key: blocks
+        min: 1
+        max: 1
+      - key: penguins
+        min: 1
+        max: 1
+      - key: needSnow
+        min: 0
+        max: 0
+      - key: danger
+        min: 1
+        max: 1
+      - key: needPush
+        min: 0
+        max: 0
+      - key: needFill
+        min: 0
+        max: 0
+      - key: fishOnPath
+        min: 0
+        max: 0
+      - key: useless
+        min: 2
+        max: 2
+    - id: c7-2
+      firstLevel: 56
+      lastLevel: 56
+      values:
+      - key: cols
+        min: 7
+        max: 7
+      - key: rows
+        min: 9
+        max: 9
+      - key: minMoves
+        min: 8
+        max: 9
+      - key: rocks
+        min: 6
+        max: 9
+      - key: snow
+        min: 1
+        max: 2
+      - key: holes
+        min: 1
+        max: 2
+      - key: waterEdges
+        min: 1
+        max: 2
+      - key: fish
+        min: 1
+        max: 2
+      - key: blocks
+        min: 1
+        max: 1
+      - key: penguins
+        min: 1
+        max: 1
+      - key: needSnow
+        min: 0
+        max: 0
+      - key: danger
+        min: 1
+        max: 1
+      - key: needPush
+        min: 1
+        max: 1
+      - key: needFill
+        min: 0
+        max: 0
+      - key: fishOnPath
+        min: 0
+        max: 0
+      - key: useless
+        min: 2
+        max: 2
+    - id: c7-3
+      firstLevel: 57
+      lastLevel: 57
+      values:
+      - key: cols
+        min: 7
+        max: 7
+      - key: rows
+        min: 9
+        max: 9
+      - key: minMoves
+        min: 9
+        max: 9
+      - key: rocks
+        min: 6
+        max: 9
+      - key: snow
+        min: 1
+        max: 2
+      - key: holes
+        min: 1
+        max: 2
+      - key: waterEdges
+        min: 1
+        max: 1
+      - key: fish
+        min: 1
+        max: 2
+      - key: blocks
+        min: 0
+        max: 0
+      - key: penguins
+        min: 2
+        max: 2
+      - key: needSnow
+        min: 0
+        max: 0
+      - key: danger
+        min: 1
+        max: 1
+      - key: needPush
+        min: 0
+        max: 0
+      - key: needFill
+        min: 0
+        max: 0
+      - key: fishOnPath
+        min: 0
+        max: 0
+      - key: useless
+        min: 2
+        max: 2
+    - id: c7-4
+      firstLevel: 58
+      lastLevel: 58
+      values:
+      - key: cols
+        min: 7
+        max: 7
+      - key: rows
+        min: 9
+        max: 9
+      - key: minMoves
+        min: 9
+        max: 10
+      - key: rocks
+        min: 6
+        max: 9
+      - key: snow
+        min: 1
+        max: 3
+      - key: holes
+        min: 1
+        max: 3
+      - key: waterEdges
+        min: 1
+        max: 2
+      - key: fish
+        min: 1
+        max: 2
+      - key: blocks
+        min: 1
+        max: 1
+      - key: penguins
+        min: 1
+        max: 1
+      - key: needSnow
+        min: 0
+        max: 0
+      - key: danger
+        min: 1
+        max: 1
+      - key: needPush
+        min: 1
+        max: 1
+      - key: needFill
+        min: 0
+        max: 0
+      - key: fishOnPath
+        min: 0
+        max: 0
+      - key: useless
+        min: 2
+        max: 2
+    - id: c7-5
+      firstLevel: 59
+      lastLevel: 59
+      values:
+      - key: cols
+        min: 7
+        max: 7
+      - key: rows
+        min: 9
+        max: 9
+      - key: minMoves
+        min: 10
+        max: 11
+      - key: rocks
+        min: 6
+        max: 10
+      - key: snow
+        min: 1
+        max: 3
+      - key: holes
+        min: 1
+        max: 3
+      - key: waterEdges
+        min: 1
+        max: 2
+      - key: fish
+        min: 1
+        max: 2
+      - key: blocks
+        min: 1
+        max: 1
+      - key: penguins
+        min: 2
+        max: 2
+      - key: needSnow
+        min: 0
+        max: 0
+      - key: danger
+        min: 1
+        max: 1
+      - key: needPush
+        min: 0
+        max: 0
+      - key: needFill
+        min: 0
+        max: 0
+      - key: fishOnPath
+        min: 0
+        max: 0
+      - key: useless
+        min: 2
+        max: 2
+    - id: c7-6
+      firstLevel: 60
+      lastLevel: 60
+      values:
+      - key: cols
+        min: 7
+        max: 7
+      - key: rows
+        min: 9
+        max: 9
+      - key: minMoves
+        min: 11
+        max: 12
+      - key: rocks
+        min: 6
+        max: 10
+      - key: snow
+        min: 1
+        max: 3
+      - key: holes
+        min: 1
+        max: 3
+      - key: waterEdges
+        min: 1
+        max: 2
+      - key: fish
+        min: 2
+        max: 2
+      - key: blocks
+        min: 2
+        max: 2
+      - key: penguins
+        min: 1
+        max: 1
+      - key: needSnow
+        min: 0
+        max: 0
+      - key: danger
+        min: 1
+        max: 1
+      - key: needPush
+        min: 1
+        max: 1
+      - key: needFill
+        min: 0
+        max: 0
+      - key: fishOnPath
+        min: 0
+        max: 0
+      - key: useless
+        min: 2
+        max: 2
+    - id: c7-7
+      firstLevel: 61
+      lastLevel: 61
+      values:
+      - key: cols
+        min: 7
+        max: 7
+      - key: rows
+        min: 9
+        max: 9
+      - key: minMoves
+        min: 12
+        max: 13
+      - key: rocks
+        min: 6
+        max: 10
+      - key: snow
+        min: 1
+        max: 3
+      - key: holes
+        min: 1
+        max: 3
+      - key: waterEdges
+        min: 1
+        max: 2
+      - key: fish
+        min: 1
+        max: 2
+      - key: blocks
+        min: 1
+        max: 1
+      - key: penguins
+        min: 2
+        max: 2
+      - key: needSnow
+        min: 0
+        max: 0
+      - key: danger
+        min: 1
+        max: 1
+      - key: needPush
+        min: 1
+        max: 1
+      - key: needFill
+        min: 0
+        max: 0
+      - key: fishOnPath
+        min: 0
+        max: 0
+      - key: useless
+        min: 2
+        max: 2
+    - id: c7-8
+      firstLevel: 62
+      lastLevel: 62
+      values:
+      - key: cols
+        min: 7
+        max: 7
+      - key: rows
+        min: 9
+        max: 9
+      - key: minMoves
+        min: 13
+        max: 14
+      - key: rocks
+        min: 6
+        max: 10
+      - key: snow
+        min: 1
+        max: 3
+      - key: holes
+        min: 2
+        max: 3
+      - key: waterEdges
+        min: 1
+        max: 2
+      - key: fish
+        min: 2
+        max: 3
+      - key: blocks
+        min: 2
+        max: 2
+      - key: penguins
+        min: 1
+        max: 1
+      - key: needSnow
+        min: 0
+        max: 0
+      - key: danger
+        min: 1
+        max: 1
+      - key: needPush
+        min: 1
+        max: 1
+      - key: needFill
+        min: 0
+        max: 0
+      - key: fishOnPath
+        min: 0
+        max: 0
+      - key: useless
+        min: 2
+        max: 2
+    - id: c7-9
+      firstLevel: 63
+      lastLevel: 63
+      values:
+      - key: cols
+        min: 7
+        max: 7
+      - key: rows
+        min: 9
+        max: 9
+      - key: minMoves
+        min: 14
+        max: 16
+      - key: rocks
+        min: 6
+        max: 10
+      - key: snow
+        min: 1
+        max: 3
+      - key: holes
+        min: 2
+        max: 3
+      - key: waterEdges
+        min: 1
+        max: 2
+      - key: fish
+        min: 2
+        max: 3
+      - key: blocks
+        min: 1
+        max: 1
+      - key: penguins
+        min: 2
+        max: 2
+      - key: needSnow
+        min: 0
+        max: 0
+      - key: danger
+        min: 1
+        max: 1
+      - key: needPush
+        min: 1
+        max: 1
+      - key: needFill
+        min: 0
+        max: 0
+      - key: fishOnPath
+        min: 0
+        max: 0
+      - key: useless
+        min: 2
+        max: 2
+  challengeDifficulty:
+    tiers:
+    - id: ch-1
+      firstLevel: 1
+      lastLevel: 3
+      values:
+      - key: cols
+        min: 4
+        max: 4
+      - key: rows
+        min: 6
+        max: 6
+      - key: minMoves
+        min: 2
+        max: 4
+      - key: rocks
+        min: 2
+        max: 4
+      - key: snow
+        min: 0
+        max: 0
+      - key: holes
+        min: 0
+        max: 0
+      - key: waterEdges
+        min: 0
+        max: 0
+      - key: fish
+        min: 0
+        max: 0
+      - key: blocks
+        min: 0
+        max: 0
+      - key: penguins
+        min: 1
+        max: 1
+      - key: needSnow
+        min: 0
+        max: 0
+      - key: danger
+        min: 0
+        max: 0
+      - key: needPush
+        min: 0
+        max: 0
+      - key: needFill
+        min: 0
+        max: 0
+      - key: fishOnPath
+        min: 0
+        max: 0
+      - key: useless
+        min: 3
+        max: 3
+    - id: ch-2
+      firstLevel: 4
+      lastLevel: 6
+      values:
+      - key: cols
+        min: 4
+        max: 4
+      - key: rows
+        min: 6
+        max: 6
+      - key: minMoves
+        min: 3
+        max: 5
+      - key: rocks
+        min: 3
+        max: 5
+      - key: snow
+        min: 0
+        max: 0
+      - key: holes
+        min: 0
+        max: 0
+      - key: waterEdges
+        min: 0
+        max: 0
+      - key: fish
+        min: 0
+        max: 0
+      - key: blocks
+        min: 0
+        max: 0
+      - key: penguins
+        min: 1
+        max: 1
+      - key: needSnow
+        min: 0
+        max: 0
+      - key: danger
+        min: 0
+        max: 0
+      - key: needPush
+        min: 0
+        max: 0
+      - key: needFill
+        min: 0
+        max: 0
+      - key: fishOnPath
+        min: 0
+        max: 0
+      - key: useless
+        min: 3
+        max: 3
+    - id: ch-3
+      firstLevel: 7
+      lastLevel: 9
+      values:
+      - key: cols
+        min: 5
+        max: 5
+      - key: rows
+        min: 7
+        max: 7
+      - key: minMoves
+        min: 4
+        max: 7
+      - key: rocks
+        min: 4
+        max: 6
+      - key: snow
+        min: 0
+        max: 0
+      - key: holes
+        min: 0
+        max: 0
+      - key: waterEdges
+        min: 0
+        max: 0
+      - key: fish
+        min: 0
+        max: 0
+      - key: blocks
+        min: 0
+        max: 0
+      - key: penguins
+        min: 1
+        max: 1
+      - key: needSnow
+        min: 0
+        max: 0
+      - key: danger
+        min: 0
+        max: 0
+      - key: needPush
+        min: 0
+        max: 0
+      - key: needFill
+        min: 0
+        max: 0
+      - key: fishOnPath
+        min: 0
+        max: 0
+      - key: useless
+        min: 3
+        max: 3
+    - id: ch-4
+      firstLevel: 10
+      lastLevel: 12
+      values:
+      - key: cols
+        min: 5
+        max: 5
+      - key: rows
+        min: 7
+        max: 7
+      - key: minMoves
+        min: 3
+        max: 6
+      - key: rocks
+        min: 3
+        max: 6
+      - key: snow
+        min: 0
+        max: 0
+      - key: holes
+        min: 0
+        max: 0
+      - key: waterEdges
+        min: 0
+        max: 0
+      - key: fish
+        min: 1
+        max: 2
+      - key: blocks
+        min: 0
+        max: 0
+      - key: penguins
+        min: 1
+        max: 1
+      - key: needSnow
+        min: 0
+        max: 0
+      - key: danger
+        min: 0
+        max: 0
+      - key: needPush
+        min: 0
+        max: 0
+      - key: needFill
+        min: 0
+        max: 0
+      - key: fishOnPath
+        min: 0
+        max: 0
+      - key: useless
+        min: 3
+        max: 3
+    - id: ch-5
+      firstLevel: 13
+      lastLevel: 15
+      values:
+      - key: cols
+        min: 5
+        max: 5
+      - key: rows
+        min: 7
+        max: 7
+      - key: minMoves
+        min: 5
+        max: 8
+      - key: rocks
+        min: 4
+        max: 7
+      - key: snow
+        min: 0
+        max: 0
+      - key: holes
+        min: 0
+        max: 0
+      - key: waterEdges
+        min: 0
+        max: 0
+      - key: fish
+        min: 2
+        max: 3
+      - key: blocks
+        min: 0
+        max: 0
+      - key: penguins
+        min: 1
+        max: 1
+      - key: needSnow
+        min: 0
+        max: 0
+      - key: danger
+        min: 0
+        max: 0
+      - key: needPush
+        min: 0
+        max: 0
+      - key: needFill
+        min: 0
+        max: 0
+      - key: fishOnPath
+        min: 0
+        max: 0
+      - key: useless
+        min: 3
+        max: 3
+    - id: ch-6
+      firstLevel: 16
+      lastLevel: 20
+      values:
+      - key: cols
+        min: 6
+        max: 6
+      - key: rows
+        min: 8
+        max: 8
+      - key: minMoves
+        min: 4
+        max: 7
+      - key: rocks
+        min: 4
+        max: 7
+      - key: snow
+        min: 1
+        max: 2
+      - key: holes
+        min: 0
+        max: 0
+      - key: waterEdges
+        min: 0
+        max: 0
+      - key: fish
+        min: 0
+        max: 1
+      - key: blocks
+        min: 0
+        max: 0
+      - key: penguins
+        min: 1
+        max: 1
+      - key: needSnow
+        min: 1
+        max: 1
+      - key: danger
+        min: 0
+        max: 0
+      - key: needPush
+        min: 0
+        max: 0
+      - key: needFill
+        min: 0
+        max: 0
+      - key: fishOnPath
+        min: 0
+        max: 0
+      - key: useless
+        min: 3
+        max: 3
+    - id: ch-7
+      firstLevel: 21
+      lastLevel: 25
+      values:
+      - key: cols
+        min: 6
+        max: 6
+      - key: rows
+        min: 8
+        max: 8
+      - key: minMoves
+        min: 6
+        max: 9
+      - key: rocks
+        min: 5
+        max: 8
+      - key: snow
+        min: 2
+        max: 3
+      - key: holes
+        min: 0
+        max: 0
+      - key: waterEdges
+        min: 0
+        max: 0
+      - key: fish
+        min: 1
+        max: 2
+      - key: blocks
+        min: 0
+        max: 0
+      - key: penguins
+        min: 1
+        max: 1
+      - key: needSnow
+        min: 1
+        max: 1
+      - key: danger
+        min: 0
+        max: 0
+      - key: needPush
+        min: 0
+        max: 0
+      - key: needFill
+        min: 0
+        max: 0
+      - key: fishOnPath
+        min: 0
+        max: 0
+      - key: useless
+        min: 3
+        max: 3
+    - id: ch-8
+      firstLevel: 26
+      lastLevel: 30
+      values:
+      - key: cols
+        min: 6
+        max: 6
+      - key: rows
+        min: 8
+        max: 8
+      - key: minMoves
+        min: 5
+        max: 8
+      - key: rocks
+        min: 4
+        max: 7
+      - key: snow
+        min: 0
+        max: 1
+      - key: holes
+        min: 1
+        max: 2
+      - key: waterEdges
+        min: 1
+        max: 1
+      - key: fish
+        min: 0
+        max: 1
+      - key: blocks
+        min: 0
+        max: 0
+      - key: penguins
+        min: 1
+        max: 1
+      - key: needSnow
+        min: 0
+        max: 0
+      - key: danger
+        min: 1
+        max: 1
+      - key: needPush
+        min: 0
+        max: 0
+      - key: needFill
+        min: 0
+        max: 0
+      - key: fishOnPath
+        min: 0
+        max: 0
+      - key: useless
+        min: 3
+        max: 3
+    - id: ch-9
+      firstLevel: 31
+      lastLevel: 35
+      values:
+      - key: cols
+        min: 6
+        max: 6
+      - key: rows
+        min: 8
+        max: 8
+      - key: minMoves
+        min: 7
+        max: 10
+      - key: rocks
+        min: 5
+        max: 8
+      - key: snow
+        min: 0
+        max: 2
+      - key: holes
+        min: 2
+        max: 3
+      - key: waterEdges
+        min: 1
+        max: 2
+      - key: fish
+        min: 1
+        max: 2
+      - key: blocks
+        min: 0
+        max: 0
+      - key: penguins
+        min: 1
+        max: 1
+      - key: needSnow
+        min: 0
+        max: 0
+      - key: danger
+        min: 1
+        max: 1
+      - key: needPush
+        min: 0
+        max: 0
+      - key: needFill
+        min: 0
+        max: 0
+      - key: fishOnPath
+        min: 0
+        max: 0
+      - key: useless
+        min: 3
+        max: 3
+    - id: ch-10
+      firstLevel: 36
+      lastLevel: 40
+      values:
+      - key: cols
+        min: 6
+        max: 6
+      - key: rows
+        min: 8
+        max: 8
+      - key: minMoves
+        min: 5
+        max: 8
+      - key: rocks
+        min: 4
+        max: 7
+      - key: snow
+        min: 0
+        max: 1
+      - key: holes
+        min: 0
+        max: 1
+      - key: waterEdges
+        min: 0
+        max: 1
+      - key: fish
+        min: 0
+        max: 1
+      - key: blocks
+        min: 1
+        max: 1
+      - key: penguins
+        min: 1
+        max: 1
+      - key: needSnow
+        min: 0
+        max: 0
+      - key: danger
+        min: 0
+        max: 0
+      - key: needPush
+        min: 1
+        max: 1
+      - key: needFill
+        min: 0
+        max: 0
+      - key: fishOnPath
+        min: 0
+        max: 0
+      - key: useless
+        min: 3
+        max: 3
+    - id: ch-11
+      firstLevel: 41
+      lastLevel: 45
+      values:
+      - key: cols
+        min: 6
+        max: 6
+      - key: rows
+        min: 8
+        max: 8
+      - key: minMoves
+        min: 7
+        max: 10
+      - key: rocks
+        min: 5
+        max: 8
+      - key: snow
+        min: 0
+        max: 1
+      - key: holes
+        min: 1
+        max: 2
+      - key: waterEdges
+        min: 0
+        max: 1
+      - key: fish
+        min: 0
+        max: 1
+      - key: blocks
+        min: 2
+        max: 2
+      - key: penguins
+        min: 1
+        max: 1
+      - key: needSnow
+        min: 0
+        max: 0
+      - key: danger
+        min: 0
+        max: 0
+      - key: needPush
+        min: 1
+        max: 1
+      - key: needFill
+        min: 0
+        max: 0
+      - key: fishOnPath
+        min: 0
+        max: 0
+      - key: useless
+        min: 3
+        max: 3
+    - id: ch-12
+      firstLevel: 46
+      lastLevel: 50
+      values:
+      - key: cols
+        min: 6
+        max: 6
+      - key: rows
+        min: 8
+        max: 8
+      - key: minMoves
+        min: 5
+        max: 8
+      - key: rocks
+        min: 4
+        max: 7
+      - key: snow
+        min: 0
+        max: 1
+      - key: holes
+        min: 0
+        max: 1
+      - key: waterEdges
+        min: 0
+        max: 1
+      - key: fish
+        min: 0
+        max: 1
+      - key: blocks
+        min: 0
+        max: 0
+      - key: penguins
+        min: 2
+        max: 2
+      - key: needSnow
+        min: 0
+        max: 0
+      - key: danger
+        min: 0
+        max: 0
+      - key: needPush
+        min: 0
+        max: 0
+      - key: needFill
+        min: 0
+        max: 0
+      - key: fishOnPath
+        min: 0
+        max: 0
+      - key: useless
+        min: 3
+        max: 3
+    - id: ch-13
+      firstLevel: 51
+      lastLevel: 55
+      values:
+      - key: cols
+        min: 7
+        max: 7
+      - key: rows
+        min: 9
+        max: 9
+      - key: minMoves
+        min: 7
+        max: 10
+      - key: rocks
+        min: 6
+        max: 9
+      - key: snow
+        min: 0
+        max: 2
+      - key: holes
+        min: 0
+        max: 2
+      - key: waterEdges
+        min: 0
+        max: 1
+      - key: fish
+        min: 1
+        max: 2
+      - key: blocks
+        min: 0
+        max: 0
+      - key: penguins
+        min: 2
+        max: 2
+      - key: needSnow
+        min: 0
+        max: 0
+      - key: danger
+        min: 0
+        max: 0
+      - key: needPush
+        min: 0
+        max: 0
+      - key: needFill
+        min: 0
+        max: 0
+      - key: fishOnPath
+        min: 0
+        max: 0
+      - key: useless
+        min: 3
+        max: 3
+    - id: ch-14
+      firstLevel: 56
+      lastLevel: 60
+      values:
+      - key: cols
+        min: 7
+        max: 7
+      - key: rows
+        min: 9
+        max: 9
+      - key: minMoves
+        min: 8
+        max: 11
+      - key: rocks
+        min: 6
+        max: 9
+      - key: snow
+        min: 1
+        max: 2
+      - key: holes
+        min: 1
+        max: 2
+      - key: waterEdges
+        min: 1
+        max: 2
+      - key: fish
+        min: 1
+        max: 2
+      - key: blocks
+        min: 1
+        max: 1
+      - key: penguins
+        min: 1
+        max: 1
+      - key: needSnow
+        min: 0
+        max: 0
+      - key: danger
+        min: 1
+        max: 1
+      - key: needPush
+        min: 0
+        max: 0
+      - key: needFill
+        min: 0
+        max: 0
+      - key: fishOnPath
+        min: 0
+        max: 0
+      - key: useless
+        min: 3
+        max: 3
+    - id: ch-15
+      firstLevel: 61
+      lastLevel: 65
+      values:
+      - key: cols
+        min: 7
+        max: 7
+      - key: rows
+        min: 9
+        max: 9
+      - key: minMoves
+        min: 8
+        max: 11
+      - key: rocks
+        min: 6
+        max: 9
+      - key: snow
+        min: 1
+        max: 2
+      - key: holes
+        min: 1
+        max: 2
+      - key: waterEdges
+        min: 1
+        max: 1
+      - key: fish
+        min: 1
+        max: 2
+      - key: blocks
+        min: 1
+        max: 1
+      - key: penguins
+        min: 2
+        max: 2
+      - key: needSnow
+        min: 0
+        max: 0
+      - key: danger
+        min: 0
+        max: 0
+      - key: needPush
+        min: 0
+        max: 0
+      - key: needFill
+        min: 0
+        max: 0
+      - key: fishOnPath
+        min: 0
+        max: 0
+      - key: useless
+        min: 3
+        max: 3
+    - id: ch-16
+      firstLevel: 66
+      lastLevel: 70
+      values:
+      - key: cols
+        min: 7
+        max: 7
+      - key: rows
+        min: 9
+        max: 9
+      - key: minMoves
+        min: 9
+        max: 12
+      - key: rocks
+        min: 6
+        max: 10
+      - key: snow
+        min: 1
+        max: 3
+      - key: holes
+        min: 1
+        max: 3
+      - key: waterEdges
+        min: 1
+        max: 2
+      - key: fish
+        min: 1
+        max: 2
+      - key: blocks
+        min: 1
+        max: 1
+      - key: penguins
+        min: 2
+        max: 2
+      - key: needSnow
+        min: 0
+        max: 0
+      - key: danger
+        min: 0
+        max: 0
+      - key: needPush
+        min: 0
+        max: 0
+      - key: needFill
+        min: 0
+        max: 0
+      - key: fishOnPath
+        min: 0
+        max: 0
+      - key: useless
+        min: 3
+        max: 3
+  challenge:
+    marginStartPercent: 60
+    marginEndPercent: 10
+    maxSeedRetries: 30
+    dailyTiers:
+    - ch-6
+    - ch-8
+    - ch-10
+    - ch-12
+    - ch-14
+  challengeMaxAttempts: 600
+  challengeMaxStates: 15000

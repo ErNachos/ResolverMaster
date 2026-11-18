@@ -373,3 +373,39 @@
 
 **Problemi aperti / prossimi passi**
 - Temi nuovi con motivi di terreno e sfondo già esistenti (solo colori nuovi); icone dei capitoli segnaposto.
+
+## Update PG-001 — Pingù: il gioco completo (2026-11-18)
+
+**Fatto**
+- **Nota**: l'Editor di Unity era aperto: test, validatore, generazione e anteprime in batchmode sulla copia `Logs/BatchCopy/`; i file generati riportati nel progetto.
+- **A — Regole** (`docs/penguin-regole.md`): griglie 4x6–7x9; 1 mossa = 1 swipe, swipe a vuoto e swipe durante un'animazione ignorati; ghiaccio, roccia, neve (ci si ferma), acqua (caduta = livello fallito: in Storia riparte con mosse a 0, in Challenge run persa); bordo a tratti di muro di neve o acqua; igloo chiuso finché mancano pesci, ingresso passandoci sopra; blocchi che scivolano, si fermano nella neve e affondano riempiendo i buchi; due pinguini mossi insieme (prima chi è davanti), stop reciproco, ingresso separato. Scelte: i blocchi si fermano davanti a pesci non presi e igloo; il bordo d'acqua ferma i blocchi come un muro.
+- **B — "Sei bloccato" (Core)**: `PuzzleBoard.IsStuck`; Storia Annulla / Ricomincia, Challenge Annulla / Termina, senza annullamenti sconfitta subito (`ChallengeRunState.StuckIsLost`), poi Continua.
+- **C — Risolutore** (`PenguinSpace`: tutti gli stati, distanze esatte all'indietro, tetto in `PenguinConfig`) e **generatore** deterministico (bozza + salita, limite in tentativi, novità del capitolo obbligatoria, primi pesci del Capitolo 2 sul percorso, al massimo pochi elementi mai toccati).
+- **D — Schermata**: swipe su tutta la board (Core `SwipeGesture`/`SwipeArea`), scivolata a velocità costante dai tempi della logica, urto e faccia stordita, pesce raccolto, igloo che si apre, ingresso felice, caduta spaventata con spruzzo e messaggio, blocco che affonda; grafica provvisoria dal codice (`PenguinSprites`), sciarpe arancione a tinta unita / viola a strisce con la bandierina uguale. Home: scheda "Pingù" con immagine provvisoria (`Tools/Art/make_penguin_card.py`).
+- **E — Storia**: 7 capitoli, 63 livelli (`docs/penguin-livelli.md`), 7 temi nuovi nel Core (terreno di neve, sfondi Distesa di ghiaccio e Aurora), icone Material segnaposto; menu *Pingù > Genera livelli Storia*.
+- **F — Lampadina**: freccia e prossima mossa (non conta), se bloccati annulla fino all'ultima posizione con soluzione; al massimo 2 stelle.
+- **G — Challenge e Sfida del giorno**: 16 gradini in `PenguinConfig` (`docs/penguin-challenge.md`), menu *Pingù > Prova Challenge*.
+- **Spostato nel Core**: `SdfArt` (disegno dal codice, prima privato di Traffic jam), "Sei bloccato", `ShowsMessages` (spazio del messaggio sotto la griglia per le board senza pulsante d'azione: misurato dalle anteprime), swipe.
+- Validatore: controllo `Penguin`. Anteprime: Pingù completo (anche daltonismo); filtro `-previewFilter` per i controlli rapidi.
+- **Test**: 6 nuovi (scivolata/stop/neve/acqua/swipe a vuoto/animazione; pesci, igloo e blocchi; due pinguini; bloccato e lampadina; generatore e salvataggio della Challenge; 63 livelli).
+
+**Risultati**
+- Compilazione: 0 errori, 0 warning. Test: 54/54 verdi. Validatore: OK (13 controlli, 0 errori, 0 warning).
+- Anteprime: 500 schermate, nessun problema misurato. Celle Pingù: 4x6 191 px, 6x8 154 px, 7x9 137 px (9:16).
+- Tempi (Editor): risolutore 7x9 0,4 ms in media (max 2 ms); "Sei bloccato" e lampadina con la tabella < 1 µs; generatore Challenge 7x9 6–11 ms in media (max 27 ms); 63 livelli della Storia in 1,5 s.
+
+| Cap. | Livelli | Griglie | Mosse minime |
+|---|---|---|---|
+| 1 | 1–9 | 4x6 → 5x7 | 1, 2, 3, 4, 4, 4, 5, 5, 7 |
+| 2 | 10–18 | 5x7 | 2, 3, 4, 5, 5, 6, 6, 8, 8 |
+| 3 | 19–27 | 5x7 → 6x8 | 3, 4, 5, 5, 6, 6, 7, 8, 9 |
+| 4 | 28–36 | 6x8 | 4, 4, 5, 5, 7, 7, 8, 9, 11 |
+| 5 | 37–45 | 6x8 | 3, 5, 5, 6, 8, 9, 10, 10, 11 |
+| 6 | 46–54 | 6x8 → 7x9 | 3, 5, 5, 6, 7, 8, 8, 10, 12 |
+| 7 | 55–63 | 7x9 | 7, 9, 9, 9, 10, 11, 13, 13, 15 |
+
+**Da provare a mano sul telefono**
+- Swipe (soglia, lanci veloci), velocità della scivolata, caduta e ripartenza, "Sei bloccato", lampadina, due pinguini; Challenge con caduta e Continua.
+
+**Problemi aperti / prossimi passi**
+- Grafica, icone e immagine della scheda provvisorie. Livelli generati relativamente brevi (massimo 15 mosse).

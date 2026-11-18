@@ -112,6 +112,11 @@ namespace ResolverMaster.Core.Localization
         public const string ChallengeUndo = "challenge.undo";
         /// <summary>"End" (the run is lost).</summary>
         public const string ChallengeEnd = "challenge.end";
+        /// <summary>PG-001: "You are stuck" (no solution from here): title, the line of the Story, the line of the Challenge ({0} undos left), Restart.</summary>
+        public const string GameStuck = "game.stuck";
+        public const string GameStuckHint = "game.stuck.hint";
+        public const string ChallengeStuckHint = "challenge.stuck.hint";
+        public const string GameRestart = "game.restart";
 
         /// <summary>Language display name key: "language.it", "language.en".</summary>
         public static string LanguageName(Language language) => "language." + LanguageCodes.ToCode(language);

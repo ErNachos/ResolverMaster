@@ -101,3 +101,16 @@ theme.spa.name = Spa
 theme.station.name = Station
 theme.mine.name = Mine
 theme.palace.name = Palace
+
+# PG-001: "You are stuck" (no solution from here) and the Pingù themes
+game.stuck = You are stuck
+game.stuck.hint = There is no way out from here.
+challenge.stuck.hint = Undo to go back ({0} left).
+game.restart = Restart
+theme.lake.name = Frozen lake
+theme.packice.name = Pack ice
+theme.blizzard.name = Blizzard
+theme.thaw.name = Thaw
+theme.glacier.name = Glacier
+theme.pole.name = Pole
+theme.aurora.name = Northern lights

@@ -3,6 +3,7 @@ using System.IO;
 using ResolverMaster.Core.Puzzle;
 using ResolverMaster.Core.UI;
 using ResolverMaster.Core.UI.Themes;
+using ResolverMaster.Games.Penguin;
 using ResolverMaster.Games.Plumber;
 using ResolverMaster.Games.TrafficJam;
 using UnityEditor;
@@ -14,7 +15,7 @@ namespace ResolverMaster.Editor
     /// <summary>
     /// Creates the parameter files that do not exist yet, with the default values written in their classes
     /// (Core <see cref="PuzzleConfig"/> and <see cref="ThemeConfig"/>, Plumber <see cref="PlumberConfig"/>, Traffic jam
-    /// <see cref="TrafficJamConfig"/>). Existing files are never overwritten; TJ-001: themes added to the classes later are appended to
+    /// <see cref="TrafficJamConfig"/>, PG-001 Pingù <see cref="PenguinConfig"/>). Existing files are never overwritten; TJ-001: themes added to the classes later are appended to
     /// the existing ThemeConfig (the themes already there are not touched).
     /// Batch: -executeMethod ResolverMaster.Editor.ConfigAssets.EnsureAllBatch
     /// </summary>
@@ -29,6 +30,9 @@ namespace ResolverMaster.Editor
         public const string TrafficJamDir = "Assets/Resources/Games/TrafficJam";
         public const string TrafficJamConfigPath = TrafficJamDir + "/TrafficJamConfig.asset";
         public const string TrafficJamStoryPath = TrafficJamDir + "/trafficjam_story.json";
+        public const string PenguinDir = "Assets/Resources/Games/Penguin";
+        public const string PenguinConfigPath = PenguinDir + "/PenguinConfig.asset";
+        public const string PenguinStoryPath = PenguinDir + "/penguin_story.json";
 
         [MenuItem("Resolver Master/Setup/Ensure Config Assets")]
         public static void EnsureAll()
@@ -38,6 +42,7 @@ namespace ResolverMaster.Editor
             Ensure<ThemeConfig>(ThemeConfigPath);
             Ensure<PlumberConfig>(PlumberConfigPath);
             Ensure<TrafficJamConfig>(TrafficJamConfigPath);
+            Ensure<PenguinConfig>(PenguinConfigPath);
             AddMissingThemes();
             AssetDatabase.SaveAssets();
         }

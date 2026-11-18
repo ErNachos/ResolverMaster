@@ -101,3 +101,16 @@ theme.spa.name = Terme
 theme.station.name = Stazione
 theme.mine.name = Miniera
 theme.palace.name = Reggia
+
+# PG-001: "Sei bloccato" (nessuna soluzione da qui) e temi di Pingù
+game.stuck = Sei bloccato
+game.stuck.hint = Da qui non c'è più soluzione.
+challenge.stuck.hint = Annulla per tornare indietro (ne hai {0}).
+game.restart = Ricomincia
+theme.lake.name = Lago ghiacciato
+theme.packice.name = Banchisa
+theme.blizzard.name = Bufera
+theme.thaw.name = Disgelo
+theme.glacier.name = Ghiacciaio
+theme.pole.name = Polo
+theme.aurora.name = Aurora

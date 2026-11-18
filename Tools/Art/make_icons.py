@@ -58,6 +58,15 @@ ICONS = {
     "train": "train",
     "hardware": "hardware",
     "crown": "crown",
+    # PG-001: Pingù (game) and its chapters (frozen lake, pack ice, blizzard, thaw, glacier, pole, aurora)
+    "game_penguin": "ac_unit",
+    "ice_skating": "ice_skating",
+    "set_meal": "set_meal",
+    "weather_snowy": "weather_snowy",
+    "waves": "waves",
+    "terrain": "terrain",
+    "diversity_1": "diversity_1",
+    "auto_awesome": "auto_awesome",
 }
 
 

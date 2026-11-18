@@ -6,7 +6,8 @@ namespace ResolverMaster.Core.UI.Themes
 {
     /// <summary>
     /// The single parameter file of the chapter themes (Core, shared by every game): Garden, Farm, City; ErNa-006: Factory, Building site,
-    /// Harbour, Mountain, Laboratory, Castle; TJ-001: Parking, Market, Airport, Crossroads, Rush hour; ErNa-009: Spa, Station, Mine, Palace.
+    /// Harbour, Mountain, Laboratory, Castle; TJ-001: Parking, Market, Airport, Crossroads, Rush hour; ErNa-009: Spa, Station, Mine, Palace; PG-001: Lake, Pack ice,
+    /// Blizzard, Thaw, Glacier, Pole, Aurora.
     /// Asset: Assets/Resources/ResolverMaster/ThemeConfig.asset (created by Resolver Master > Setup > Ensure Config Assets).
     /// Each game's chapters name one of these ids (e.g. PlumberConfig.chapters[i].theme).
     /// </summary>
@@ -21,6 +22,9 @@ namespace ResolverMaster.Core.UI.Themes
         public const string Parking = "parking", Market = "market", Airport = "airport", Crossroads = "crossroads", RushHour = "rushhour";
         /// <summary>ErNa-009 (Plumber chapters 10-13).</summary>
         public const string Spa = "spa", Station = "station", Mine = "mine", Palace = "palace";
+        /// <summary>PG-001 (Pingù chapters): frozen lake, pack ice, blizzard, thaw, glacier, pole, northern lights.</summary>
+        public const string Lake = "lake", PackIce = "packice", Blizzard = "blizzard", Thaw = "thaw", Glacier = "glacier", Pole = "pole",
+            NorthernLights = "aurora";
 
         /// <summary>Used by a chapter with no theme or an unknown one.</summary>
         public string defaultTheme = Garden;
@@ -192,7 +196,30 @@ namespace ResolverMaster.Core.UI.Themes
                 backdrop = BackdropPattern.Castle,
                 skyTop = C(0xE5DDE2), skyBottom = C(0xF6F2F2), landA = C(0xC4B49C), landB = C(0x5F7F4E), landDetail = C(0x8E7F6B),
             },
+            // PG-001, Pingù: pale ice and snow, never close to the water colors nor to the Traffic jam target cars (checked by the validators)
+            Ice(Lake, 2001, Icy(0xF2F5F7, 0xD9E4EA, 0xE8F1F3, 0xBFD3DA, 0xA9C6CF), BackdropPattern.Icefield, 0xCFE3EC, 0xF2F7F8, 0xE9F0F2, 0xBFD3DA, 0x8FA9B3, 0xA9C9D2),
+            Ice(PackIce, 2002, Icy(0xEEF3F2, 0xD3E1DF, 0xE6EFEF, 0xBCD3D4, 0x9FBEC2), BackdropPattern.Icefield, 0xD7E6E8, 0xF3F7F6, 0xEEF3F2, 0x9FC3C2, 0x7FA3A3, 0x9FC3BC),
+            Ice(Blizzard, 2003, Icy(0xE9ECEF, 0xCDD4DA, 0xE3EAEE, 0xC2CFD6, 0xA3B1BA), BackdropPattern.Icefield, 0xB8C0C8, 0xDDE2E6, 0xE6EAED, 0xC9D3DA, 0x9AA6AF, 0xB8C2CA),
+            Ice(Thaw, 2004, Icy(0xEEF1EC, 0xD2DCCF, 0xE6EFF0, 0xBCD3D4, 0x9FBEC2), BackdropPattern.Icefield, 0xDCE6E0, 0xF3F6F1, 0xE8EEE6, 0xA9C2B4, 0x7E9A86, 0xA8C3A0),
+            Ice(Glacier, 2005, Icy(0xEEF2F4, 0xD2DDE3, 0xE4EEF2, 0xB7CCD6, 0x98B2BF), BackdropPattern.Mountains, 0xD3E2EA, 0xF1F5F7, 0xC9D6DC, 0xE8EEF0, 0xF7F9FA, 0x9DB7C4),
+            Ice(Pole, 2006, Icy(0xF4F3F1, 0xDCDDDF, 0xEDF2F3, 0xC8D8DD, 0xA6BCC4), BackdropPattern.Icefield, 0xE8E1DA, 0xF6F3EF, 0xF1F2F2, 0xC9D8DE, 0x9DAAB0, 0xC4B8B0),
+            Ice(NorthernLights, 2007, Icy(0xE6ECF0, 0xC8D3DB, 0xDDE8EE, 0xAFC4CF, 0x8DA5B2), BackdropPattern.Aurora, 0x1C2433, 0x2E3B52, 0xDCE4EA, 0xAEBFCB, 0x7FD8A6, 0x8FCBB0),
         };
+
+        /// <summary>PG-001: the snow ground and the ice tiles of a Pingù theme (ground, ground detail, slab, slab detail, slab rim).</summary>
+        static int[] Icy(int ground, int groundDetail, int slab, int slabDetail, int slabEdge) => new[] { ground, groundDetail, slab, slabDetail, slabEdge };
+
+        /// <summary>PG-001: a Pingù theme (snow terrain; backdrop colors: sky top and bottom, land A and B, detail; accent).</summary>
+        static VisualTheme Ice(string id, int seed, int[] cells, BackdropPattern backdrop, int skyTop, int skyBottom, int landA, int landB, int landDetail, int accent) =>
+            new VisualTheme
+            {
+                id = id, nameKey = "theme." + id + ".name", accent = C(accent), seed = seed,
+                terrain = TerrainPattern.Snow,
+                ground = C(cells[0]), groundDetail = C(cells[1]),
+                slab = C(cells[2]), slabDetail = C(cells[3]), slabEdge = C(cells[4]),
+                backdrop = backdrop,
+                skyTop = C(skyTop), skyBottom = C(skyBottom), landA = C(landA), landB = C(landB), landDetail = C(landDetail),
+            };
 
         ThemeCatalog _catalog;
 

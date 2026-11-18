@@ -11,6 +11,7 @@ using ResolverMaster.Core.Save;
 using ResolverMaster.Core.UI;
 using ResolverMaster.Core.UI.Screens;
 using ResolverMaster.Games.Plumber;
+using ResolverMaster.Games.Penguin;
 using ResolverMaster.Games.TrafficJam;
 using ResolverMaster.Core.UI.Themes;
 using TMPro;
@@ -33,6 +34,8 @@ namespace ResolverMaster.Editor
     /// the free space above and below the grid, the size of the fountain drawings and the position of the main action button.
     /// TJ-001: Traffic jam too (mode, chapters, levels, two levels per chapter, light bulb, drag, win, Challenge with "Out of moves",
     /// daily challenge, Home with the record) and the short side of the vehicles.
+    /// PG-001: Pingù too (Home, mode, chapters, levels, two levels per chapter, a slide, a push, a fall, "You are stuck", light bulb,
+    /// win, Challenge also stuck, daily challenge, Home with the record) and the drawn size of the penguins.
     /// Report: Previews/previews_report.txt (also in the log). Batch: -executeMethod ResolverMaster.Editor.PreviewMaker.MakePreviewsBatch
     /// </summary>
     public static class PreviewMaker
@@ -328,6 +331,174 @@ namespace ResolverMaster.Editor
                     home.ShowCard(Math.Max(0, ctx.Games.Games.ToList().FindIndex(g => g.Id == TrafficJamModule.Id)));
                 },
             },
+
+            // PG-001: Pingù: Home, mode choice, chapters, levels, two levels per chapter (also color-blind), a slide, a push, a fall,
+            // stuck, light bulb (one and two penguins), win, Challenge (playing and stuck), daily challenge, Home with the record
+            HomeShot("home_penguin", PenguinModule.Id),
+            new Shot
+            {
+                Name = "pg_mode_select",
+                Setup = (ctx, m) =>
+                {
+                    m.Get<ModeSelectScreen>(ScreenIds.ModeSelect).SetGame(ctx.Games.Find(PenguinModule.Id));
+                    m.PushImmediate(ScreenIds.ModeSelect);
+                },
+            },
+            new Shot
+            {
+                Name = "pg_chapters",
+                Setup = (ctx, m) =>
+                {
+                    PgSampleProgress(ctx);
+                    m.Get<ChapterSelectScreen>(ScreenIds.ChapterSelect).Open(ctx.Games.FindModule(PenguinModule.Id));
+                    m.PushImmediate(ScreenIds.ChapterSelect);
+                },
+            },
+            PgLevelsShot(1), PgLevelsShot(4), PgLevelsShot(7),
+            PgGameShot("game_pg_c1_1", 0), PgGameShot("game_pg_c1_9", 8),
+            PgGameShot("game_pg_c2_10", 9), PgGameShot("game_pg_c2_18", 17),
+            PgGameShot("game_pg_c3_19", 18), PgGameShot("game_pg_c3_27", 26),
+            PgGameShot("game_pg_c4_28", 27), PgGameShot("game_pg_c4_36", 35),
+            PgGameShot("game_pg_c5_37", 36), PgGameShot("game_pg_c5_45", 44),
+            PgGameShot("game_pg_c6_46", 45), PgGameShot("game_pg_c6_54", 53),
+            PgGameShot("game_pg_c7_55", 54), PgGameShot("game_pg_c7_63", 62),
+            PgGameShot("game_pg_partial", 40, BoardPreview.Partial),
+            PgGameShot("game_pg_slide", 12, after: b => ((ResolverMaster.Games.Penguin.View.PenguinBoardView)b).PreviewSlide(0.5f)),
+            PgGameShot("game_pg_push", 36, after: b => ((ResolverMaster.Games.Penguin.View.PenguinBoardView)b).PreviewSlide(0.75f)),
+            PgGameShot("game_pg_fall", 35, after: b => ((ResolverMaster.Games.Penguin.View.PenguinBoardView)b).PreviewFall()),
+            PgGameShot("game_pg_hint", 20, after: b => ((ResolverMaster.Games.Penguin.View.PenguinBoardView)b).PreviewHintArrow()),
+            PgGameShot("game_pg_hint_2p", 50, after: b => ((ResolverMaster.Games.Penguin.View.PenguinBoardView)b).PreviewHintArrow()),
+            PgGameShot("game_pg_stuck", -1, after: b => ((ResolverMaster.Games.Penguin.View.PenguinBoardView)b).PreviewStuck()),
+            PgGameShot("game_pg_win", 2, BoardPreview.Solved, win: true),
+            PgChallengeShot("challenge_pg_game", 23, stuck: false),
+            PgChallengeShot("challenge_pg_stuck", 41, stuck: true),
+            new Shot
+            {
+                Name = "daily_pg_game",
+                Setup = (ctx, m) =>
+                {
+                    var module = ctx.Games.FindModule(PenguinModule.Id);
+                    var run = ResolverMaster.Core.Challenge.DailyChallenge.Begin(ctx.Data.challenge, PenguinModule.Id, ctx.Today,
+                        ResolverMaster.Core.Challenge.DailyChallenge.Steps(module.Challenge));
+                    run.OnSolved(3);
+                    m.Get<GameScreen>(ScreenIds.Game).StartChallenge(module, run);
+                    m.PushImmediate(ScreenIds.Game);
+                },
+                AfterLayout = (ctx, m) =>
+                {
+                    var game = m.Get<GameScreen>(ScreenIds.Game);
+                    game.Board.Refit();
+                    game.Board.SnapVisuals();
+                },
+            },
+            new Shot
+            {
+                Name = "home_pg_challenge",
+                Setup = (ctx, m) =>
+                {
+                    PgSampleRun(ctx, 23, false);
+                    ctx.Data.challenge.SubmitScore(PenguinModule.Id, 27, 11);
+                },
+                AfterLayout = (ctx, m) =>
+                {
+                    var home = m.Get<HomeScreen>(ScreenIds.Home);
+                    home.OnShow();
+                    home.ShowCard(Math.Max(0, ctx.Games.Games.ToList().FindIndex(g => g.Id == PenguinModule.Id)));
+                },
+            },
+        };
+
+        // ------------------------------------------------------------------ Pingù shots (PG-001)
+
+        /// <summary>A Pingù level (<paramref name="levelIndex"/> -1: the first Story level from chapter 4 on with a way into "You are stuck").</summary>
+        static Shot PgGameShot(string name, int levelIndex, BoardPreview state = BoardPreview.Start, bool win = false, Action<PuzzleBoard> after = null) => new Shot
+        {
+            Name = name,
+            Setup = (ctx, m) =>
+            {
+                var module = (PenguinModule)ctx.Games.FindModule(PenguinModule.Id);
+                int index = levelIndex >= 0 ? levelIndex : PgStuckLevel(module);
+                m.Get<GameScreen>(ScreenIds.Game).StartLevel(module, index);
+                m.PushImmediate(ScreenIds.Game);
+            },
+            AfterLayout = (ctx, m) =>
+            {
+                var game = m.Get<GameScreen>(ScreenIds.Game);
+                game.Board.Refit();
+                game.Board.SnapVisuals();
+                game.Board.PreparePreview(state);
+                after?.Invoke(game.Board);
+                if (win) game.ShowWin(animate: false);
+            },
+        };
+
+        static int PgStuckLevel(PenguinModule module)
+        {
+            var levels = module.StoryLevels;
+            for (int i = 27; i < levels.Count; i++)
+            {
+                var p = new PenguinPuzzle();
+                p.Load(levels[i]);
+                if (p.Space.PathToStuck().Count > 0) return i;
+            }
+            return 0;
+        }
+
+        static Shot PgLevelsShot(int chapter) => new Shot
+        {
+            Name = "pg_levels_c" + chapter,
+            Setup = (ctx, m) =>
+            {
+                PgSampleProgress(ctx);
+                m.Get<LevelSelectScreen>(ScreenIds.LevelSelect).Open(ctx.Games.FindModule(PenguinModule.Id), chapter);
+                m.PushImmediate(ScreenIds.LevelSelect);
+            },
+        };
+
+        /// <summary>Sample progress: chapters 1-6 complete with mixed stars (chapter 7 open).</summary>
+        static void PgSampleProgress(AppServices ctx)
+        {
+            var book = ctx.Games.FindModule(PenguinModule.Id).Story;
+            for (int i = 0; i < book.LevelCount - 9; i++) ctx.Data.progress.SetBest(StoryProgress.Mode, book.IdOf(i), 1 + (i * 5 % 3));
+        }
+
+        /// <summary>
+        /// A sample Pingù run (fixed seed) at <paramref name="level"/>: two moves of the solution, or (<paramref name="stuck"/>) the way into a
+        /// state with no solution left, with 2 undos.
+        /// </summary>
+        static ResolverMaster.Core.Challenge.ChallengeRunState PgSampleRun(AppServices ctx, int level, bool stuck)
+        {
+            var module = ctx.Games.FindModule(PenguinModule.Id);
+            var run = ResolverMaster.Core.Challenge.ChallengeRunState.Start(PenguinModule.Id, 4242);
+            run.SetLevel(ResolverMaster.Core.Challenge.ChallengeRules.Generate(module.Challenge, run.runSeed, level, 0));
+            run.stars = 2 * (level - 1);
+            run.levelsCleared = level - 1;
+            run.undosLeft = 2;
+            var p = new PenguinPuzzle();
+            p.Load(PenguinChallenge.ToLevel(run.level, run.tierId, run.levelSeed, run.levelData, run.minMoves));
+            var dirs = stuck ? p.Space.PathToStuck() : p.Space.Solution(p.State).Take(2).ToList();
+            foreach (int d in dirs)
+                if (p.Swipe(d)) run.OnMove(d);
+            ctx.Data.challenge.SetRun(run);
+            return run;
+        }
+
+        static Shot PgChallengeShot(string name, int level, bool stuck) => new Shot
+        {
+            Name = name,
+            Setup = (ctx, m) =>
+            {
+                var run = PgSampleRun(ctx, level, stuck);
+                ctx.Data.challenge.SubmitScore(PenguinModule.Id, 27, 11);
+                m.Get<GameScreen>(ScreenIds.Game).StartChallenge(ctx.Games.FindModule(PenguinModule.Id), run);
+                m.PushImmediate(ScreenIds.Game);
+            },
+            AfterLayout = (ctx, m) =>
+            {
+                var game = m.Get<GameScreen>(ScreenIds.Game);
+                game.Board.Refit();
+                game.Board.SnapVisuals();
+            },
         };
 
         // ------------------------------------------------------------------ Traffic jam shots (TJ-001)
@@ -570,6 +741,18 @@ namespace ResolverMaster.Editor
             }
         }
 
+        /// <summary>
+        /// PG-001: an optional filter for quick checks: <c>-previewFilter a,b</c> on the command line keeps only the shots whose name
+        /// contains one of the parts (no filter = every shot, as always before a commit).
+        /// </summary>
+        static bool Selected(Shot shot)
+        {
+            var args = Environment.GetCommandLineArgs();
+            int i = Array.IndexOf(args, "-previewFilter");
+            if (i < 0 || i + 1 >= args.Length) return true;
+            return args[i + 1].Split(',').Any(part => part.Length > 0 && shot.Name.Contains(part));
+        }
+
         public static List<string> Make()
         {
             Directory.CreateDirectory(OutDir);
@@ -592,7 +775,7 @@ namespace ResolverMaster.Editor
                     report.Append($"\n== {device.Width}x{device.Height} ({device.Name}) safe area x {device.Safe.x}..{device.Safe.xMax}, y {device.Safe.y}..{device.Safe.yMax} " +
                                   $"-> margins top {device.Height - device.Safe.yMax} px, bottom {device.Safe.y} px, left {device.Safe.x} px, right {device.Width - device.Safe.xMax} px\n");
                     foreach (var lang in LanguageCodes.All)
-                    foreach (var shot in Shots)
+                    foreach (var shot in Shots.Where(Selected))
                     {
                         string file = $"{OutDir}/{shot.Name}_{LanguageCodes.ToCode(lang)}_{device.Width}x{device.Height}.png";
                         var issues = Shoot(scene, style, icons, device, lang, shot, file, out string margins, out string board);
@@ -765,6 +948,12 @@ namespace ResolverMaster.Editor
                         sb.Append($"; {drawn.Count} drawn, width {across:0.0} px ({across / cell * 100:0}% of a cell), smallest room along a vehicle {spare:0.0} px");
                     }
                 }
+            }
+            // PG-001: the penguins: drawn size as a share of the cell
+            if (game.Board is ResolverMaster.Games.Penguin.View.PenguinBoardView penguin)
+            {
+                var pens = penguin.PenguinRects.Select(r => PixelRect(r, d)).ToList();
+                if (pens.Count > 0) sb.Append($"; {pens.Count} penguin(s) drawn at {pens.Min(r => r.width):0.0} px ({pens.Min(r => r.width) / cell * 100:0}% of a cell)");
             }
             if (game.Board is ResolverMaster.Games.Plumber.View.PlumberBoardView plumber)
             {

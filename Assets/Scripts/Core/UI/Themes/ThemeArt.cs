@@ -97,6 +97,28 @@ namespace ResolverMaster.Core.UI.Themes
                     }
                     for (int i = 0; i < 16; i++) c.Disk(R(rng, lo, hi), R(rng, lo, hi), R(rng, 1.5f, 3f), t.slabEdge, 0.6f);
                     break;
+                case TerrainPattern.Snow:
+                    // PG-001: pale ice: a few thin cracks, white glints in one corner, tiny frost dots
+                    for (int k = 0; k < 3; k++)
+                    {
+                        float x = R(rng, lo, hi), y = R(rng, lo, hi), ang = R(rng, 0f, 6.28f);
+                        for (int s = 0; s < 5; s++)
+                        {
+                            ang += R(rng, -0.7f, 0.7f);
+                            float len = R(rng, 12f, 26f);
+                            float nx = Mathf.Clamp(x + Mathf.Cos(ang) * len, lo, hi), ny = Mathf.Clamp(y + Mathf.Sin(ang) * len, lo, hi);
+                            c.Line(x, y, nx, ny, 1.4f, t.slabDetail, 0.8f);
+                            x = nx;
+                            y = ny;
+                        }
+                    }
+                    for (int k = 0; k < 2; k++)
+                    {
+                        float off = lo + 14f + k * 16f;
+                        c.Line(off, hi - 6f, off + 34f, hi - 40f, 4f - k * 1.5f, Color.white, 0.75f);
+                    }
+                    for (int i = 0; i < 40; i++) c.Disk(R(rng, lo, hi), R(rng, lo, hi), R(rng, 0.7f, 1.3f), Color.white, 0.6f);
+                    break;
                 default:
                     for (int i = 0; i < 120; i++) c.Disk(R(rng, lo, hi), R(rng, lo, hi), R(rng, 0.8f, 1.6f), rng.Chance(0.5) ? t.slabDetail : t.slab * 1.06f, 0.7f);
                     // bevel: a light line inside the top-left of the slab
@@ -136,6 +158,11 @@ namespace ResolverMaster.Core.UI.Themes
                         c.Line(x, y, x + Mathf.Cos(ang) * len, y + Mathf.Sin(ang) * len, 1.7f, t.groundDetail, 0.9f);
                     }
                     for (int i = 0; i < 26; i++) c.Disk(R(rng, 0, n), R(rng, 0, n), R(rng, 1.8f, 3.4f), t.ground * 0.78f, 0.8f);
+                    break;
+                case TerrainPattern.Snow:
+                    // PG-001: soft dimples in the snow and sparkles
+                    for (int i = 0; i < 40; i++) c.Disk(R(rng, 0, n), R(rng, 0, n), R(rng, 2.5f, 5.5f), t.groundDetail, 0.45f);
+                    for (int i = 0; i < 80; i++) c.Disk(R(rng, 0, n), R(rng, 0, n), R(rng, 0.6f, 1.3f), Color.white, 0.9f);
                     break;
                 default:
                     for (int i = 0; i < 260; i++) c.Disk(R(rng, 0, n), R(rng, 0, n), R(rng, 0.7f, 1.4f), rng.Chance(0.5) ? t.groundDetail : t.ground * 1.12f, 0.8f);
@@ -272,6 +299,51 @@ namespace ResolverMaster.Core.UI.Themes
                         c.Line(0, y, w, y, 1.3f, t.landA * 0.86f, 0.6f);
                     c.Rect(w * 0.45f, baseY, w * 0.55f, baseY + h * 0.11f, t.landDetail, 1f);   // the gate
                     for (int i = 0; i < 120; i++) Tuft(c, rng, R(rng, 0, w), h * R(rng, 0.02f, ground - 0.04f), t.landB * 0.7f, R(rng, 6f, 11f), 0.85f);
+                    break;
+                }
+                case BackdropPattern.Icefield:
+                {
+                    // PG-001: pale sky, snowy hills, a frozen field with ice floes, falling snowflakes
+                    float horizon = 0.62f, hills = 0.70f;
+                    Fill(c, nseed, 46f, (u, v) =>
+                    {
+                        float hill = hills + 0.04f * Mathf.Sin(u * 4.3f + 0.5f) + 0.025f * Mathf.Sin(u * 9.1f + 1.3f);
+                        float edge = horizon + 0.012f * Mathf.Sin(u * 7.3f);
+                        if (v > hill) return (Color.Lerp(t.skyBottom, t.skyTop, Smooth(hill, 1f, v)), false);
+                        if (v > edge) return (Color.Lerp(t.landA * 0.95f, t.landA, (v - edge) / Mathf.Max(0.01f, hill - edge)), true);
+                        return (Color.Lerp(t.landB * 0.93f, Color.Lerp(t.landB, t.skyBottom, 0.35f), v / edge), true);
+                    });
+                    for (int i = 0; i < 3; i++) Cloud(c, rng, R(rng, 0, w), h * R(rng, 0.84f, 0.96f), R(rng, 22f, 36f), Color.white);
+                    for (int i = 0; i < 16; i++)
+                    {
+                        float y = h * R(rng, 0.03f, horizon - 0.05f), x = R(rng, 0, w);
+                        float r = Mathf.Lerp(30f, 12f, y / (h * horizon));   // smaller towards the horizon
+                        c.Disk(x, y - r * 0.18f, r * 1.02f, t.landDetail, 0.55f);   // a soft shadow edge
+                        c.Disk(x, y, r, t.landA, 1f);
+                        c.Disk(x + r * 0.8f, y + r * 0.05f, r * 0.72f, t.landA, 1f);
+                        c.Disk(x - r * 0.75f, y - r * 0.05f, r * 0.6f, t.landA, 1f);
+                    }
+                    for (int i = 0; i < 110; i++) c.Disk(R(rng, 0, w), R(rng, 0, h), R(rng, 1f, 2.6f), Color.white, 0.85f);
+                    break;
+                }
+                case BackdropPattern.Aurora:
+                {
+                    // PG-001: night sky with two soft green bands of light and stars, snowy hills in front
+                    float hills = 0.40f;
+                    Fill(c, nseed, 46f, (u, v) =>
+                    {
+                        float hill = hills + 0.04f * Mathf.Sin(u * 4.1f + 0.3f) + 0.02f * Mathf.Sin(u * 10.3f);
+                        if (v <= hill) return (Color.Lerp(t.landB * 0.85f, t.landA, v / hill), true);
+                        var sky = Color.Lerp(t.skyBottom, t.skyTop, Smooth(hill, 1f, v));
+                        float b1 = 0.76f + 0.06f * Mathf.Sin(u * 5.2f + 1.1f) + 0.03f * Mathf.Sin(u * 11.7f);
+                        float b2 = 0.63f + 0.05f * Mathf.Sin(u * 4.1f + 2.3f);
+                        float q1 = (v - b1) / 0.04f, q2 = (v - b2) / 0.028f;
+                        float k = Mathf.Exp(-q1 * q1) * 0.75f + Mathf.Exp(-q2 * q2) * 0.5f;
+                        k *= 0.78f + 0.22f * Mathf.Sin(u * 60f);
+                        return (Color.Lerp(sky, t.landDetail, Mathf.Clamp01(k)), false);
+                    });
+                    for (int i = 0; i < 80; i++) c.Disk(R(rng, 0, w), h * R(rng, hills + 0.06f, 0.99f), R(rng, 0.6f, 1.5f), Color.white, R(rng, 0.5f, 1f));
+                    for (int i = 0; i < 40; i++) c.Disk(R(rng, 0, w), h * R(rng, 0.02f, hills - 0.04f), R(rng, 0.7f, 1.4f), Color.white, 0.8f);
                     break;
                 }
                 default:

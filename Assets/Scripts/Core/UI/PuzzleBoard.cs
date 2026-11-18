@@ -60,6 +60,13 @@ namespace ResolverMaster.Core.UI
         /// </summary>
         public virtual bool LosesWhenOutOfMoves => false;
 
+        /// <summary>
+        /// PG-001: no sequence of moves reaches the end any more from the current position (games whose moves cannot all be undone by
+        /// another move, e.g. Pingù). Read when nothing is busy: the game screen then shows "You are stuck" (Story: undo or restart;
+        /// Challenge: undo or end the run, lost with no undo left). False (default) for games where this cannot happen.
+        /// </summary>
+        public virtual bool IsStuck => false;
+
         /// <summary>ErNa-007, Challenge save: the moves on the undo stack (oldest first) as integers in the game's format.</summary>
         public virtual IReadOnlyList<int> MoveHistory => Array.Empty<int>();
 
@@ -84,6 +91,12 @@ namespace ResolverMaster.Core.UI
 
         /// <summary>Null = no main action button (default). Read once when the board is shown.</summary>
         public virtual MainActionInfo MainAction => null;
+
+        /// <summary>
+        /// PG-001: a board without main action that raises short messages (<see cref="RaiseMessage"/>): the game screen keeps the room of
+        /// the message slot between the grid and the bottom bar, so a message never covers the grid.
+        /// </summary>
+        public virtual bool ShowsMessages => false;
 
         /// <summary>An animation is running: the main action, undo and restart are disabled.</summary>
         public virtual bool IsBusy => false;

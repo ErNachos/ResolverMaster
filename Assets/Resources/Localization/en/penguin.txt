@@ -1,0 +1,13 @@
+# Pingù minigame texts (English). Keys used by code: Scripts/Games/Penguin/PenguinKeys.cs
+# The name is the same in every language, but it lives here so it can be changed in one place.
+game.penguin.name = Pingù
+
+penguin.chapter1.name = Frozen lake
+penguin.chapter2.name = Pack ice
+penguin.chapter3.name = Blizzard
+penguin.chapter4.name = Thaw
+penguin.chapter5.name = Glacier
+penguin.chapter6.name = Pole
+penguin.chapter7.name = Aurora
+
+penguin.splash = Splash! Into the water!

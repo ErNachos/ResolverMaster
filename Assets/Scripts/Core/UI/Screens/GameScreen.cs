@@ -21,6 +21,8 @@ namespace ResolverMaster.Core.UI.Screens
     /// failure ends the run (end panel), Back opens the pause; the run is saved at every move and at every level change.
     /// ErNa-008: on the end panel "Continue" (rewarded ad, once per run) plays the same level again from the start with 3 undos;
     /// "Change level" (rewarded ad, 0 moves); the daily challenge (5 fixed levels, no change, its own end panel).
+    /// PG-001: "You are stuck" when the board has no solution left (<see cref="PuzzleBoard.IsStuck"/>): Story undo / restart; Challenge
+    /// undo / end, and the run is lost at once with no undo left.
     /// </summary>
     public sealed class GameScreen : UiScreen
     {
@@ -46,7 +48,7 @@ namespace ResolverMaster.Core.UI.Screens
         GameMode _mode = GameMode.Story;
         ChallengeRunState _run;
         readonly Dictionary<string, ChallengeQueue> _queues = new Dictionary<string, ChallengeQueue>();
-        DialogPanel _pause, _end, _dailyEnd, _outOfMoves;
+        DialogPanel _pause, _end, _dailyEnd, _outOfMoves, _stuck, _stuckChallenge;
         Image _undoBadge;
         TextMeshProUGUI _undoCount;
         bool _lastNewRecord;
@@ -71,6 +73,8 @@ namespace ResolverMaster.Core.UI.Screens
         public bool EndVisible => _end.Visible || _dailyEnd.Visible;
         /// <summary>TJ-001: the "Out of moves" panel (undo or end the run) is open.</summary>
         public bool OutOfMovesVisible => _outOfMoves.Visible;
+        /// <summary>PG-001: the "You are stuck" panel (Story or Challenge) is open.</summary>
+        public bool StuckVisible => _stuck.Visible || _stuckChallenge.Visible;
 
         public static GameScreen Create(AppServices ctx, Transform parent)
         {
@@ -170,6 +174,9 @@ namespace ResolverMaster.Core.UI.Screens
                 extraKey: LocKeys.ChallengeContinue, extraIcon: AdIcon);
             // TJ-001: out of moves in a game with no final check (Traffic jam): undo to free moves, or end the run
             screen._outOfMoves = new DialogPanel(ctx, layout.Root, "OutOfMoves", LocKeys.ChallengeOutOfMoves, 1, LocKeys.ChallengeEnd, LocKeys.ChallengeUndo);
+            // PG-001: no solution left from here: undo or restart (Story), undo or end the run (Challenge)
+            screen._stuck = new DialogPanel(ctx, layout.Root, "Stuck", LocKeys.GameStuck, 1, LocKeys.GameRestart, LocKeys.ChallengeUndo);
+            screen._stuckChallenge = new DialogPanel(ctx, layout.Root, "StuckChallenge", LocKeys.GameStuck, 1, LocKeys.ChallengeEnd, LocKeys.ChallengeUndo);
             return screen;
         }
 
@@ -210,6 +217,8 @@ namespace ResolverMaster.Core.UI.Screens
             _end.Hide();
             _dailyEnd.Hide();
             _outOfMoves.Hide();
+            _stuck.Hide();
+            _stuckChallenge.Hide();
         }
 
         /// <summary>Loads Story level <paramref name="index"/> (0-based, whole Story) of <paramref name="module"/>; creates its board the first time.</summary>
@@ -252,7 +261,8 @@ namespace ResolverMaster.Core.UI.Screens
             var s = _ctx.Style;
             var info = Board.MainAction;
             _action.gameObject.SetActive(info != null);
-            float bottom = s.bottomBarHeight + (info != null ? s.mainActionGap + s.mainActionHeight : 0) + s.puzzleMargin;
+            bool slot = info != null || Board.ShowsMessages;   // PG-001: the room of the messages, also without a main action
+            float bottom = s.bottomBarHeight + (slot ? s.mainActionGap + s.mainActionHeight : 0) + s.puzzleMargin;
             UiFactory.Stretch(_area, s.puzzleMargin, bottom, s.puzzleMargin, s.puzzleMargin);
             if (info == null) return;
             _actionLabel.Bind(_ctx.Loc, info.LabelKey);
@@ -301,6 +311,34 @@ namespace ResolverMaster.Core.UI.Screens
             UiFactory.SetInteractable(_help, RewardedAds.CanOffer(_ctx.Ads, playing && Board.CanHint));
             _lastBusy = busy;
             _lastAds = _ctx.Ads != null && _ctx.Ads.IsAvailable;
+            CheckStuckStory(session, busy);
+        }
+
+        /// <summary>
+        /// PG-001, Story: no solution left from the current position: "You are stuck" (undo the last move, or restart the level), once
+        /// the animations are over.
+        /// </summary>
+        void CheckStuckStory(IPuzzleSession session, bool busy)
+        {
+            if (session.IsSolved || !Board.IsStuck)
+            {
+                _stuck.Hide();
+                return;
+            }
+            if (busy || _win.Visible || _stuck.Visible) return;
+            _stuck.SetLine(0, _ctx.Loc.Get(LocKeys.GameStuckHint));
+            _stuck.Show(() =>
+            {
+                // "Undo" (the green button): the last move back
+                _stuck.Hide();
+                UndoPressed();
+            }, () =>
+            {
+                // "Restart": the level from the start
+                _stuck.Hide();
+                if (Board != null && !Board.IsBusy) Board.Restart();
+                Refresh();
+            });
         }
 
         /// <summary>Short message in place of the main action button (shown at once, held, then faded out).</summary>
@@ -428,6 +466,31 @@ namespace ResolverMaster.Core.UI.Screens
         /// </summary>
         void CheckOutOfMoves(IPuzzleSession session, bool busy)
         {
+            // PG-001: no solution left (before the maximum too): "You are stuck" (undo or end); with no undo left the run is lost at once
+            if (!session.IsSolved && !_run.over && !_run.lost && Board.IsStuck)
+            {
+                _outOfMoves.Hide();
+                if (busy || _pause.Visible || EndVisible || _win.Visible) return;
+                if (_run.StuckIsLost(true))
+                {
+                    _stuckChallenge.Hide();
+                    OnRunLost();
+                    return;
+                }
+                if (_stuckChallenge.Visible) return;
+                _stuckChallenge.SetLine(0, string.Format(_ctx.Loc.Get(LocKeys.ChallengeStuckHint), _run.undosLeft));
+                _stuckChallenge.Show(() =>
+                {
+                    _stuckChallenge.Hide();
+                    UndoPressed();
+                }, () =>
+                {
+                    _stuckChallenge.Hide();
+                    OnRunLost();
+                });
+                return;
+            }
+            _stuckChallenge.Hide();
             bool stuck = Board.LosesWhenOutOfMoves && _run.IsOutOfMoves(session.IsSolved) && session.MovesMade >= _run.maxMoves;
             if (!stuck)
             {
@@ -593,6 +656,8 @@ namespace ResolverMaster.Core.UI.Screens
             _end.Hide();
             _dailyEnd.Hide();
             _outOfMoves.Hide();
+            _stuck.Hide();
+            _stuckChallenge.Hide();
             _ctx.Save();
             _ctx.Screens.ShowRoot(ScreenIds.Home);
         }
