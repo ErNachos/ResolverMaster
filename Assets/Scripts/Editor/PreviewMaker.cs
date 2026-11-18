@@ -103,6 +103,8 @@ namespace ResolverMaster.Editor
             LevelsShot(3),
             // ErNa-006: the themes of chapters 4-9
             LevelsShot(4), LevelsShot(5), LevelsShot(6), LevelsShot(7), LevelsShot(8), LevelsShot(9),
+            // ErNa-009: chapters 10-13 (one page each of the swipeable level screen)
+            LevelsShot(10), LevelsShot(11), LevelsShot(12), LevelsShot(13),
             // before the opening, one level per chapter (theme): 3x4 (level 1), 5x7 (level 14), 6x8 (level 27)
             GameShot("game_c1", 0, BoardPreview.Start, win: false),
             GameShot("game_c2", 13, BoardPreview.Start, win: false),
@@ -239,6 +241,16 @@ namespace ResolverMaster.Editor
             GameShot("game_c8_72", 71, BoardPreview.ActionFlowing, win: false),
             GameShot("game_c9_75", 74, BoardPreview.Start, win: false),
             GameShot("game_c9_81", 80, BoardPreview.ActionSuccess, win: false),
+            // ErNa-009: two levels per new chapter (branching routes; a cross used as a divider, opened, in level 87)
+            GameShot("game_c10_82", 81, BoardPreview.Start, win: false),
+            GameShot("game_c10_87", 86, BoardPreview.ActionSuccess, win: false),
+            GameShot("game_c10_90", 89, BoardPreview.Start, win: false),
+            GameShot("game_c11_91", 90, BoardPreview.Start, win: false),
+            GameShot("game_c11_99", 98, BoardPreview.ActionSuccess, win: false),
+            GameShot("game_c12_100", 99, BoardPreview.Start, win: false),
+            GameShot("game_c12_108", 107, BoardPreview.ActionFlowing, win: false),
+            GameShot("game_c13_109", 108, BoardPreview.Start, win: false),
+            GameShot("game_c13_117", 116, BoardPreview.ActionSuccess, win: false),
             // ErNa-006: a hand-made level with a bridge (orange east-west, blue north-south), a decoy cross and locked pieces
             CustomShot("game_bridge", BridgeLevel, BoardPreview.Start),
             CustomShot("game_bridge_flowing", BridgeLevel, BoardPreview.ActionFlowing),

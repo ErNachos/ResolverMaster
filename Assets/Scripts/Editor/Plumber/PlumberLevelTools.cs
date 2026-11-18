@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using ResolverMaster.Core.Puzzle;
 using ResolverMaster.Games.Plumber;
 using UnityEditor;
@@ -16,7 +17,9 @@ namespace ResolverMaster.Editor.Plumber
     /// Menu Resolver Master > Idraulico > Genera livelli Storia: generates every Story level of the PlumberConfig difficulty table from the
     /// fixed seeds (storySeedBase + level), groups them in chapters of 9 (level n is in chapter (n-1)/9+1), saves them as game data
     /// (Resources/Games/Plumber/plumber_story.json) and writes the table in docs/idraulico-livelli.md, with the average generation time
-    /// of a level of the last tier (6x8, two colors).
+    /// of a level of the last tier. ErNa-009: levels are generated in parallel (each one deterministic); a seed that gives no level within
+    /// the attempts moves on to the next fixed seed (+1000, the level saves the seed used); the run stops without saving if a level that
+    /// was already saved before the newest chapters (1-81) would change; the solver is timed on every level from chapter 10.
     /// Batch: -executeMethod ResolverMaster.Editor.Plumber.PlumberLevelTools.GenerateStoryLevelsBatch
     /// </summary>
     public static class PlumberLevelTools
@@ -24,6 +27,10 @@ namespace ResolverMaster.Editor.Plumber
         public const string DocPath = "docs/idraulico-livelli.md";
         public const int TimingSamples = 30;
         public const int TimingSeedBase = 900000;
+        /// <summary>ErNa-009: fixed seeds tried for one level (seed, seed + 1000, ...) before giving up.</summary>
+        public const int SeedRetries = 6, SeedStep = 1000;
+        /// <summary>ErNa-009: these levels are already played and must never change.</summary>
+        public const int FrozenLevels = 81;
 
         [MenuItem("Resolver Master/Idraulico/Genera livelli Storia")]
         public static void GenerateStoryLevels() => Run();
@@ -48,6 +55,7 @@ namespace ResolverMaster.Editor.Plumber
             public PlumberSolution Solution;
             public int Attempts;
             public double Ms;
+            public double SolverMs;
         }
 
         public const string ChallengeDocPath = "docs/idraulico-challenge.md";
@@ -191,29 +199,63 @@ namespace ResolverMaster.Editor.Plumber
             int chapters = last / StoryBook.LevelsPerChapter;
             if (cfg.chapters.Count < chapters) throw new InvalidOperationException($"PlumberConfig: {chapters} chapters needed, {cfg.chapters.Count} defined");
 
-            var generated = new List<Generated>();
+            var tiers = new DifficultyTier[last];
             for (int n = 1; n <= last; n++)
+                tiers[n - 1] = table.ForLevel(n) ?? throw new InvalidOperationException($"PlumberConfig: no difficulty tier covers level {n}");
+            var slots = new Generated[last];
+            var errors = new System.Collections.Concurrent.ConcurrentBag<string>();
+            int maxAttempts = cfg.maxAttempts, seedBase = cfg.storySeedBase;
+            Parallel.For(0, last, i =>
             {
-                var tier = table.ForLevel(n) ?? throw new InvalidOperationException($"PlumberConfig: no difficulty tier covers level {n}");
+                int n = i + 1;
+                var tier = tiers[i];
+                var settings = PlumberGenerator.Settings.FromTier(tier, maxAttempts);
                 var sw = Stopwatch.StartNew();
-                var r = PlumberGenerator.Generate(PlumberGenerator.Settings.FromTier(tier, cfg.maxAttempts), cfg.storySeedBase + n, tier.id, n);
+                PlumberGenerator.Result r = null;
+                for (int k = 0; k < SeedRetries && r == null; k++)
+                {
+                    try { r = PlumberGenerator.Generate(settings, seedBase + n + k * SeedStep, tier.id, n); }
+                    catch (InvalidOperationException) when (k + 1 < SeedRetries && n > FrozenLevels) { }
+                    catch (InvalidOperationException e)
+                    {
+                        errors.Add($"level {n}: {e.Message}");
+                        return;
+                    }
+                }
                 sw.Stop();
                 r.Level.chapter = (n - 1) / StoryBook.LevelsPerChapter + 1;
                 r.Level.index = (n - 1) % StoryBook.LevelsPerChapter;
-                generated.Add(new Generated { Level = r.Level, Solution = r.Solution, Attempts = r.Attempts, Ms = sw.Elapsed.TotalMilliseconds });
-            }
+                var solveTime = Stopwatch.StartNew();
+                PlumberSolver.Solve(r.Level.CreateGrid());
+                solveTime.Stop();
+                slots[i] = new Generated { Level = r.Level, Solution = r.Solution, Attempts = r.Attempts, Ms = sw.Elapsed.TotalMilliseconds, SolverMs = solveTime.Elapsed.TotalMilliseconds };
+            });
+            if (!errors.IsEmpty) throw new InvalidOperationException("PlumberLevelTools: " + string.Join("; ", errors.OrderBy(e => e)));
+            var generated = slots.ToList();
+
+            // the levels already played must stay exactly the same
+            var oldText = File.Exists(ConfigAssets.PlumberStoryPath) ? File.ReadAllText(ConfigAssets.PlumberStoryPath) : null;
+            var old = oldText != null ? JsonUtility.FromJson<PlumberLevelSet>(oldText) : null;
+            if (old?.levels != null)
+                for (int i = 0; i < Math.Min(FrozenLevels, Math.Min(old.levels.Count, generated.Count)); i++)
+                    if (old.levels[i].cells != generated[i].Level.cells || old.levels[i].minMoves != generated[i].Level.minMoves)
+                        throw new InvalidOperationException($"PlumberLevelTools: level {i + 1} would change (generator or table changed): nothing saved");
 
             var set = new PlumberLevelSet { levels = generated.Select(g => g.Level).ToList() };
             Directory.CreateDirectory(ConfigAssets.PlumberDir);
             File.WriteAllText(ConfigAssets.PlumberStoryPath, JsonUtility.ToJson(set, true) + "\n", new UTF8Encoding(false));
             AssetDatabase.ImportAsset(ConfigAssets.PlumberStoryPath);
 
-            string timing = MeasureTiming(cfg, last) + "\n" + SolverTiming();
+            var newer = generated.Where(g => g.Level.number > FrozenLevels).ToList();
+            string solverNew = newer.Count == 0 ? "" :
+                $"solver on the Story levels {FrozenLevels + 1}-{last} (exact minimum, Editor, one thread): average {newer.Average(g => g.SolverMs):0.0} ms, " +
+                $"max {newer.Max(g => g.SolverMs):0.0} ms (level {newer.OrderByDescending(g => g.SolverMs).First().Level.number})\n";
+            string timing = solverNew + MeasureTiming(cfg, last) + "\n" + SolverTiming();
             WriteDoc(cfg, generated, timing);
             var log = new StringBuilder($"PlumberLevelTools: {generated.Count} Story levels in {chapters} chapters saved in {ConfigAssets.PlumberStoryPath}, table in {DocPath}\n");
             foreach (var g in generated)
                 log.Append($"  {g.Level.number,2} (c{g.Level.chapter}): {g.Level.width}x{g.Level.height} min {g.Level.minMoves} path {g.Level.path} " +
-                           $"seed {g.Level.seed} ({g.Attempts} attempts, {g.Ms:0.0} ms)\n");
+                           $"seed {g.Level.seed} ({g.Attempts} attempts, {g.Ms:0.0} ms, solver {g.SolverMs:0.0} ms)\n");
             log.Append("  ").Append(timing);
             Debug.Log(log.ToString());
         }
@@ -247,21 +289,25 @@ namespace ResolverMaster.Editor.Plumber
             sb.Append("Id stabile di un livello nel salvataggio: (gioco, capitolo, indice nel capitolo).\n\n");
             sb.Append("Colonne: *Fonti/Arrivi/Colori* sulla griglia; *T* = T sulla griglia (tra parentesi quelle sul percorso della soluzione); ");
             sb.Append("*Ponti* = ponti sulla griglia (tra parentesi quelli con l'acqua nei due canali nella soluzione); *Bloccati* = pezzi che non ruotano; ");
-            sb.Append("*Percorso* = tubi attraversati dall'acqua nella soluzione ottima.\n");
+            sb.Append("*Percorso* = tubi attraversati dall'acqua nella soluzione ottima. ");
+            sb.Append("*Croci*: tra parentesi quelle sul percorso (dal Capitolo 10 una croce bagnata divide il flusso verso 3 lati); ");
+            sb.Append("*Arrivi* tra parentesi: per colore; *Risolutore* = tempo del risolutore esatto su quel livello.\n");
             foreach (var chapter in levels.GroupBy(g => g.Level.chapter))
             {
                 var theme = chapter.Key - 1 < cfg.chapters.Count ? cfg.chapters[chapter.Key - 1] : null;
                 sb.Append($"\n## Capitolo {chapter.Key}{(theme != null ? " — `" + theme.nameKey + "`" : "")}\n\n");
-                sb.Append("| Livello | Nel cap. | Gradino | Griglia | Fonti | Arrivi | Colori | Dritti | Curve | T | Croci | Ponti | Bloccati | Mosse minime | Percorso | Seed | Tentativi |\n");
-                sb.Append("|---:|---:|---|---|---:|---:|---:|---:|---:|---|---:|---|---:|---:|---:|---:|---:|\n");
+                sb.Append("| Livello | Nel cap. | Gradino | Griglia | Fonti | Arrivi | Colori | Dritti | Curve | T | Croci | Ponti | Bloccati | Mosse minime | Percorso | Seed | Tentativi | Risolutore (ms) |\n");
+                sb.Append("|---:|---:|---|---|---:|---|---:|---:|---:|---|---|---|---:|---:|---:|---:|---:|---:|\n");
                 foreach (var g in chapter)
                 {
                     var l = g.Level;
                     var grid = l.CreateGrid();
-                    sb.Append($"| {l.number} | {l.index + 1} | {l.tier} | {l.width}x{l.height} | {grid.Count(PieceKind.Source)} | {grid.Count(PieceKind.Sink)} | " +
+                    string perColor = grid.Count(PieceKind.Sink) > grid.ColorCount()
+                        ? " (" + string.Join("+", Enumerable.Range(0, grid.ColorCount()).Select(grid.CountSinks)) + ")" : "";
+                    sb.Append($"| {l.number} | {l.index + 1} | {l.tier} | {l.width}x{l.height} | {grid.Count(PieceKind.Source)} | {grid.Count(PieceKind.Sink)}{perColor} | " +
                               $"{grid.ColorCount()} | {grid.Count(PieceKind.Straight)} | {grid.Count(PieceKind.Curve)} | " +
-                              $"{grid.Count(PieceKind.Tee)} ({g.Solution.TeesOnPath}) | {grid.Count(PieceKind.Cross)} | {grid.Count(PieceKind.Bridge)} ({g.Solution.BridgesCrossed}) | " +
-                              $"{grid.CountLocked()} | {l.minMoves} | {l.path} | {l.seed} | {g.Attempts} |\n");
+                              $"{grid.Count(PieceKind.Tee)} ({g.Solution.TeesOnPath}) | {grid.Count(PieceKind.Cross)} ({g.Solution.CrossesOnPath}) | {grid.Count(PieceKind.Bridge)} ({g.Solution.BridgesCrossed}) | " +
+                              $"{grid.CountLocked()} | {l.minMoves} | {l.path} | {l.seed} | {g.Attempts} | {g.SolverMs:0.0} |\n");
                 }
             }
             sb.Append("\n## Gradini di difficoltà (PlumberConfig)\n\n| Gradino | Livelli | Valori |\n|---|---|---|\n");

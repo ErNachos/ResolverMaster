@@ -121,8 +121,9 @@ namespace ResolverMaster.Editor.Validation
     }
 
     /// <summary>
-    /// ErNa-006: bridges needed where the tier says so, locked pieces and bridges counted by the tier, last level within the chapter 8
-    /// maximum + 30%.
+    /// ErNa-006: bridges needed where the tier says so, locked pieces and bridges counted by the tier, last level within the maximum of the
+    /// chapter before + 30%. ErNa-009: branching levels have their fountains per color in the tier and at least one source feeding 2 or more,
+    /// crosses used as dividers where the tier asks, each new chapter starts easier than the end of the one before.
     /// Plumber parameters and Story levels (ErNa-003 rules): water colors with a sink halo each, chapter icons, names, valid themes and texts in every language;
     /// each chapter has exactly 9 levels in order; each level parses, is solvable with no leaks and colors apart, its saved minimum
     /// moves match the solver, opening the water at the start does not solve it, it respects its difficulty tier, in chapter 1 the
@@ -171,15 +172,24 @@ namespace ResolverMaster.Editor.Validation
             for (int i = 0; i < set.levels.Count; i++)
                 CheckLevel(cfg, set.levels[i], i, report);
 
-            // ErNa-006: the last level is demanding but not frustrating: its minimum stays within the chapter 8 maximum + 30%
-            const int chapter8 = 8;
-            var ch8 = set.levels.Where(l => l.chapter == chapter8).ToList();
-            if (ch8.Count > 0 && set.levels.Count > 0)
+            // ErNa-006 / ErNa-009: the last level is demanding but not frustrating: its minimum stays within the maximum of the chapter
+            // before the last one + 30%
+            int lastChapter = set.levels[set.levels.Count - 1].chapter;
+            var before = set.levels.Where(l => l.chapter == lastChapter - 1).ToList();
+            if (before.Count > 0)
             {
-                int max8 = ch8.Max(l => l.minMoves), final = set.levels[set.levels.Count - 1].minMoves;
-                if (final > max8 * cfg.finalLevelMaxRatio)
-                    report.Error($"last level: minimum {final} above the chapter 8 maximum {max8} x {cfg.finalLevelMaxRatio:0.00}");
+                int maxBefore = before.Max(l => l.minMoves), final = set.levels[set.levels.Count - 1].minMoves;
+                if (final > maxBefore * cfg.finalLevelMaxRatio)
+                    report.Error($"last level: minimum {final} above the chapter {lastChapter - 1} maximum {maxBefore} x {cfg.finalLevelMaxRatio:0.00}");
             }
+            // ErNa-009: saw-tooth between chapters: the first level of a chapter is easier than the last one of the chapter before
+            for (int i = StoryBook.LevelsPerChapter; i < set.levels.Count; i += StoryBook.LevelsPerChapter)
+                if (set.levels[i].chapter >= 10 && set.levels[i].minMoves >= set.levels[i - 1].minMoves)
+                    report.Error($"level {i + 1}: first of chapter {set.levels[i].chapter} ({set.levels[i].minMoves} moves) not easier than level {i} ({set.levels[i - 1].minMoves})");
+            // ErNa-009: inside the new chapters the minimum never drops from one level to the next
+            for (int i = 1; i < set.levels.Count; i++)
+                if (set.levels[i].chapter >= 10 && set.levels[i].chapter == set.levels[i - 1].chapter && set.levels[i].minMoves < set.levels[i - 1].minMoves)
+                    report.Error($"level {i + 1}: {set.levels[i].minMoves} moves, easier than level {i} ({set.levels[i - 1].minMoves}) in the same chapter");
         }
 
         static void CheckConfig(PlumberConfig cfg, ValidationReport report)
@@ -261,6 +271,9 @@ namespace ResolverMaster.Editor.Validation
             // ErNa-006: a needed bridge = the level is impossible with crosses (which mix) in place of the bridges
             if (tier.GetOr(PlumberDifficulty.NeedBridge, 0).min > 0 && PlumberSolver.Solve(grid, new PlumberSolver.Options { BridgesAsCrosses = true }).Solvable)
                 report.Error($"{id} (tier {tier.id}): the bridge is not needed (solvable with crosses in its place)");
+            // ErNa-009: a cross used as a divider where the tier asks for it
+            if (tier.TryGet(PlumberDifficulty.CrossSplits, out var splits) && sol.CrossesOnPath < splits.min)
+                report.Error($"{id} (tier {tier.id}): {sol.CrossesOnPath} cross(es) on the solution, the tier asks for at least {splits.min} divider(s)");
 
             try
             {

@@ -346,3 +346,30 @@
 **Problemi aperti / prossimi passi**
 - Con il muso in alto o di lato la faccia appare capovolta o girata (vista dall'alto).
 - Uscite colorate e freccia della lampadina restano disegnate dal codice.
+
+## Update ErNa-009 — Idraulico: Capitoli 10–13 e scorrimento tra i capitoli (2026-11-18)
+
+**Fatto**
+- **A — Scorrimento tra i capitoli (Core)**: la schermata dei livelli ha una pagina per capitolo; si scorre a destra e a sinistra con la logica delle schede della Home (`CardCarousel`: aggancio alla pagina, al massimo una pagina per lancio), pallini in basso; titolo e sfondo seguono il capitolo al centro. I capitoli bloccati si vedono (livelli col lucchetto, non toccabili). Avviando un livello la schermata segue il suo capitolo, anche dopo "Avanti" in un altro capitolo. Vale per Idraulico e Traffic jam.
+- **B — Croce come divisore**: un flusso che entra in una croce esce dagli altri 3 lati; due colori nella croce si mescolano (errore). Acqua e risolutore la gestivano già; il generatore ora può mettere croci sul percorso (4 aperture = croce) e il risolutore conta le croci bagnate (`CrossesOnPath`).
+- **C — Capitoli 10–13** (36 livelli, 117 in tutto): generatore ad albero (`Layout.Tree`, chiavi `sinksPerColor`, `crossSplits`, `decoys`), temi nuovi nel Core (Terme, Stazione, Miniera, Reggia; terreni e sfondi dal codice), icone Material segnaposto (`hot_tub`, `train`, `hardware`, `crown`), nomi IT/EN. Generazione in parallelo con seed di riserva (+1000); si ferma senza salvare se cambierebbe uno dei livelli 1–81. Validatore: fontane per colore, croci divisori, minimo mai in discesa dentro un capitolo nuovo, inizio più facile della fine del capitolo prima, ultimo livello entro il capitolo precedente + 30%.
+- **Test**: 4 nuovi (scorrimento tra capitoli; croce divisore verso 3 fontane e croce con due colori; generatore ad albero; livelli 1–81 invariati e almeno una fonte verso 2+ fontane); aggiornato il test della Storia (117 livelli, 13 capitoli). I test di Traffic jam restano verdi.
+
+**Risultati**
+- Compilazione: 0 errori, 0 warning. Test: 48/48 verdi. Validatore: OK (12 controlli, 0 errori, 0 warning). Livelli 1–81 identici (stessa impronta).
+- Risolutore sui livelli 82–117: media 2,0 ms, massimo 5,6 ms. Generatore 7x9 con 4 fonti ad albero: 3,5 ms in media.
+- Anteprime: 372 schermate, nessun problema misurato; lista dei capitoli scorrevole con 13 capitoli.
+
+| Cap. | Livelli | Griglie | Mosse minime |
+|---|---|---|---|
+| 10 | 82–90 | 6x8 → 7x9 | 16, 16, 18, 18, 21, 22, 22, 22, 25 |
+| 11 | 91–99 | 6x8 → 7x9 | 20, 20, 20, 21, 23, 23, 25, 25, 28 |
+| 12 | 100–108 | 6x8 → 7x9 | 22, 23, 23, 23, 25, 27, 28, 28, 30 |
+| 13 | 109–117 | 7x9 | 23, 24, 25, 25, 26, 27, 29, 33, 35 |
+
+**Da provare a mano sul telefono**
+- Scorrimento tra i capitoli: trascinamento, lancio, tocco su un livello dopo uno scorrimento, Indietro da un livello e dopo "Avanti" nel capitolo successivo.
+- Livelli lunghi a 7x9 (fino a 35 mosse): leggibilità di croci divisori e diramazioni.
+
+**Problemi aperti / prossimi passi**
+- Temi nuovi con motivi di terreno e sfondo già esistenti (solo colori nuovi); icone dei capitoli segnaposto.

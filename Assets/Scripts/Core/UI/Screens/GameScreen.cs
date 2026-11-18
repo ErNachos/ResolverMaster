@@ -224,6 +224,7 @@ namespace ResolverMaster.Core.UI.Screens
             _layout.SetTheme(theme);
             Board.Theme = theme;
             Board.Load(new LevelRequest(GameMode.Story, index));
+            _ctx.Screens.Get<LevelSelectScreen>(ScreenIds.LevelSelect)?.FollowLevel(module, index);   // ErNa-009: Back lands on this chapter
             Refresh();
         }
 
@@ -635,10 +636,7 @@ namespace ResolverMaster.Core.UI.Screens
                 _ctx.Screens.Back();
                 return;
             }
-            var chapter = Module.Story.ChapterOf(LevelIndex + 1);
-            if (!chapter.Contains(LevelIndex))   // moving into the next chapter: Back then returns to its grid
-                _ctx.Screens.Get<LevelSelectScreen>(ScreenIds.LevelSelect)?.Open(Module, chapter.Number);
-            StartLevel(Module, LevelIndex + 1);
+            StartLevel(Module, LevelIndex + 1);   // into the next chapter too: the level screen follows it (Back returns to its page)
         }
 
         /// <summary>The light bulb: a rewarded ad, then (if watched) one hint. Disabled without an ad or without anything to fix.</summary>

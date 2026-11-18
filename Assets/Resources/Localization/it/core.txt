@@ -96,3 +96,8 @@ challenge.out_of_moves = Mosse finite
 challenge.out_of_moves.hint = Annulla per liberare mosse (ne hai {0}).
 challenge.undo = Annulla
 challenge.end = Termina
+# ErNa-009
+theme.spa.name = Terme
+theme.station.name = Stazione
+theme.mine.name = Miniera
+theme.palace.name = Reggia

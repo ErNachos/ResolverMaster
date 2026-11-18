@@ -64,6 +64,7 @@
 - **Capitoli (Core, `Core/Puzzle/Story.cs`)**:
   - La Storia di ogni gioco è uno `StoryBook` di capitoli da **9 livelli** (`StoryBook.LevelsPerChapter`), numerati di seguito (1, 2, … 27).
   - Ogni capitolo ha nome tradotto e tema (`ChapterTheme`: chiave, icona, colore) nel file di parametri del gioco.
+  - Schermata dei livelli (ErNa-009): una pagina per capitolo, si passa al precedente o al successivo scorrendo (stessa logica `CardCarousel` della Home, pallini); i capitoli bloccati si vedono con i livelli bloccati; avviando un livello della Storia la schermata segue il suo capitolo (`LevelSelectScreen.FollowLevel`).
   - Sblocco (`StoryProgress`): il livello successivo si sblocca risolvendo il precedente; il capitolo successivo si sblocca finendo tutti i 9 livelli del precedente, con qualsiasi numero di stelle.
   - Salvataggio per **id stabile** `LevelId` (gioco, capitolo, indice nel capitolo).
   - Difficoltà a dente di sega: sale dentro il capitolo e riparte più bassa quando arriva la novità; i primi 2 livelli di un capitolo nuovo sono facili.
@@ -119,11 +120,13 @@
   - colori dell'acqua (ErNa-006, `PlumberPalette`): regole della palette e distanza da interfaccia, temi e capitoli;
   - Traffic jam (TJ-002): ogni disegno di veicoli e ostacoli presente (file e libreria `TrafficJamArt`), tabella degli ostacoli con temi e ostacoli esistenti;
   - Traffic jam (TJ-001): colori riservati delle auto obiettivo; capitoli (icona, nome, tema), gradini (griglie verticali, tetto delle mosse), 9 livelli per capitolo; ogni livello leggibile, nessuna auto obiettivo già uscita, mosse minime salvate = risolutore, posizioni sotto il tetto, valori nel gradino, difficoltà mai in discesa dentro un capitolo e capitolo successivo più facile, livello 1 al massimo 2 mosse; avviso se il seed non lo riproduce più (in parallelo);
+  - Idraulico, capitoli 10–13 (ErNa-009): fontane per colore nel gradino e almeno una fonte verso 2 o più fontane, croci divisori dove il gradino lo chiede, minimo mai in discesa dentro il capitolo, primo livello più facile dell'ultimo del capitolo prima, ultimo livello entro il massimo del capitolo precedente + 30%;
   - Idraulico, su ogni livello della Storia (ErNa-006: anche ponte necessario dove il gradino lo chiede, bloccati e ponti nel gradino, ultimo livello entro il massimo del Capitolo 8 + 30%): leggibile e risolvibile con le regole ErNa-003; mosse minime salvate = risolutore; aprendo l'acqua all'inizio non è già risolto; valori nel gradino; ogni capitolo ha esattamente 9 livelli; nel capitolo 1 la soluzione non usa T e non ne ha bisogno; avviso se il seed non lo riproduce più.
 
 ## 11. Anteprime e misure
 - *Resolver Master > Make Previews*, in IT ed EN, a 1080x1920 (9:16) e 1080x2520 (9:21), in `Previews/` (ignorata da git). La zona fuori dalla safe area simulata è tinta di rosso. Schermate:
   - Home con la scheda Idraulico e con la scheda Traffic jam al centro, scelta della modalità, Impostazioni, lista dei capitoli, griglia dei livelli di ogni capitolo (con il suo tema);
+  - ErNa-009: pagine dei capitoli 10–13 e due livelli per capitolo nuovo (anche aperti, con la croce divisore);
   - Gioco: un livello per capitolo prima dell'apertura (1: 3x4, 14: 5x7, 27: 6x8), acqua a metà percorso, apertura riuscita a due colori, apertura sbagliata per perdita nel momento dell'effetto, pannello di vittoria.
 - Traffic jam (TJ-001): scelta modalità, capitoli, livelli (capitoli 1, 4, 7), due livelli per capitolo, metà soluzione, freccia della lampadina, trascinamento, vittoria, auto obiettivo a metà uscita (felice) a 4x6 e 7x9 (TJ-002), Challenge (in gioco, "Mosse finite", run persa), sfida del giorno, Home con il record; misura del lato corto dei veicoli rispetto alla cella.
 - Daltonismo (ErNa-006): le schermate di gioco in italiano si salvano anche filtrate per deuteranopia, protanopia e tritanopia in `Previews/colorblind/` (Machado 2009); il report riporta la differenza minima tra i colori dell'acqua per ogni tipo.
@@ -146,6 +149,7 @@
 - ErNa-007: pubblicità con premio e lampadina, Challenge generica nel Core (§7a), blocco `challenge` del salvataggio (§6), `DialogPanel` (pausa, fine run, conferme).
 - ErNa-008: Continua, Cambia livello, Sfida del giorno (§6, §7a), pulsante extra del `DialogPanel`, controllo `DailyChallenge` del validatore (§10).
 - ErNa-006: 4 colori dell'acqua con controlli di palette e daltonismo (§9, §10, §11), ponte (due nodi, `PipeNodes`), croce e ponte non contano mosse, elementi bloccati nel Core (§7b), griglia 7x9 con cornice compatta, liste scorrevoli (§9), 9 capitoli e 6 temi nuovi.
+- ErNa-009: scorrimento tra i capitoli nella schermata dei livelli (§7b), croce come divisore e percorsi ad albero dell'Idraulico, capitoli 10–13 e 4 temi nuovi, nuovi controlli (§10) e anteprime (§11).
 - TJ-002: disegni di Gemini per veicoli e ostacoli di Traffic jam (§4, §9, §10, §11), `ThemeVariants` nel Core, `offMark` più scuro (lontano dal rosso delle auto obiettivo).
 - TJ-001: Traffic jam (§4, §7a, §7b, §9, §10, §11); spostati nel Core `StoryBook.Build`, `BoardFrame`, mosse gratuite, "Mosse finite", `StateIndex`, 5 temi.
 - ErNa-003: capitoli da 9 livelli, sblocco e id stabili nel Core (§7b); pulsante d'azione opzionale e messaggi brevi nella schermata di gioco (§7b); `Decoration` (§9); nuove regole e controlli dell'Idraulico (§10, `docs/idraulico-regole.md`); anteprime aggiornate (§11).

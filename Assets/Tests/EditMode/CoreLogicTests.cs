@@ -267,5 +267,54 @@ namespace ResolverMaster.Tests
             Assert.AreEqual(8, result);
             Assert.AreEqual(8, stored);
         }
+
+        // ------------------------------------------------------------------ ErNa-009
+
+        [Test]
+        public void ChapterPages_SwipeToNextAndPrevious_OnePageAtMost_LockedChapterVisibleButLocked_ReturnToTheLevelChapter()
+        {
+            var book = new ResolverMaster.Games.Plumber.PlumberModule().Story;
+            int chapters = book.Chapters.Count;
+            Assert.AreEqual(13, chapters);
+            var pages = new ResolverMaster.Core.UI.CardCarousel(chapters, 1000f);
+            pages.JumpTo(2);   // chapter 3
+
+            // finger to the left past half a page: the next chapter; to the right: the previous one
+            pages.BeginDrag();
+            pages.Drag(-600f);
+            Assert.AreEqual(3, pages.EndDrag(0f, 0.18f));
+            pages.JumpTo(3);
+            pages.BeginDrag();
+            pages.Drag(600f);
+            Assert.AreEqual(2, pages.EndDrag(0f, 0.18f));
+            // a short drag goes back; a strong flick moves one page only
+            pages.JumpTo(2);
+            pages.BeginDrag();
+            pages.Drag(-200f);
+            Assert.AreEqual(2, pages.EndDrag(0f, 0.18f));
+            pages.BeginDrag();
+            pages.Drag(-100f);
+            Assert.AreEqual(3, pages.EndDrag(-30000f, 0.18f));
+            // never before the first nor after the last chapter
+            pages.JumpTo(chapters - 1);
+            pages.BeginDrag();
+            pages.Drag(-900f);
+            Assert.AreEqual(chapters - 1, pages.EndDrag(-5000f, 0.18f));
+            pages.JumpTo(0);
+            pages.BeginDrag();
+            pages.Drag(900f);
+            Assert.AreEqual(0, pages.EndDrag(5000f, 0.18f));
+
+            // a locked chapter can be shown, but none of its levels can be played
+            var progress = new ProgressBlock();
+            Assert.IsTrue(StoryProgress.IsChapterUnlocked(progress, book, book.Chapter(1)));
+            var locked = book.Chapter(4);
+            Assert.IsFalse(StoryProgress.IsChapterUnlocked(progress, book, locked));
+            for (int i = 0; i < locked.LevelCount; i++) Assert.IsFalse(StoryProgress.IsLevelUnlocked(progress, book, locked.FirstLevel + i));
+
+            // back from a level (also after "Next" into another chapter): the page of the level's chapter
+            Assert.AreEqual(5, book.ChapterOf(40).Number);
+            Assert.AreEqual(10, book.ChapterOf(81).Number, "level 82 opens chapter 10");
+        }
     }
 }

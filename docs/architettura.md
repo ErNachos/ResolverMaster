@@ -25,7 +25,7 @@ Assets/
                                ColorVision (Lab, delta E, simulazione del daltonismo), ShakeMotion (scossa di un elemento bloccato),
                                BoardFrame (finestra della griglia adattata all'area, terreno del tema, cornice sottile per le griglie grandi; TJ-001)
         Themes/                VisualTheme + ThemeCatalog (tema di un capitolo, C# puro), ThemeConfig (asset dei temi), ThemeArt (terreni e sfondi generati)
-        Screens/               Home (schede a scorrimento), ModeSelect, Settings, ChapterSelect (capitoli), LevelSelect (griglia 3x3 di un capitolo),
+        Screens/               Home (schede a scorrimento), ModeSelect, Settings, ChapterSelect (capitoli), LevelSelect (griglia 3x3 di un capitolo, ErNa-009: una pagina per capitolo con scorrimento a destra e sinistra e pallini, `CardCarousel`),
                                Game (+ pulsante d'azione, messaggio breve, pannello di vittoria), ScreenLayout, ScreenIds
     Games/                     ResolverMaster.Games (un sotto-cartella per gioco)
       Plumber/                 PlumberModule, PlumberConfig, PlumberKeys (Idraulico)

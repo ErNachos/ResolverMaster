@@ -107,6 +107,22 @@ MonoBehaviour:
     icon: castle
     color: {r: 0.64705884, g: 0.5764706, b: 0.7529412, a: 1}
     theme: castle
+  - nameKey: plumber.chapter10.name
+    icon: hot_tub
+    color: {r: 0.56078434, g: 0.72156864, b: 0.65882355, a: 1}
+    theme: spa
+  - nameKey: plumber.chapter11.name
+    icon: train
+    color: {r: 0.65882355, g: 0.56078434, b: 0.47843137, a: 1}
+    theme: station
+  - nameKey: plumber.chapter12.name
+    icon: hardware
+    color: {r: 0.54901963, g: 0.47843137, b: 0.4, a: 1}
+    theme: mine
+  - nameKey: plumber.chapter13.name
+    icon: crown
+    color: {r: 0.7882353, g: 0.6627451, b: 0.6901961, a: 1}
+    theme: palace
   storyDifficulty:
     tiers:
     - id: c1-1
@@ -2863,6 +2879,1446 @@ MonoBehaviour:
       - key: needBridge
         min: 1
         max: 1
+    - id: c10-1
+      firstLevel: 82
+      lastLevel: 82
+      values:
+      - key: cols
+        min: 6
+        max: 6
+      - key: rows
+        min: 8
+        max: 8
+      - key: minMoves
+        min: 15
+        max: 17
+      - key: path
+        min: 18
+        max: 26
+      - key: sinks
+        min: 3
+        max: 3
+      - key: colors
+        min: 1
+        max: 1
+      - key: sinksPerColor
+        min: 3
+        max: 3
+      - key: crossSplits
+        min: 0
+        max: 1
+      - key: decoys
+        min: 0
+        max: 1
+      - key: locked
+        min: 0
+        max: 0
+      - key: bridges
+        min: 0
+        max: 0
+      - key: needBridge
+        min: 0
+        max: 0
+    - id: c10-2
+      firstLevel: 83
+      lastLevel: 83
+      values:
+      - key: cols
+        min: 6
+        max: 6
+      - key: rows
+        min: 8
+        max: 8
+      - key: minMoves
+        min: 16
+        max: 18
+      - key: path
+        min: 19
+        max: 27
+      - key: sinks
+        min: 3
+        max: 3
+      - key: colors
+        min: 1
+        max: 1
+      - key: sinksPerColor
+        min: 3
+        max: 3
+      - key: crossSplits
+        min: 1
+        max: 1
+      - key: decoys
+        min: 0
+        max: 1
+      - key: locked
+        min: 0
+        max: 0
+      - key: bridges
+        min: 0
+        max: 0
+      - key: needBridge
+        min: 0
+        max: 0
+    - id: c10-3
+      firstLevel: 84
+      lastLevel: 84
+      values:
+      - key: cols
+        min: 6
+        max: 6
+      - key: rows
+        min: 8
+        max: 8
+      - key: minMoves
+        min: 17
+        max: 18
+      - key: path
+        min: 20
+        max: 28
+      - key: sinks
+        min: 3
+        max: 4
+      - key: colors
+        min: 1
+        max: 1
+      - key: sinksPerColor
+        min: 3
+        max: 4
+      - key: crossSplits
+        min: 0
+        max: 1
+      - key: decoys
+        min: 0
+        max: 1
+      - key: locked
+        min: 0
+        max: 0
+      - key: bridges
+        min: 0
+        max: 0
+      - key: needBridge
+        min: 0
+        max: 0
+    - id: c10-4
+      firstLevel: 85
+      lastLevel: 85
+      values:
+      - key: cols
+        min: 7
+        max: 7
+      - key: rows
+        min: 9
+        max: 9
+      - key: minMoves
+        min: 18
+        max: 20
+      - key: path
+        min: 21
+        max: 30
+      - key: sinks
+        min: 3
+        max: 3
+      - key: colors
+        min: 1
+        max: 1
+      - key: sinksPerColor
+        min: 3
+        max: 3
+      - key: crossSplits
+        min: 1
+        max: 1
+      - key: decoys
+        min: 0
+        max: 1
+      - key: locked
+        min: 0
+        max: 0
+      - key: bridges
+        min: 0
+        max: 0
+      - key: needBridge
+        min: 0
+        max: 0
+    - id: c10-5
+      firstLevel: 86
+      lastLevel: 86
+      values:
+      - key: cols
+        min: 7
+        max: 7
+      - key: rows
+        min: 9
+        max: 9
+      - key: minMoves
+        min: 19
+        max: 21
+      - key: path
+        min: 22
+        max: 31
+      - key: sinks
+        min: 4
+        max: 4
+      - key: colors
+        min: 1
+        max: 1
+      - key: sinksPerColor
+        min: 4
+        max: 4
+      - key: crossSplits
+        min: 0
+        max: 1
+      - key: decoys
+        min: 0
+        max: 1
+      - key: locked
+        min: 0
+        max: 0
+      - key: bridges
+        min: 0
+        max: 0
+      - key: needBridge
+        min: 0
+        max: 0
+    - id: c10-6
+      firstLevel: 87
+      lastLevel: 87
+      values:
+      - key: cols
+        min: 7
+        max: 7
+      - key: rows
+        min: 9
+        max: 9
+      - key: minMoves
+        min: 20
+        max: 22
+      - key: path
+        min: 23
+        max: 32
+      - key: sinks
+        min: 4
+        max: 4
+      - key: colors
+        min: 1
+        max: 1
+      - key: sinksPerColor
+        min: 4
+        max: 4
+      - key: crossSplits
+        min: 1
+        max: 1
+      - key: decoys
+        min: 0
+        max: 1
+      - key: locked
+        min: 0
+        max: 0
+      - key: bridges
+        min: 0
+        max: 0
+      - key: needBridge
+        min: 0
+        max: 0
+    - id: c10-7
+      firstLevel: 88
+      lastLevel: 88
+      values:
+      - key: cols
+        min: 7
+        max: 7
+      - key: rows
+        min: 9
+        max: 9
+      - key: minMoves
+        min: 21
+        max: 23
+      - key: path
+        min: 24
+        max: 33
+      - key: sinks
+        min: 4
+        max: 4
+      - key: colors
+        min: 1
+        max: 1
+      - key: sinksPerColor
+        min: 4
+        max: 4
+      - key: crossSplits
+        min: 1
+        max: 2
+      - key: decoys
+        min: 0
+        max: 1
+      - key: locked
+        min: 0
+        max: 0
+      - key: bridges
+        min: 0
+        max: 0
+      - key: needBridge
+        min: 0
+        max: 0
+    - id: c10-8
+      firstLevel: 89
+      lastLevel: 89
+      values:
+      - key: cols
+        min: 7
+        max: 7
+      - key: rows
+        min: 9
+        max: 9
+      - key: minMoves
+        min: 22
+        max: 24
+      - key: path
+        min: 25
+        max: 34
+      - key: sinks
+        min: 4
+        max: 4
+      - key: colors
+        min: 1
+        max: 1
+      - key: sinksPerColor
+        min: 4
+        max: 4
+      - key: crossSplits
+        min: 1
+        max: 2
+      - key: decoys
+        min: 0
+        max: 2
+      - key: locked
+        min: 0
+        max: 0
+      - key: bridges
+        min: 0
+        max: 0
+      - key: needBridge
+        min: 0
+        max: 0
+    - id: c10-9
+      firstLevel: 90
+      lastLevel: 90
+      values:
+      - key: cols
+        min: 7
+        max: 7
+      - key: rows
+        min: 9
+        max: 9
+      - key: minMoves
+        min: 24
+        max: 26
+      - key: path
+        min: 26
+        max: 36
+      - key: sinks
+        min: 4
+        max: 4
+      - key: colors
+        min: 1
+        max: 1
+      - key: sinksPerColor
+        min: 4
+        max: 4
+      - key: crossSplits
+        min: 1
+        max: 2
+      - key: decoys
+        min: 0
+        max: 2
+      - key: locked
+        min: 0
+        max: 0
+      - key: bridges
+        min: 0
+        max: 0
+      - key: needBridge
+        min: 0
+        max: 0
+    - id: c11-1
+      firstLevel: 91
+      lastLevel: 91
+      values:
+      - key: cols
+        min: 6
+        max: 6
+      - key: rows
+        min: 8
+        max: 8
+      - key: minMoves
+        min: 18
+        max: 20
+      - key: path
+        min: 18
+        max: 26
+      - key: sinks
+        min: 4
+        max: 4
+      - key: colors
+        min: 2
+        max: 2
+      - key: sinksPerColor
+        min: 2
+        max: 2
+      - key: crossSplits
+        min: 0
+        max: 0
+      - key: decoys
+        min: 0
+        max: 1
+      - key: locked
+        min: 0
+        max: 0
+      - key: bridges
+        min: 0
+        max: 1
+      - key: needBridge
+        min: 0
+        max: 0
+    - id: c11-2
+      firstLevel: 92
+      lastLevel: 92
+      values:
+      - key: cols
+        min: 6
+        max: 6
+      - key: rows
+        min: 8
+        max: 8
+      - key: minMoves
+        min: 19
+        max: 21
+      - key: path
+        min: 19
+        max: 27
+      - key: sinks
+        min: 4
+        max: 5
+      - key: colors
+        min: 2
+        max: 2
+      - key: sinksPerColor
+        min: 2
+        max: 3
+      - key: crossSplits
+        min: 0
+        max: 1
+      - key: decoys
+        min: 0
+        max: 1
+      - key: locked
+        min: 0
+        max: 0
+      - key: bridges
+        min: 1
+        max: 1
+      - key: needBridge
+        min: 0
+        max: 0
+    - id: c11-3
+      firstLevel: 93
+      lastLevel: 93
+      values:
+      - key: cols
+        min: 7
+        max: 7
+      - key: rows
+        min: 9
+        max: 9
+      - key: minMoves
+        min: 20
+        max: 21
+      - key: path
+        min: 20
+        max: 29
+      - key: sinks
+        min: 4
+        max: 5
+      - key: colors
+        min: 2
+        max: 2
+      - key: sinksPerColor
+        min: 2
+        max: 3
+      - key: crossSplits
+        min: 0
+        max: 1
+      - key: decoys
+        min: 0
+        max: 1
+      - key: locked
+        min: 0
+        max: 0
+      - key: bridges
+        min: 1
+        max: 1
+      - key: needBridge
+        min: 1
+        max: 1
+    - id: c11-4
+      firstLevel: 94
+      lastLevel: 94
+      values:
+      - key: cols
+        min: 7
+        max: 7
+      - key: rows
+        min: 9
+        max: 9
+      - key: minMoves
+        min: 21
+        max: 23
+      - key: path
+        min: 21
+        max: 30
+      - key: sinks
+        min: 5
+        max: 5
+      - key: colors
+        min: 2
+        max: 2
+      - key: sinksPerColor
+        min: 2
+        max: 3
+      - key: crossSplits
+        min: 0
+        max: 1
+      - key: decoys
+        min: 0
+        max: 1
+      - key: locked
+        min: 0
+        max: 0
+      - key: bridges
+        min: 1
+        max: 2
+      - key: needBridge
+        min: 0
+        max: 0
+    - id: c11-5
+      firstLevel: 95
+      lastLevel: 95
+      values:
+      - key: cols
+        min: 7
+        max: 7
+      - key: rows
+        min: 9
+        max: 9
+      - key: minMoves
+        min: 22
+        max: 24
+      - key: path
+        min: 22
+        max: 31
+      - key: sinks
+        min: 5
+        max: 5
+      - key: colors
+        min: 2
+        max: 2
+      - key: sinksPerColor
+        min: 2
+        max: 3
+      - key: crossSplits
+        min: 0
+        max: 1
+      - key: decoys
+        min: 0
+        max: 1
+      - key: locked
+        min: 0
+        max: 0
+      - key: bridges
+        min: 1
+        max: 2
+      - key: needBridge
+        min: 1
+        max: 1
+    - id: c11-6
+      firstLevel: 96
+      lastLevel: 96
+      values:
+      - key: cols
+        min: 7
+        max: 7
+      - key: rows
+        min: 9
+        max: 9
+      - key: minMoves
+        min: 23
+        max: 25
+      - key: path
+        min: 23
+        max: 32
+      - key: sinks
+        min: 5
+        max: 6
+      - key: colors
+        min: 2
+        max: 2
+      - key: sinksPerColor
+        min: 2
+        max: 3
+      - key: crossSplits
+        min: 0
+        max: 1
+      - key: decoys
+        min: 0
+        max: 1
+      - key: locked
+        min: 0
+        max: 0
+      - key: bridges
+        min: 1
+        max: 2
+      - key: needBridge
+        min: 1
+        max: 1
+    - id: c11-7
+      firstLevel: 97
+      lastLevel: 97
+      values:
+      - key: cols
+        min: 7
+        max: 7
+      - key: rows
+        min: 9
+        max: 9
+      - key: minMoves
+        min: 24
+        max: 26
+      - key: path
+        min: 24
+        max: 33
+      - key: sinks
+        min: 5
+        max: 6
+      - key: colors
+        min: 2
+        max: 2
+      - key: sinksPerColor
+        min: 2
+        max: 3
+      - key: crossSplits
+        min: 0
+        max: 1
+      - key: decoys
+        min: 0
+        max: 2
+      - key: locked
+        min: 0
+        max: 0
+      - key: bridges
+        min: 1
+        max: 2
+      - key: needBridge
+        min: 1
+        max: 1
+    - id: c11-8
+      firstLevel: 98
+      lastLevel: 98
+      values:
+      - key: cols
+        min: 7
+        max: 7
+      - key: rows
+        min: 9
+        max: 9
+      - key: minMoves
+        min: 25
+        max: 27
+      - key: path
+        min: 25
+        max: 34
+      - key: sinks
+        min: 6
+        max: 6
+      - key: colors
+        min: 2
+        max: 2
+      - key: sinksPerColor
+        min: 3
+        max: 3
+      - key: crossSplits
+        min: 0
+        max: 1
+      - key: decoys
+        min: 0
+        max: 2
+      - key: locked
+        min: 0
+        max: 0
+      - key: bridges
+        min: 1
+        max: 2
+      - key: needBridge
+        min: 1
+        max: 1
+    - id: c11-9
+      firstLevel: 99
+      lastLevel: 99
+      values:
+      - key: cols
+        min: 7
+        max: 7
+      - key: rows
+        min: 9
+        max: 9
+      - key: minMoves
+        min: 26
+        max: 28
+      - key: path
+        min: 26
+        max: 36
+      - key: sinks
+        min: 6
+        max: 6
+      - key: colors
+        min: 2
+        max: 2
+      - key: sinksPerColor
+        min: 3
+        max: 3
+      - key: crossSplits
+        min: 0
+        max: 1
+      - key: decoys
+        min: 0
+        max: 2
+      - key: locked
+        min: 0
+        max: 0
+      - key: bridges
+        min: 1
+        max: 2
+      - key: needBridge
+        min: 1
+        max: 1
+    - id: c12-1
+      firstLevel: 100
+      lastLevel: 100
+      values:
+      - key: cols
+        min: 6
+        max: 6
+      - key: rows
+        min: 8
+        max: 8
+      - key: minMoves
+        min: 20
+        max: 22
+      - key: path
+        min: 18
+        max: 26
+      - key: sinks
+        min: 4
+        max: 4
+      - key: colors
+        min: 3
+        max: 3
+      - key: sinksPerColor
+        min: 1
+        max: 2
+      - key: crossSplits
+        min: 0
+        max: 0
+      - key: decoys
+        min: 0
+        max: 1
+      - key: locked
+        min: 2
+        max: 3
+      - key: bridges
+        min: 0
+        max: 1
+      - key: needBridge
+        min: 0
+        max: 0
+    - id: c12-2
+      firstLevel: 101
+      lastLevel: 101
+      values:
+      - key: cols
+        min: 7
+        max: 7
+      - key: rows
+        min: 9
+        max: 9
+      - key: minMoves
+        min: 21
+        max: 23
+      - key: path
+        min: 19
+        max: 28
+      - key: sinks
+        min: 4
+        max: 5
+      - key: colors
+        min: 3
+        max: 3
+      - key: sinksPerColor
+        min: 1
+        max: 2
+      - key: crossSplits
+        min: 0
+        max: 0
+      - key: decoys
+        min: 0
+        max: 1
+      - key: locked
+        min: 2
+        max: 3
+      - key: bridges
+        min: 0
+        max: 1
+      - key: needBridge
+        min: 0
+        max: 0
+    - id: c12-3
+      firstLevel: 102
+      lastLevel: 102
+      values:
+      - key: cols
+        min: 7
+        max: 7
+      - key: rows
+        min: 9
+        max: 9
+      - key: minMoves
+        min: 22
+        max: 24
+      - key: path
+        min: 20
+        max: 29
+      - key: sinks
+        min: 4
+        max: 5
+      - key: colors
+        min: 3
+        max: 3
+      - key: sinksPerColor
+        min: 1
+        max: 2
+      - key: crossSplits
+        min: 0
+        max: 1
+      - key: decoys
+        min: 0
+        max: 1
+      - key: locked
+        min: 3
+        max: 4
+      - key: bridges
+        min: 0
+        max: 1
+      - key: needBridge
+        min: 0
+        max: 0
+    - id: c12-4
+      firstLevel: 103
+      lastLevel: 103
+      values:
+      - key: cols
+        min: 7
+        max: 7
+      - key: rows
+        min: 9
+        max: 9
+      - key: minMoves
+        min: 23
+        max: 25
+      - key: path
+        min: 21
+        max: 30
+      - key: sinks
+        min: 5
+        max: 5
+      - key: colors
+        min: 3
+        max: 3
+      - key: sinksPerColor
+        min: 1
+        max: 3
+      - key: crossSplits
+        min: 0
+        max: 1
+      - key: decoys
+        min: 0
+        max: 1
+      - key: locked
+        min: 3
+        max: 4
+      - key: bridges
+        min: 0
+        max: 1
+      - key: needBridge
+        min: 0
+        max: 0
+    - id: c12-5
+      firstLevel: 104
+      lastLevel: 104
+      values:
+      - key: cols
+        min: 7
+        max: 7
+      - key: rows
+        min: 9
+        max: 9
+      - key: minMoves
+        min: 24
+        max: 26
+      - key: path
+        min: 22
+        max: 31
+      - key: sinks
+        min: 5
+        max: 5
+      - key: colors
+        min: 3
+        max: 3
+      - key: sinksPerColor
+        min: 1
+        max: 3
+      - key: crossSplits
+        min: 0
+        max: 1
+      - key: decoys
+        min: 0
+        max: 1
+      - key: locked
+        min: 3
+        max: 5
+      - key: bridges
+        min: 0
+        max: 1
+      - key: needBridge
+        min: 0
+        max: 0
+    - id: c12-6
+      firstLevel: 105
+      lastLevel: 105
+      values:
+      - key: cols
+        min: 7
+        max: 7
+      - key: rows
+        min: 9
+        max: 9
+      - key: minMoves
+        min: 25
+        max: 27
+      - key: path
+        min: 23
+        max: 32
+      - key: sinks
+        min: 5
+        max: 6
+      - key: colors
+        min: 3
+        max: 3
+      - key: sinksPerColor
+        min: 1
+        max: 3
+      - key: crossSplits
+        min: 0
+        max: 1
+      - key: decoys
+        min: 0
+        max: 1
+      - key: locked
+        min: 4
+        max: 5
+      - key: bridges
+        min: 0
+        max: 1
+      - key: needBridge
+        min: 0
+        max: 0
+    - id: c12-7
+      firstLevel: 106
+      lastLevel: 106
+      values:
+      - key: cols
+        min: 7
+        max: 7
+      - key: rows
+        min: 9
+        max: 9
+      - key: minMoves
+        min: 26
+        max: 28
+      - key: path
+        min: 24
+        max: 33
+      - key: sinks
+        min: 5
+        max: 6
+      - key: colors
+        min: 3
+        max: 3
+      - key: sinksPerColor
+        min: 1
+        max: 3
+      - key: crossSplits
+        min: 0
+        max: 1
+      - key: decoys
+        min: 0
+        max: 1
+      - key: locked
+        min: 4
+        max: 5
+      - key: bridges
+        min: 0
+        max: 1
+      - key: needBridge
+        min: 0
+        max: 0
+    - id: c12-8
+      firstLevel: 107
+      lastLevel: 107
+      values:
+      - key: cols
+        min: 7
+        max: 7
+      - key: rows
+        min: 9
+        max: 9
+      - key: minMoves
+        min: 28
+        max: 30
+      - key: path
+        min: 25
+        max: 35
+      - key: sinks
+        min: 6
+        max: 6
+      - key: colors
+        min: 3
+        max: 3
+      - key: sinksPerColor
+        min: 1
+        max: 3
+      - key: crossSplits
+        min: 0
+        max: 1
+      - key: decoys
+        min: 0
+        max: 1
+      - key: locked
+        min: 4
+        max: 6
+      - key: bridges
+        min: 0
+        max: 1
+      - key: needBridge
+        min: 0
+        max: 0
+    - id: c12-9
+      firstLevel: 108
+      lastLevel: 108
+      values:
+      - key: cols
+        min: 7
+        max: 7
+      - key: rows
+        min: 9
+        max: 9
+      - key: minMoves
+        min: 30
+        max: 32
+      - key: path
+        min: 26
+        max: 37
+      - key: sinks
+        min: 6
+        max: 6
+      - key: colors
+        min: 3
+        max: 3
+      - key: sinksPerColor
+        min: 1
+        max: 3
+      - key: crossSplits
+        min: 0
+        max: 1
+      - key: decoys
+        min: 0
+        max: 1
+      - key: locked
+        min: 5
+        max: 6
+      - key: bridges
+        min: 0
+        max: 1
+      - key: needBridge
+        min: 0
+        max: 0
+    - id: c13-1
+      firstLevel: 109
+      lastLevel: 109
+      values:
+      - key: cols
+        min: 7
+        max: 7
+      - key: rows
+        min: 9
+        max: 9
+      - key: minMoves
+        min: 22
+        max: 24
+      - key: path
+        min: 19
+        max: 28
+      - key: sinks
+        min: 5
+        max: 5
+      - key: colors
+        min: 4
+        max: 4
+      - key: sinksPerColor
+        min: 1
+        max: 2
+      - key: crossSplits
+        min: 0
+        max: 0
+      - key: decoys
+        min: 0
+        max: 1
+      - key: locked
+        min: 2
+        max: 3
+      - key: bridges
+        min: 0
+        max: 1
+      - key: needBridge
+        min: 0
+        max: 0
+    - id: c13-2
+      firstLevel: 110
+      lastLevel: 110
+      values:
+      - key: cols
+        min: 7
+        max: 7
+      - key: rows
+        min: 9
+        max: 9
+      - key: minMoves
+        min: 23
+        max: 25
+      - key: path
+        min: 20
+        max: 29
+      - key: sinks
+        min: 5
+        max: 5
+      - key: colors
+        min: 4
+        max: 4
+      - key: sinksPerColor
+        min: 1
+        max: 2
+      - key: crossSplits
+        min: 0
+        max: 1
+      - key: decoys
+        min: 0
+        max: 1
+      - key: locked
+        min: 2
+        max: 3
+      - key: bridges
+        min: 0
+        max: 1
+      - key: needBridge
+        min: 0
+        max: 0
+    - id: c13-3
+      firstLevel: 111
+      lastLevel: 111
+      values:
+      - key: cols
+        min: 7
+        max: 7
+      - key: rows
+        min: 9
+        max: 9
+      - key: minMoves
+        min: 24
+        max: 25
+      - key: path
+        min: 21
+        max: 30
+      - key: sinks
+        min: 5
+        max: 6
+      - key: colors
+        min: 4
+        max: 4
+      - key: sinksPerColor
+        min: 1
+        max: 2
+      - key: crossSplits
+        min: 0
+        max: 1
+      - key: decoys
+        min: 0
+        max: 1
+      - key: locked
+        min: 3
+        max: 4
+      - key: bridges
+        min: 1
+        max: 1
+      - key: needBridge
+        min: 0
+        max: 0
+    - id: c13-4
+      firstLevel: 112
+      lastLevel: 112
+      values:
+      - key: cols
+        min: 7
+        max: 7
+      - key: rows
+        min: 9
+        max: 9
+      - key: minMoves
+        min: 25
+        max: 27
+      - key: path
+        min: 22
+        max: 31
+      - key: sinks
+        min: 5
+        max: 6
+      - key: colors
+        min: 4
+        max: 4
+      - key: sinksPerColor
+        min: 1
+        max: 2
+      - key: crossSplits
+        min: 0
+        max: 1
+      - key: decoys
+        min: 0
+        max: 1
+      - key: locked
+        min: 3
+        max: 4
+      - key: bridges
+        min: 1
+        max: 1
+      - key: needBridge
+        min: 0
+        max: 0
+    - id: c13-5
+      firstLevel: 113
+      lastLevel: 113
+      values:
+      - key: cols
+        min: 7
+        max: 7
+      - key: rows
+        min: 9
+        max: 9
+      - key: minMoves
+        min: 26
+        max: 27
+      - key: path
+        min: 23
+        max: 32
+      - key: sinks
+        min: 6
+        max: 6
+      - key: colors
+        min: 4
+        max: 4
+      - key: sinksPerColor
+        min: 1
+        max: 3
+      - key: crossSplits
+        min: 0
+        max: 1
+      - key: decoys
+        min: 0
+        max: 1
+      - key: locked
+        min: 3
+        max: 4
+      - key: bridges
+        min: 1
+        max: 2
+      - key: needBridge
+        min: 0
+        max: 0
+    - id: c13-6
+      firstLevel: 114
+      lastLevel: 114
+      values:
+      - key: cols
+        min: 7
+        max: 7
+      - key: rows
+        min: 9
+        max: 9
+      - key: minMoves
+        min: 27
+        max: 29
+      - key: path
+        min: 24
+        max: 33
+      - key: sinks
+        min: 6
+        max: 6
+      - key: colors
+        min: 4
+        max: 4
+      - key: sinksPerColor
+        min: 1
+        max: 3
+      - key: crossSplits
+        min: 0
+        max: 1
+      - key: decoys
+        min: 0
+        max: 1
+      - key: locked
+        min: 3
+        max: 5
+      - key: bridges
+        min: 1
+        max: 2
+      - key: needBridge
+        min: 0
+        max: 0
+    - id: c13-7
+      firstLevel: 115
+      lastLevel: 115
+      values:
+      - key: cols
+        min: 7
+        max: 7
+      - key: rows
+        min: 9
+        max: 9
+      - key: minMoves
+        min: 29
+        max: 31
+      - key: path
+        min: 25
+        max: 35
+      - key: sinks
+        min: 6
+        max: 7
+      - key: colors
+        min: 4
+        max: 4
+      - key: sinksPerColor
+        min: 1
+        max: 3
+      - key: crossSplits
+        min: 0
+        max: 1
+      - key: decoys
+        min: 0
+        max: 2
+      - key: locked
+        min: 4
+        max: 5
+      - key: bridges
+        min: 1
+        max: 2
+      - key: needBridge
+        min: 0
+        max: 0
+    - id: c13-8
+      firstLevel: 116
+      lastLevel: 116
+      values:
+      - key: cols
+        min: 7
+        max: 7
+      - key: rows
+        min: 9
+        max: 9
+      - key: minMoves
+        min: 30
+        max: 33
+      - key: path
+        min: 26
+        max: 36
+      - key: sinks
+        min: 6
+        max: 7
+      - key: colors
+        min: 4
+        max: 4
+      - key: sinksPerColor
+        min: 1
+        max: 3
+      - key: crossSplits
+        min: 0
+        max: 1
+      - key: decoys
+        min: 0
+        max: 2
+      - key: locked
+        min: 4
+        max: 5
+      - key: bridges
+        min: 1
+        max: 2
+      - key: needBridge
+        min: 0
+        max: 0
+    - id: c13-9
+      firstLevel: 117
+      lastLevel: 117
+      values:
+      - key: cols
+        min: 7
+        max: 7
+      - key: rows
+        min: 9
+        max: 9
+      - key: minMoves
+        min: 32
+        max: 35
+      - key: path
+        min: 27
+        max: 38
+      - key: sinks
+        min: 7
+        max: 7
+      - key: colors
+        min: 4
+        max: 4
+      - key: sinksPerColor
+        min: 1
+        max: 3
+      - key: crossSplits
+        min: 0
+        max: 1
+      - key: decoys
+        min: 0
+        max: 2
+      - key: locked
+        min: 4
+        max: 6
+      - key: bridges
+        min: 1
+        max: 2
+      - key: needBridge
+        min: 0
+        max: 0
   challengeDifficulty:
     tiers:
     - id: ch-1

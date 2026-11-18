@@ -23,6 +23,8 @@ MonoBehaviour:
     sprite: {fileID: 21300000, guid: 0d859fc26152ac342bbea199f19e8f61, type: 3}
   - name: construction
     sprite: {fileID: 21300000, guid: 0607fea329804b4498f11eb85675fd1a, type: 3}
+  - name: crown
+    sprite: {fileID: 21300000, guid: 863ef93c0a0619a4fb478ca1da7752f3, type: 3}
   - name: factory
     sprite: {fileID: 21300000, guid: 558fde6067353bf409bb480c44778f62, type: 3}
   - name: flight
@@ -33,6 +35,10 @@ MonoBehaviour:
     sprite: {fileID: 21300000, guid: dc4e9d9c012b28c4d93f590254379614, type: 3}
   - name: game_trafficjam
     sprite: {fileID: 21300000, guid: b788e883115c32e44bd14903c8f2b198, type: 3}
+  - name: hardware
+    sprite: {fileID: 21300000, guid: 6795524b91bcb9347a16e0d20b549303, type: 3}
+  - name: hot_tub
+    sprite: {fileID: 21300000, guid: c2beb2c86bb0ab7449acdc61842e80ac, type: 3}
   - name: icon_back
     sprite: {fileID: 21300000, guid: 1ca01d3bdea16214dadb48a684ce1093, type: 3}
   - name: icon_bolt
@@ -89,5 +95,7 @@ MonoBehaviour:
     sprite: {fileID: 21300000, guid: 8596d61c842a9844f879f4fb6d6f6ffa, type: 3}
   - name: traffic
     sprite: {fileID: 21300000, guid: b7fa0e92011d21e4fa7ddad2479ab720, type: 3}
+  - name: train
+    sprite: {fileID: 21300000, guid: c31b24adb435f4e4cb626e9eb1ccc7f1, type: 3}
   - name: water_drop
     sprite: {fileID: 21300000, guid: 6e961f6d84a49364a8622158636f0c27, type: 3}

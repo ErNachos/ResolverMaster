@@ -16,3 +16,8 @@ plumber.fail.leak = Leak!
 plumber.fail.mix = Colors mixed!
 plumber.fail.wrong_color = Wrong color!
 plumber.fail.dry = Dry fountain!
+# ErNa-009: chapters 10-13
+plumber.chapter10.name = A Thousand Fountains
+plumber.chapter11.name = Crossing Tracks
+plumber.chapter12.name = Deep Tunnels
+plumber.chapter13.name = The Great Palace

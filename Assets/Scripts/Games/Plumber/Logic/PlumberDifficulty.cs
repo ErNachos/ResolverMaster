@@ -26,6 +26,15 @@ namespace ResolverMaster.Games.Plumber
         public const string Bridges = "bridges";
         /// <summary>ErNa-006: 1 = the level is impossible when its bridges are crosses (a bridge is needed), 0 = no requirement.</summary>
         public const string NeedBridge = "needBridge";
+        /// <summary>
+        /// ErNa-009: fountains per color (a tier with this key builds branching routes: each source feeds its fountains through T and
+        /// crosses; at least one source feeds 2 or more). With it, <see cref="Sinks"/> is the total number of fountains.
+        /// </summary>
+        public const string SinksPerColor = "sinksPerColor";
+        /// <summary>ErNa-009: crosses used as dividers on the routes (one flow in, three out), also checked on the optimal solution.</summary>
+        public const string CrossSplits = "crossSplits";
+        /// <summary>ErNa-009: decoy T and crosses off the routes (branching tiers; their total T and crosses are not fixed).</summary>
+        public const string Decoys = "decoys";
 
         static DifficultyRange R(string key, int min, int max) => new DifficultyRange(key, min, max);
 
@@ -156,8 +165,61 @@ namespace ResolverMaster.Games.Plumber
                 N("c9-7", 79, 7, 4, 18, 21, 19, 25, 2, 1, 1, 3, 4, 1, 2, true),
                 N("c9-8", 80, 7, 4, 20, 23, 21, 27, 2, 1, 1, 3, 4, 1, 2, true),
                 N("c9-9", 81, 7, 4, 21, 23, 21, 28, 2, 1, 2, 4, 4, 2, 2, true),
+
+                // ErNa-009, branching routes: one source feeds several fountains (T and crosses as dividers), longer routes, more taps.
+                //  id       lvl cols col sinks  per    min      path   split dec locked  bridges need
+                B("c10-1",  82, 6, 1, 3, 3, 3, 3, 15, 17, 18, 26, 0, 1, 1, 0, 0, 0, 0, false),
+                B("c10-2",  83, 6, 1, 3, 3, 3, 3, 16, 18, 19, 27, 1, 1, 1, 0, 0, 0, 0, false),
+                B("c10-3",  84, 6, 1, 3, 4, 3, 4, 17, 18, 20, 28, 0, 1, 1, 0, 0, 0, 0, false),
+                B("c10-4",  85, 7, 1, 3, 3, 3, 3, 18, 20, 21, 30, 1, 1, 1, 0, 0, 0, 0, false),
+                B("c10-5",  86, 7, 1, 4, 4, 4, 4, 19, 21, 22, 31, 0, 1, 1, 0, 0, 0, 0, false),
+                B("c10-6",  87, 7, 1, 4, 4, 4, 4, 20, 22, 23, 32, 1, 1, 1, 0, 0, 0, 0, false),
+                B("c10-7",  88, 7, 1, 4, 4, 4, 4, 21, 23, 24, 33, 1, 2, 1, 0, 0, 0, 0, false),
+                B("c10-8",  89, 7, 1, 4, 4, 4, 4, 22, 24, 25, 34, 1, 2, 2, 0, 0, 0, 0, false),
+                B("c10-9",  90, 7, 1, 4, 4, 4, 4, 24, 26, 26, 36, 1, 2, 2, 0, 0, 0, 0, false),
+
+                B("c11-1",  91, 6, 2, 4, 4, 2, 2, 18, 20, 18, 26, 0, 0, 1, 0, 0, 0, 1, false),
+                B("c11-2",  92, 6, 2, 4, 5, 2, 3, 19, 21, 19, 27, 0, 1, 1, 0, 0, 1, 1, false),
+                B("c11-3",  93, 7, 2, 4, 5, 2, 3, 20, 21, 20, 29, 0, 1, 1, 0, 0, 1, 1, true),
+                B("c11-4",  94, 7, 2, 5, 5, 2, 3, 21, 23, 21, 30, 0, 1, 1, 0, 0, 1, 2, false),
+                B("c11-5",  95, 7, 2, 5, 5, 2, 3, 22, 24, 22, 31, 0, 1, 1, 0, 0, 1, 2, true),
+                B("c11-6",  96, 7, 2, 5, 6, 2, 3, 23, 25, 23, 32, 0, 1, 1, 0, 0, 1, 2, true),
+                B("c11-7",  97, 7, 2, 5, 6, 2, 3, 24, 26, 24, 33, 0, 1, 2, 0, 0, 1, 2, true),
+                B("c11-8",  98, 7, 2, 6, 6, 3, 3, 25, 27, 25, 34, 0, 1, 2, 0, 0, 1, 2, true),
+                B("c11-9",  99, 7, 2, 6, 6, 3, 3, 26, 28, 26, 36, 0, 1, 2, 0, 0, 1, 2, true),
+
+                B("c12-1", 100, 6, 3, 4, 4, 1, 2, 20, 22, 18, 26, 0, 0, 1, 2, 3, 0, 1, false),
+                B("c12-2", 101, 7, 3, 4, 5, 1, 2, 21, 23, 19, 28, 0, 0, 1, 2, 3, 0, 1, false),
+                B("c12-3", 102, 7, 3, 4, 5, 1, 2, 22, 24, 20, 29, 0, 1, 1, 3, 4, 0, 1, false),
+                B("c12-4", 103, 7, 3, 5, 5, 1, 3, 23, 25, 21, 30, 0, 1, 1, 3, 4, 0, 1, false),
+                B("c12-5", 104, 7, 3, 5, 5, 1, 3, 24, 26, 22, 31, 0, 1, 1, 3, 5, 0, 1, false),
+                B("c12-6", 105, 7, 3, 5, 6, 1, 3, 25, 27, 23, 32, 0, 1, 1, 4, 5, 0, 1, false),
+                B("c12-7", 106, 7, 3, 5, 6, 1, 3, 26, 28, 24, 33, 0, 1, 1, 4, 5, 0, 1, false),
+                B("c12-8", 107, 7, 3, 6, 6, 1, 3, 28, 30, 25, 35, 0, 1, 1, 4, 6, 0, 1, false),
+                B("c12-9", 108, 7, 3, 6, 6, 1, 3, 30, 32, 26, 37, 0, 1, 1, 5, 6, 0, 1, false),
+
+                B("c13-1", 109, 7, 4, 5, 5, 1, 2, 22, 24, 19, 28, 0, 0, 1, 2, 3, 0, 1, false),
+                B("c13-2", 110, 7, 4, 5, 5, 1, 2, 23, 25, 20, 29, 0, 1, 1, 2, 3, 0, 1, false),
+                B("c13-3", 111, 7, 4, 5, 6, 1, 2, 24, 25, 21, 30, 0, 1, 1, 3, 4, 1, 1, false),
+                B("c13-4", 112, 7, 4, 5, 6, 1, 2, 25, 27, 22, 31, 0, 1, 1, 3, 4, 1, 1, false),
+                B("c13-5", 113, 7, 4, 6, 6, 1, 3, 26, 27, 23, 32, 0, 1, 1, 3, 4, 1, 2, false),
+                B("c13-6", 114, 7, 4, 6, 6, 1, 3, 27, 29, 24, 33, 0, 1, 1, 3, 5, 1, 2, false),
+                B("c13-7", 115, 7, 4, 6, 7, 1, 3, 29, 31, 25, 35, 0, 1, 2, 4, 5, 1, 2, false),
+                B("c13-8", 116, 7, 4, 6, 7, 1, 3, 30, 33, 26, 36, 0, 1, 2, 4, 5, 1, 2, false),
+                B("c13-9", 117, 7, 4, 7, 7, 1, 3, 32, 35, 27, 38, 0, 1, 2, 4, 6, 1, 2, false),
             },
         };
+
+        /// <summary>
+        /// A tier of chapters 10-13 (ErNa-009): <paramref name="colors"/> sources, each feeding <paramref name="perLo"/>..<paramref name="perHi"/>
+        /// fountains (<paramref name="sinkLo"/>..<paramref name="sinkHi"/> in all) through T and crosses; crosses used as dividers; decoys;
+        /// locked pieces; bridges.
+        /// </summary>
+        static DifficultyTier B(string id, int level, int cols, int colors, int sinkLo, int sinkHi, int perLo, int perHi, int minLo, int minHi,
+            int pathLo, int pathHi, int splitLo, int splitHi, int decoys, int lockLo, int lockHi, int bridgeLo, int bridgeHi, bool needBridge) =>
+            DifficultyTable.Tier(id, level, level, R(Cols, cols, cols), R(Rows, RowsFor(cols), RowsFor(cols)), R(MinMoves, minLo, minHi), R(Path, pathLo, pathHi),
+                R(Sinks, sinkLo, sinkHi), R(Colors, colors, colors), R(SinksPerColor, perLo, perHi), R(CrossSplits, splitLo, splitHi), R(Decoys, 0, decoys),
+                R(Locked, lockLo, lockHi), R(Bridges, bridgeLo, bridgeHi), R(NeedBridge, needBridge ? 1 : 0, needBridge ? 1 : 0));
 
         /// <summary>A Challenge step (ErNa-007): levels <paramref name="first"/>..<paramref name="last"/> of a run.</summary>
         static DifficultyTier S(string id, int first, int last, int cols, int colors, int sinks, int minLo, int minHi, int pathLo, int pathHi, int tees,
@@ -213,6 +275,18 @@ namespace ResolverMaster.Games.Plumber
             Check(Colors, grid.ColorCount());
             Check(Locked, grid.CountLocked());
             Check(Bridges, grid.Count(PieceKind.Bridge));
+            if (tier.TryGet(SinksPerColor, out var per))
+            {
+                // every color has its fountains in range, and at least one source feeds 2 or more (ErNa-009)
+                int colors = grid.ColorCount(), most = 0;
+                for (int color = 0; color < colors; color++)
+                {
+                    int n = grid.CountSinks(color);
+                    most = Math.Max(most, n);
+                    if (!per.Contains(n)) problems.Add($"{SinksPerColor} {n} (color {color}) outside {per.min}..{per.max}");
+                }
+                if (most < 2) problems.Add("no source feeds 2 or more fountains");
+            }
             return problems;
         }
     }

@@ -11,7 +11,7 @@ Ruotare i tubi per collegare ogni **fonte** alle **fontane** (arrivi) del suo co
 | Dritto | 2 opposte | sì (2 posizioni diverse) |
 | Curva | 2 vicine | sì (4 posizioni) |
 | T | 3 | sì (4 posizioni). Divide un flusso verso due uscite |
-| Croce | 4, tutte collegate tra loro: **mescola** i flussi | no (uguale in ogni rotazione): il tocco fa solo una scossa e non conta |
+| Croce | 4, tutte collegate tra loro: **mescola** i flussi di colori diversi; dal Capitolo 10 anche **divisore**: un flusso che entra esce dagli altri 3 lati (fino a 3 fontane dello stesso colore) | no (uguale in ogni rotazione): il tocco fa solo una scossa e non conta |
 | Ponte (ErNa-006) | 4, ma come **due tubi separati**: nord–sud ed est–ovest, che non si mescolano | no (uguale in ogni rotazione): scossa, nessuna mossa |
 | Fonte | 1 | no. Colorata come la sua acqua |
 | Fontana (arrivo) | 1 | no. Ha sotto un alone del suo colore |
@@ -58,7 +58,7 @@ Contano le **rotazioni del tentativo riuscito**, confrontate con le mosse minime
 - Il risolutore è stato confrontato con una ricerca che prova tutte le rotazioni, su 32.132 griglie piccole casuali: nessuna differenza.
 
 ## Capitoli della Storia
-I capitoli sono di 9 livelli, numerati di seguito (1–81). Una novità per capitolo. Lo sblocco segue le regole del Core.
+I capitoli sono di 9 livelli, numerati di seguito (1–117). Una novità per capitolo. Lo sblocco segue le regole del Core.
 
 | Cap. | Nome | Contenuto | Griglie |
 |---|---|---|---|
@@ -71,9 +71,14 @@ I capitoli sono di 9 livelli, numerati di seguito (1–81). Una novità per capi
 | 7 | Alta quota / High Up | mix: 2–3 colori, ponti, bloccati, croci trappola | 6x8, 7x9 negli ultimi 2 (Montagna) |
 | 8 | Quattro colori / Four Colors | **4 colori**; i primi 2 con percorsi brevi e separati, poi ponti | 6x8 → 7x9 (Laboratorio) |
 | 9 | Il gran finale / The Grand Finale | mix finale: 3–4 colori, tutto | 7x9 (Castello) |
+| 10 | Mille fontane / A Thousand Fountains | **1 fonte → 3–4 fontane**, con T e **croce come divisore** | 6x8 → 7x9 (Terme) |
+| 11 | Binari incrociati / Crossing Tracks | **2 fonti, ognuna verso 2–3 fontane**, con ponti | 6x8 → 7x9 (Stazione) |
+| 12 | Gallerie profonde / Deep Tunnels | **3 fonti con diramazioni**, più tubi bloccati | 6x8 → 7x9 (Miniera) |
+| 13 | La grande reggia / The Great Palace | finale: **4 fonti con diramazioni**, tutto insieme | 7x9 (Reggia) |
 
 - La difficoltà sale dentro il capitolo e riparte più bassa all'inizio del successivo: i primi 2 livelli di ogni capitolo nuovo sono facili.
 - I livelli 1, 2 e 3 richiedono 1, 2 e 3 mosse.
 - "Ponte necessario": con croci al posto dei ponti il livello diventa impossibile (validatore).
-- L'ultimo livello resta entro il massimo del Capitolo 8 + 30% (`PlumberConfig.finalLevelMaxRatio`, validatore).
+- L'ultimo livello resta entro il massimo del capitolo precedente + 30% (`PlumberConfig.finalLevelMaxRatio`, validatore).
+- ErNa-009, capitoli 10–13: ogni livello ha almeno una fonte che alimenta 2 o più fontane; la difficoltà non scende mai dentro il capitolo; i livelli 1–81 restano identici (il generatore si ferma senza salvare se cambierebbero). Il generatore costruisce un albero per colore (`Layout.Tree`): dalla fonte alla prima fontana, poi un ramo per ogni fontana in più da un tubo dello stesso albero (diventa una T) o da una T (diventa una croce, il divisore).
 - Tabella completa dei livelli: `docs/idraulico-livelli.md`.

@@ -53,6 +53,11 @@ ICONS = {
     "flight": "flight",
     "traffic": "traffic",
     "schedule": "schedule",
+    # ErNa-009: Plumber chapters 10-13 (spa, station, mine, palace)
+    "hot_tub": "hot_tub",
+    "train": "train",
+    "hardware": "hardware",
+    "crown": "crown",
 }
 
 

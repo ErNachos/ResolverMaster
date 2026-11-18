@@ -424,13 +424,13 @@ namespace ResolverMaster.Tests
 
         // ErNa-006
         [Test]
-        public void Story_81LevelsInNineChapters_NumberedInOrder_SavedMinimumIsExact()
+        public void Story_117LevelsInThirteenChapters_NumberedInOrder_SavedMinimumIsExact()
         {
             var module = new PlumberModule();
             var levels = module.StoryLevels;
-            Assert.AreEqual(81, levels.Count);
+            Assert.AreEqual(117, levels.Count);
             var book = module.Story;
-            Assert.AreEqual(9, book.Chapters.Count);
+            Assert.AreEqual(13, book.Chapters.Count);
             Assert.IsTrue(book.Chapters.All(c => c.LevelCount == StoryBook.LevelsPerChapter));
             int maxColors = 0;
             for (int i = 0; i < levels.Count; i++)
@@ -447,8 +447,87 @@ namespace ResolverMaster.Tests
             }
             Assert.AreEqual(4, maxColors, "the last chapters use 4 colors");
             // saw-tooth: every chapter starts easier than the previous one ends
-            for (int c = 1; c < 9; c++)
+            for (int c = 1; c < 13; c++)
                 Assert.Less(levels[c * 9].minMoves, levels[c * 9 - 1].minMoves, $"chapter {c + 1} starts easier");
+        }
+
+        // ------------------------------------------------------------------ ErNa-009
+
+        [Test]
+        public void Story_Levels1To81Unchanged_EveryNewLevelHasASourceWithTwoOrMoreFountains()
+        {
+            var levels = new PlumberModule().StoryLevels;
+            // fingerprint (FNV-1a 32 over "cells:minMoves" lines) of levels 1-81 as saved before ErNa-009
+            uint h = 2166136261;
+            foreach (byte b in System.Text.Encoding.UTF8.GetBytes(string.Join("\n", levels.Take(81).Select(l => l.cells + ":" + l.minMoves))))
+                h = unchecked((h ^ b) * 16777619);
+            Assert.AreEqual(0xce44b075u, h, "levels 1-81 must stay identical");
+            for (int i = 81; i < levels.Count; i++)
+            {
+                var grid = levels[i].CreateGrid();
+                int most = Enumerable.Range(0, grid.ColorCount()).Max(grid.CountSinks);
+                Assert.GreaterOrEqual(most, 2, $"level {i + 1}: a source feeds 2 or more fountains");
+                Assert.AreEqual(grid.ColorCount(), grid.Count(PieceKind.Source), $"level {i + 1}: one source per color");
+                Assert.LessOrEqual(grid.Width * grid.Height, 63, "never beyond 7x9");
+            }
+            // inside the new chapters the minimum never drops
+            for (int i = 82; i < levels.Count; i++)
+                if (levels[i].chapter == levels[i - 1].chapter) Assert.GreaterOrEqual(levels[i].minMoves, levels[i - 1].minMoves, $"level {i + 1}");
+        }
+
+        [Test]
+        public void Cross_AsDivider_FeedsThreeFountains_TwoColorsInACrossMix()
+        {
+            // the source pours into a straight (1 tap to turn it), then a cross sends the water up, right and down to 3 fountains
+            const string divider = ". . E2 ./S1 I0 X0 E3/. . E0 .";
+            var grid = PlumberLevelCodec.Parse(divider);
+            var sol = PlumberSolver.Solve(grid);
+            Assert.IsTrue(sol.Solvable);
+            Assert.AreEqual(1, sol.MinMoves);
+            Assert.AreEqual(1, sol.CrossesOnPath, "the cross is on the solution");
+            Assert.AreEqual(sol.MinMoves, Exhaustive(grid));
+            grid.Rotate(5, 1);
+            Assert.IsTrue(WaterFlow.Compute(grid).Success, "one flow in, three fountains filled");
+
+            // a second color entering the same cross: the flows mix
+            var mix = WaterFlow.Compute(PlumberLevelCodec.Parse(". . E2 ./S1 I1 X0 E3/. . S0@1 ."));
+            Assert.IsFalse(mix.Success);
+            Assert.AreEqual(WaterProblemKind.ColorMix, mix.FirstProblem.Kind);
+            Assert.IsFalse(PlumberSolver.Solve(PlumberLevelCodec.Parse(". . E2 ./S1 I0 X0 E3/. . S0@1 .")).Solvable);
+        }
+
+        [Test]
+        public void Generator_BranchingRoutes_CrossDividersUsed_SameSeedSameLevel()
+        {
+            var settings = new PlumberGenerator.Settings
+            {
+                Width = 6, Height = 8, ColorCount = 1, Layout = PlumberGenerator.Layout.Tree,
+                Sinks = new DifficultyRange(PlumberDifficulty.Sinks, 3, 3), SinksPerColor = new DifficultyRange(PlumberDifficulty.SinksPerColor, 3, 3),
+                CrossSplits = new DifficultyRange(PlumberDifficulty.CrossSplits, 1, 1),
+                MinMoves = new DifficultyRange(PlumberDifficulty.MinMoves, 1, 999), Path = new DifficultyRange(PlumberDifficulty.Path, 12, 24),
+                MaxAttempts = 5000, SolverLimit = PlumberGenerator.TreeSolverLimit,
+            };
+            for (int seed = 1; seed <= 6; seed++)
+            {
+                var r = PlumberGenerator.Generate(settings, seed);
+                var grid = r.Level.CreateGrid();
+                Assert.AreEqual(1, grid.Count(PieceKind.Source));
+                Assert.AreEqual(3, grid.CountSinks(0), $"seed {seed}: one source, three fountains");
+                Assert.GreaterOrEqual(r.Solution.CrossesOnPath, 1, $"seed {seed}: a cross divides the flow");
+                Assert.AreEqual(r.Level.minMoves, PlumberSolver.Solve(grid).MinMoves);
+                Assert.AreEqual(r.Level.cells, PlumberGenerator.Generate(settings, seed).Level.cells, "same seed, same level");
+            }
+            // two sources with 2-3 fountains each, bridges allowed
+            settings.ColorCount = 2;
+            settings.Sinks = new DifficultyRange(PlumberDifficulty.Sinks, 5, 5);
+            settings.SinksPerColor = new DifficultyRange(PlumberDifficulty.SinksPerColor, 2, 3);
+            settings.CrossSplits = new DifficultyRange(PlumberDifficulty.CrossSplits, 0, 0);
+            settings.Bridges = new DifficultyRange(PlumberDifficulty.Bridges, 0, 2);
+            settings.Width = 7;
+            settings.Height = 9;
+            var two = PlumberGenerator.Generate(settings, 7).Level.CreateGrid();
+            Assert.AreEqual(5, two.CountSinks(0) + two.CountSinks(1));
+            Assert.IsTrue(two.CountSinks(0) >= 2 && two.CountSinks(1) >= 2);
         }
 
         /// <summary>Cheapest successful opening over every rotation of every rotatable piece (small grids only).</summary>

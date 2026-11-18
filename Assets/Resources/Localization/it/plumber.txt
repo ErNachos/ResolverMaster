@@ -16,3 +16,8 @@ plumber.fail.leak = Perdita!
 plumber.fail.mix = Colori mescolati!
 plumber.fail.wrong_color = Colore sbagliato!
 plumber.fail.dry = Fontana asciutta!
+# ErNa-009: chapters 10-13
+plumber.chapter10.name = Mille fontane
+plumber.chapter11.name = Binari incrociati
+plumber.chapter12.name = Gallerie profonde
+plumber.chapter13.name = La grande reggia

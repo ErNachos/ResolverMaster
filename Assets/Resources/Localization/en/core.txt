@@ -96,3 +96,8 @@ challenge.out_of_moves = Out of moves
 challenge.out_of_moves.hint = Undo to free moves ({0} left).
 challenge.undo = Undo
 challenge.end = End
+# ErNa-009
+theme.spa.name = Spa
+theme.station.name = Station
+theme.mine.name = Mine
+theme.palace.name = Palace

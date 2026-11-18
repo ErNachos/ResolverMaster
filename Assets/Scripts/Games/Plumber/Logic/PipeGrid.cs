@@ -76,6 +76,15 @@ namespace ResolverMaster.Games.Plumber
             return seen.Count;
         }
 
+        /// <summary>ErNa-009: fountains (sinks) of water color <paramref name="color"/>.</summary>
+        public int CountSinks(int color)
+        {
+            int n = 0;
+            foreach (var p in Pieces)
+                if (p.Kind == PieceKind.Sink && p.Color == color) n++;
+            return n;
+        }
+
         /// <summary>Highest water color used by a source or sink (-1 if none).</summary>
         public int MaxColor()
         {

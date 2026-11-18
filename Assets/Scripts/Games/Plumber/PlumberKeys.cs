@@ -15,6 +15,11 @@ namespace ResolverMaster.Games.Plumber
         public const string Chapter7 = "plumber.chapter7.name";
         public const string Chapter8 = "plumber.chapter8.name";
         public const string Chapter9 = "plumber.chapter9.name";
+        /// <summary>ErNa-009: chapters 10-13 (spa, station, mine, palace).</summary>
+        public const string Chapter10 = "plumber.chapter10.name";
+        public const string Chapter11 = "plumber.chapter11.name";
+        public const string Chapter12 = "plumber.chapter12.name";
+        public const string Chapter13 = "plumber.chapter13.name";
         /// <summary>Main action button: "Open the water".</summary>
         public const string OpenWater = "plumber.action.open";
         public const string FailLeak = "plumber.fail.leak";

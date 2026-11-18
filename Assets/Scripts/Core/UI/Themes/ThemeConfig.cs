@@ -6,7 +6,7 @@ namespace ResolverMaster.Core.UI.Themes
 {
     /// <summary>
     /// The single parameter file of the chapter themes (Core, shared by every game): Garden, Farm, City; ErNa-006: Factory, Building site,
-    /// Harbour, Mountain, Laboratory, Castle; TJ-001: Parking, Market, Airport, Crossroads, Rush hour.
+    /// Harbour, Mountain, Laboratory, Castle; TJ-001: Parking, Market, Airport, Crossroads, Rush hour; ErNa-009: Spa, Station, Mine, Palace.
     /// Asset: Assets/Resources/ResolverMaster/ThemeConfig.asset (created by Resolver Master > Setup > Ensure Config Assets).
     /// Each game's chapters name one of these ids (e.g. PlumberConfig.chapters[i].theme).
     /// </summary>
@@ -19,6 +19,8 @@ namespace ResolverMaster.Core.UI.Themes
         public const string Factory = "factory", Site = "site", Harbor = "harbor", Mountain = "mountain", Lab = "lab", Castle = "castle";
         /// <summary>TJ-001 (Traffic jam chapters; city and site are shared).</summary>
         public const string Parking = "parking", Market = "market", Airport = "airport", Crossroads = "crossroads", RushHour = "rushhour";
+        /// <summary>ErNa-009 (Plumber chapters 10-13).</summary>
+        public const string Spa = "spa", Station = "station", Mine = "mine", Palace = "palace";
 
         /// <summary>Used by a chapter with no theme or an unknown one.</summary>
         public string defaultTheme = Garden;
@@ -152,6 +154,43 @@ namespace ResolverMaster.Core.UI.Themes
                 slab = C(0xD3D0CC), slabDetail = C(0xBCB8B3), slabEdge = C(0x9A958F),
                 backdrop = BackdropPattern.Skyline,
                 skyTop = C(0xD9CFE0), skyBottom = C(0xF2E9E4), landA = C(0x8E8A9A), landB = C(0x6E6A7A), landDetail = C(0xF6DFA6),
+            },
+            // ErNa-009: never close to the water colors nor to the Traffic jam target cars (checked by the validators)
+            new VisualTheme
+            {
+                id = Spa, nameKey = "theme.spa.name", accent = C(0x8FB8A8), seed = 1606,
+                terrain = TerrainPattern.Pavement,
+                ground = C(0xA59E8F), groundDetail = C(0x8E877A),
+                slab = C(0xE6E1D6), slabDetail = C(0xCEC7B8), slabEdge = C(0xABA391),
+                backdrop = BackdropPattern.Mountains,
+                skyTop = C(0xDDE5E0), skyBottom = C(0xF3F5F1), landA = C(0x9FB8A6), landB = C(0x7A9585), landDetail = C(0xF4F1EA),
+            },
+            new VisualTheme
+            {
+                id = Station, nameKey = "theme.station.name", accent = C(0xA88F7A), seed = 1707,
+                terrain = TerrainPattern.Pavement,
+                ground = C(0x6E6A66), groundDetail = C(0x5C5854),
+                slab = C(0xD9D4CC), slabDetail = C(0xC0BAB0), slabEdge = C(0x9E978C),
+                backdrop = BackdropPattern.Skyline,
+                skyTop = C(0xE0DBD3), skyBottom = C(0xF4F1EC), landA = C(0x9A8F84), landB = C(0x766C63), landDetail = C(0xEADFC0),
+            },
+            new VisualTheme
+            {
+                id = Mine, nameKey = "theme.mine.name", accent = C(0x8C7A66), seed = 1808,
+                terrain = TerrainPattern.Dirt,
+                ground = C(0x5E4B3C), groundDetail = C(0x7A6450),
+                slab = C(0xB8A58C), slabDetail = C(0xA08D74), slabEdge = C(0x7D6B55),
+                backdrop = BackdropPattern.Mountains,
+                skyTop = C(0xD8D2C8), skyBottom = C(0xEFEBE4), landA = C(0x8A7D6E), landB = C(0x5E4B3C), landDetail = C(0xD9CDB5),
+            },
+            new VisualTheme
+            {
+                id = Palace, nameKey = "theme.palace.name", accent = C(0xC9A9B0), seed = 1909,
+                terrain = TerrainPattern.Grass,
+                ground = C(0x5F7F4E), groundDetail = C(0x4A6A3C),
+                slab = C(0xE8E0D0), slabDetail = C(0xD2C7B2), slabEdge = C(0xAE9F86),
+                backdrop = BackdropPattern.Castle,
+                skyTop = C(0xE5DDE2), skyBottom = C(0xF6F2F2), landA = C(0xC4B49C), landB = C(0x5F7F4E), landDetail = C(0x8E7F6B),
             },
         };
 

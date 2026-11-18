@@ -22,7 +22,10 @@ namespace ResolverMaster.Games.Plumber
         public Color lockedTileColor = new Color32(0xC8, 0xC2, 0xB8, 0xFF);
         /// <summary>Every pipe is this grey (the black outline is drawn in the sprite); the water runs inside it.</summary>
         public Color pipeEmpty = new Color32(0xC2, 0xC6, 0xCF, 0xFF);
-        /// <summary>Validator: the minimum of the last Story level is at most the highest minimum of chapter 8 times this (not frustrating).</summary>
+        /// <summary>
+        /// Validator: the minimum of the last Story level is at most the highest minimum of the chapter before the last one times this
+        /// (demanding, not frustrating; ErNa-006 compared chapter 9 with chapter 8, ErNa-009 chapter 13 with chapter 12).
+        /// </summary>
         public float finalLevelMaxRatio = 1.3f;
         /// <summary>
         /// Water color of each source/sink pair (index = Piece.Color), in order of appearance (ErNa-006): blue, orange, violet, yellow.
@@ -147,6 +150,11 @@ namespace ResolverMaster.Games.Plumber
             new ChapterTheme(PlumberKeys.Chapter7, "landscape", new Color32(0x7F, 0xA3, 0x7A, 0xFF), ThemeConfig.Mountain),
             new ChapterTheme(PlumberKeys.Chapter8, "science", new Color32(0xA3, 0xB0, 0xBD, 0xFF), ThemeConfig.Lab),
             new ChapterTheme(PlumberKeys.Chapter9, "castle", new Color32(0xA5, 0x93, 0xC0, 0xFF), ThemeConfig.Castle),
+            // ErNa-009: branching routes (one source, many fountains), longer chapters
+            new ChapterTheme(PlumberKeys.Chapter10, "hot_tub", new Color32(0x8F, 0xB8, 0xA8, 0xFF), ThemeConfig.Spa),
+            new ChapterTheme(PlumberKeys.Chapter11, "train", new Color32(0xA8, 0x8F, 0x7A, 0xFF), ThemeConfig.Station),
+            new ChapterTheme(PlumberKeys.Chapter12, "hardware", new Color32(0x8C, 0x7A, 0x66, 0xFF), ThemeConfig.Mine),
+            new ChapterTheme(PlumberKeys.Chapter13, "crown", new Color32(0xC9, 0xA9, 0xB0, 0xFF), ThemeConfig.Palace),
         };
 
         [Header("Story difficulty (one tier per level, numbered across chapters)")]

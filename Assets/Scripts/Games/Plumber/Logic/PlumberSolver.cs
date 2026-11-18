@@ -11,6 +11,8 @@ namespace ResolverMaster.Games.Plumber
         public int PathLength;
         /// <summary>T pieces among those pipe cells.</summary>
         public int TeesOnPath;
+        /// <summary>ErNa-009: cross pieces among those pipe cells (a wet cross splits one flow towards its other three sides).</summary>
+        public int CrossesOnPath;
         /// <summary>Bridges with water in both channels in the optimal solution found (ErNa-006).</summary>
         public int BridgesCrossed;
         /// <summary>Why the level is not solvable (null when solvable).</summary>
@@ -219,6 +221,7 @@ namespace ResolverMaster.Games.Plumber
             {
                 result.PathCells.Add(c);
                 if (grid.Pieces[c].Kind == PieceKind.Tee) result.TeesOnPath++;
+                if (grid.Pieces[c].Kind == PieceKind.Cross) result.CrossesOnPath++;
                 for (int k = 0; k < taps[c]; k++) result.Taps.Add(c);
             }
             result.PathLength = order.Count;
