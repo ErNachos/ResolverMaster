@@ -279,6 +279,9 @@ namespace ResolverMaster.Editor
             TjGameShot("game_tj_hint", 20, after: b => ((ResolverMaster.Games.TrafficJam.View.TrafficBoardView)b).PreviewHintArrow()),
             TjGameShot("game_tj_drag", 12, after: b => ((ResolverMaster.Games.TrafficJam.View.TrafficBoardView)b).PreviewDrag()),
             TjGameShot("game_tj_win", 2, BoardPreview.Solved, win: true),
+            // TJ-002: a target car halfway out of its exit (happy), on a 4x6 and on a 7x9 grid
+            TjGameShot("game_tj_exit_4x6", 0, after: b => ((ResolverMaster.Games.TrafficJam.View.TrafficBoardView)b).PreviewExit()),
+            TjGameShot("game_tj_exit_7x9", 62, after: b => ((ResolverMaster.Games.TrafficJam.View.TrafficBoardView)b).PreviewExit()),
             // TJ-001: Traffic jam Challenge: playing, out of moves with undos left (panel), out of moves without (run over), daily challenge, Home
             TjChallengeShot("challenge_tj_game", 3, 2),
             TjChallengeShot("challenge_tj_out_of_moves", 0, 2),
@@ -740,6 +743,15 @@ namespace ResolverMaster.Editor
                 {
                     float shortSide = shown.Min(r => Mathf.Min(r.width, r.height));
                     sb.Append($"; {shown.Count} vehicles, short side {shortSide:0.0} px ({shortSide / cell * 100:0}% of a cell)");
+                    // TJ-002: the drawings inside (width across the vehicle, mirrors included) and the smallest gap left along the vehicle
+                    var drawn = traffic.Vehicles.Where(v => v.gameObject.activeInHierarchy && v.Drawn).ToList();
+                    if (drawn.Count > 0)
+                    {
+                        float ls = drawn[0].Picture.rectTransform.lossyScale.x;
+                        float across = drawn.Min(v => v.Picture.rectTransform.rect.width) * ls;
+                        float spare = drawn.Min(v => (v.Art.rect.height - v.Picture.rectTransform.rect.height) * ls);
+                        sb.Append($"; {drawn.Count} drawn, width {across:0.0} px ({across / cell * 100:0}% of a cell), smallest room along a vehicle {spare:0.0} px");
+                    }
                 }
             }
             if (game.Board is ResolverMaster.Games.Plumber.View.PlumberBoardView plumber)
@@ -912,7 +924,10 @@ namespace ResolverMaster.Editor
             foreach (var g in visible)
             {
                 if (!(g is Image img) || img.sprite == null) continue;
-                var px = PixelRect(img.rectTransform, d);
+                // drawn size from the rect and the scale, not from the screen bounds: right also for a rotated image (TJ-002 vehicles)
+                var rs = img.rectTransform.rect.size;
+                var ls = img.rectTransform.lossyScale;
+                var px = new Rect(0, 0, Mathf.Abs(rs.x * ls.x), Mathf.Abs(rs.y * ls.y));
                 var sr = img.sprite.rect;
                 float scale;
                 if (img.type == Image.Type.Sliced || img.type == Image.Type.Tiled)

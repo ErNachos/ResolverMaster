@@ -24,6 +24,9 @@ namespace ResolverMaster.Games.TrafficJam.View
         TrafficJamModule _module;
         TrafficJamConfig _cfg;
         TrafficSprites _sprites;
+        TrafficJamArt _art;
+        TrafficLook _look;
+        bool _challenge;
         UiFactory _ui;
         BoardFrame _board;
         RectTransform _tilesRoot, _gatesRoot, _barriersRoot, _vehiclesRoot;
@@ -32,6 +35,7 @@ namespace ResolverMaster.Games.TrafficJam.View
         ComponentPool<TrafficVehicleView> _vehiclePool;
         readonly List<TrafficVehicleView> _vehicles = new List<TrafficVehicleView>();
         readonly List<int> _barrierCells = new List<int>();
+        readonly List<Image> _obstacleImages = new List<Image>();
         readonly List<Image> _gateImages = new List<Image>();
         readonly TrafficPuzzle _puzzle = new TrafficPuzzle();
         /// <summary>Front of each vehicle's art: 0 up, 1 right, 2 down, 3 left (target cars face their exit).</summary>
@@ -81,6 +85,7 @@ namespace ResolverMaster.Games.TrafficJam.View
             _ui = ctx.Ui;
             _cfg = TrafficJamConfig.LoadOrDefault();
             _sprites = TrafficSprites.For(_cfg);
+            _art = TrafficJamArt.Load();
             _puzzle.MaxStates = Mathf.Max(1000, _cfg.maxStates);
             _board = BoardFrame.Create(_ui, transform, _cfg.boardInset, _cfg.compactCellBelow, _cfg.compactFrameScale, _cfg.compactOverflow);
             _tilesRoot = Layer("Tiles");
@@ -148,6 +153,9 @@ namespace ResolverMaster.Games.TrafficJam.View
             view.Body.raycastTarget = true;   // takes the touches of the whole vehicle
             view.Stripes = ArtImage("Stripes", view.Art);
             view.Details = ArtImage("Details", view.Art);
+            view.Picture = ArtImage("Picture", view.Art);
+            view.Picture.rectTransform.anchorMin = view.Picture.rectTransform.anchorMax = view.Picture.rectTransform.pivot = new Vector2(0.5f, 0.5f);
+            view.Picture.raycastTarget = true;   // takes the touches of the drawn vehicle
             view.Pressed = OnPressed;
             view.Dragged = OnDragged;
             view.Released = OnReleased;
@@ -186,7 +194,7 @@ namespace ResolverMaster.Games.TrafficJam.View
         {
             if (request.Mode == GameMode.Challenge)
             {
-                LoadLevel(TrafficChallenge.ToLevel(request.Index + 1, "", request.Seed, request.Data, request.MinMoves));
+                LoadLevel(TrafficChallenge.ToLevel(request.Index + 1, "", request.Seed, request.Data, request.MinMoves), challenge: true);
                 return;
             }
             var levels = _module.StoryLevels;
@@ -194,9 +202,13 @@ namespace ResolverMaster.Games.TrafficJam.View
             LoadLevel(levels[Mathf.Clamp(request.Index, 0, levels.Count - 1)]);
         }
 
-        /// <summary>Plays any level (Story, Challenge, or a hand-made one for the previews and tests).</summary>
-        public void LoadLevel(TrafficLevel level)
+        /// <summary>
+        /// Plays any level (Story, Challenge, or a hand-made one for the previews and tests). Obstacle drawings: those of the chapter theme,
+        /// all of them in the Challenge.
+        /// </summary>
+        public void LoadLevel(TrafficLevel level, bool challenge = false)
         {
+            _challenge = challenge;
             CancelDrag();
             _exiting = null;
             _hintTime = _winTime = -1f;
@@ -222,49 +234,56 @@ namespace ResolverMaster.Games.TrafficJam.View
                 tile.sprite = theme != null ? ThemeArt.Slab(theme, ArtVariants.Pick(seed, 3, c, ThemeArt.SlabVariants)) : _sprites.Tile;
                 tile.name = $"Cell_{x}_{y}";
             }
+            _look = TrafficLook.For(layout, seed, _challenge ? TrafficLook.ObstacleNames : _cfg.ObstaclesFor(theme != null ? theme.id : null));
             _barriers.ReleaseAll();
             _barrierCells.Clear();
-            for (int c = 0; c < layout.CellCount; c++)
+            _obstacleImages.Clear();
+            for (int k = 0; k < _look.ObstacleCells.Length; k++)
             {
-                if ((layout.Obstacles >> c & 1) == 0) continue;
+                int c = _look.ObstacleCells[k];
                 var b = _barriers.Get();
+                var drawing = _art.Get(_look.Obstacles[k]);
+                b.sprite = drawing != null ? drawing : _sprites.Barrier;
+                b.preserveAspect = drawing != null;   // the drawings keep their shape (the manhole lid leaves its square)
+                b.name = drawing != null ? _look.Obstacles[k] : "Barrier";
                 SetCellAnchors(b.rectTransform, c % w, c / w, w, h);
                 _barrierCells.Add(c);
+                _obstacleImages.Add(b);
             }
             _gates.ReleaseAll();
             _gateImages.Clear();
             _vehiclePool.ReleaseAll();
             _vehicles.Clear();
-            _facing = new int[layout.VehicleCount];
-            int others = 0;
+            _facing = _look.Front;
             for (int i = 0; i < layout.VehicleCount; i++)
             {
                 var v = layout.Vehicles[i];
                 var view = _vehiclePool.Get();
                 view.Index = i;
-                view.name = v.IsTarget ? (v.Target == 1 ? "TargetBlue" : "TargetRed") : (v.Kind == VehicleKind.Truck ? "Truck_" : "Car_") + i;
                 bool truck = v.Kind == VehicleKind.Truck;
+                view.name = v.IsTarget ? (v.Target == 1 ? "TargetBlue" : "TargetRed") : (truck ? "Truck_" : "Car_") + i;
+                var drawing = _art.Get(_look.Vehicles[i]);
+                view.Picture.gameObject.SetActive(drawing != null);
+                view.Picture.sprite = drawing;
+                view.Waiting = v.IsTarget ? drawing : null;
+                view.Leaving = v.IsTarget && drawing != null ? _art.Get(TrafficLook.TargetName(v.Target, true)) : null;
+                // provisional art drawn by code: only when the drawing is missing
+                view.Wheels.gameObject.SetActive(drawing == null);
+                view.Body.gameObject.SetActive(drawing == null);
+                view.Details.gameObject.SetActive(drawing == null);
+                view.Stripes.gameObject.SetActive(drawing == null && v.IsTarget);
                 view.Wheels.sprite = truck ? _sprites.TruckWheels : _sprites.CarWheels;
                 view.Body.sprite = truck ? _sprites.TruckBody : _sprites.CarBody;
                 view.Details.sprite = truck ? _sprites.TruckDetails : _sprites.CarDetails;
                 view.Stripes.sprite = _sprites.CarStripes;
-                view.Stripes.gameObject.SetActive(v.IsTarget);
                 view.Stripes.color = _cfg.stripeColor;
+                view.Body.color = v.IsTarget ? _cfg.TargetColor(v.Target) : _cfg.PaintOf(truck, _look.Variant[i]);
                 if (v.IsTarget)
                 {
-                    view.Body.color = _cfg.TargetColor(v.Target);
-                    _facing[i] = v.ExitSide;
                     var gate = _gates.Get();
                     gate.color = _cfg.TargetColor(v.Target);
                     gate.name = "Exit_" + (v.Target == 1 ? "Blue" : "Red");
                     _gateImages.Add(gate);
-                }
-                else
-                {
-                    view.Body.color = _cfg.VehicleColor(ArtVariants.Pick(seed, 11, others, Mathf.Max(1, _cfg.vehicleColors.Count)));
-                    bool flip = ArtVariants.Pick(seed, 12, others, 2) == 1;
-                    _facing[i] = v.Horizontal ? (flip ? SquareTopology.Left : SquareTopology.Right) : (flip ? SquareTopology.Down : SquareTopology.Up);
-                    others++;
                 }
                 view.StopSlide();
                 view.StopShake();
@@ -288,6 +307,7 @@ namespace ResolverMaster.Games.TrafficJam.View
                 // the car comes back in from its exit
                 view.gameObject.SetActive(true);
                 view.Group.alpha = 1f;
+                view.SetLeaving(false);
                 view.Shown = OutPosition(move.Vehicle);
             }
             view.SlideTo(move.From, _cfg.snapDuration * 2f);
@@ -318,6 +338,29 @@ namespace ResolverMaster.Games.TrafficJam.View
         public void PreviewHintArrow()
         {
             if (_puzzle.TryFindHint(out var move)) ShowArrow(move);
+        }
+
+        /// <summary>
+        /// Editor previews (TJ-002): the right moves up to the first exit, then that target car frozen halfway out of its exit, happy.
+        /// </summary>
+        public void PreviewExit()
+        {
+            _puzzle.Restart();
+            for (int i = 0; i < 64 && _puzzle.TryFindHint(out var move); i++)
+            {
+                if (move.IsExit)
+                {
+                    SnapVisuals();
+                    var view = _vehicles[move.Vehicle];
+                    view.SetLeaving(true);
+                    view.Shown = (move.From + OutPosition(move.Vehicle)) / 2f;
+                    PlaceVehicle(view);
+                    RaiseChanged();
+                    return;
+                }
+                _puzzle.ApplyMove(move);
+            }
+            SnapVisuals();
         }
 
         /// <summary>Editor previews: the vehicle of the next right move held halfway through its drag.</summary>
@@ -363,6 +406,12 @@ namespace ResolverMaster.Games.TrafficJam.View
                         break;
                 }
             }
+            float inset = _cfg.obstacleInset * cell;
+            foreach (var b in _obstacleImages)
+            {
+                b.rectTransform.offsetMin = b.preserveAspect ? new Vector2(inset, inset) : Vector2.zero;
+                b.rectTransform.offsetMax = b.preserveAspect ? new Vector2(-inset, -inset) : Vector2.zero;
+            }
             foreach (var view in _vehicles) PlaceVehicle(view);
             if (_arrow.gameObject.activeSelf && _hintVehicle != null) PlaceArrow(_hintVehicle, _hintMove);
         }
@@ -385,6 +434,7 @@ namespace ResolverMaster.Games.TrafficJam.View
                 bool inside = p != TrafficLayout.Exited;
                 view.gameObject.SetActive(inside);
                 view.Group.alpha = 1f;
+                view.SetLeaving(false);
                 if (inside) view.Shown = p;
             }
             if (_board.Cell > 0) foreach (var view in _vehicles) PlaceVehicle(view);
@@ -427,6 +477,20 @@ namespace ResolverMaster.Games.TrafficJam.View
             view.Place(centre);
             view.Art.sizeDelta = new Vector2(cell, len * cell);
             view.Art.localRotation = Quaternion.Euler(0, 0, -90f * _facing[view.Index]);
+            if (view.Drawn) FitDrawing(view.Picture, len, cell);
+        }
+
+        /// <summary>
+        /// TJ-002: the drawing (front up, mirrors included) fitted uniformly inside (length - 2 gap) x (1 - 2 gap) cells, centred: the same
+        /// scale on both axes (the lengthening was done on flat bands by Tools/Art/make_trafficjam_art.py), a small gap to the neighbours.
+        /// </summary>
+        void FitDrawing(Image picture, float length, float cell)
+        {
+            var size = picture.sprite.rect.size;
+            float gap = _cfg.vehicleGap;
+            float s = Mathf.Min((1f - 2f * gap) * cell / Mathf.Max(1f, size.x), (length - 2f * gap) * cell / Mathf.Max(1f, size.y));
+            picture.rectTransform.sizeDelta = size * s;
+            picture.rectTransform.anchoredPosition = Vector2.zero;
         }
 
         void ShowArrow(TrafficMove move)
@@ -517,6 +581,7 @@ namespace ResolverMaster.Games.TrafficJam.View
 
         void StartExit(TrafficVehicleView view, float duration)
         {
+            view.SetLeaving(true);   // happy from the first frame of the way out
             _exiting = view;
             _exitFrom = view.Shown;
             view.SlideTo(OutPosition(view.Index), duration);

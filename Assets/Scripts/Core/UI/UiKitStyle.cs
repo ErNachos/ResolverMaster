@@ -40,8 +40,8 @@ namespace ResolverMaster.Core.UI
         public Color disabledTint = new Color(0.92f, 0.91f, 0.9f, 1f);
         /// <summary>Alpha of the label of a disabled button (its sprites are desaturated by <see cref="disabledMaterial"/>).</summary>
         [Range(0f, 1f)] public float disabledContentAlpha = 0.55f;
-        /// <summary>Small X drawn by code on a switched-off toggle (vibration).</summary>
-        public Color offMark = Hex(0xD9404A);
+        /// <summary>Small X drawn by code on a switched-off toggle (vibration), moves near the Challenge maximum, streak flame. TJ-002: darker, never close to the red target car.</summary>
+        public Color offMark = Hex(0xB8324A);
 
         [Header("Pressed button")]
         /// <summary>A pressed button goes down by this (units)...</summary>

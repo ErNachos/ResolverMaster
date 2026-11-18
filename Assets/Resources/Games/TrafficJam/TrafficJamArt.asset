@@ -1,0 +1,45 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 47563a8b69299fe4f9ade74da0e62d9c, type: 3}
+  m_Name: TrafficJamArt
+  m_EditorClassIdentifier: 
+  entries:
+  - name: Car_Beige
+    sprite: {fileID: 21300000, guid: 45febcf7f77bd9e40b2a16a05eae99c5, type: 3}
+  - name: Car_Grey
+    sprite: {fileID: 21300000, guid: c017ff343c9b9b84199984102291b05c, type: 3}
+  - name: Car_Lilac
+    sprite: {fileID: 21300000, guid: d578f30d08e4fda41ada8d3ee9a0684f, type: 3}
+  - name: Car_Yellow
+    sprite: {fileID: 21300000, guid: a7da79d8c8404be47b43ba4fa6e78d49, type: 3}
+  - name: Obstacle_Barrier
+    sprite: {fileID: 21300000, guid: 9e58f571f82b24842839c559953016ba, type: 3}
+  - name: Obstacle_Manhole
+    sprite: {fileID: 21300000, guid: 57ba7f8fea184a042a0870f985097537, type: 3}
+  - name: Obstacle_Rock
+    sprite: {fileID: 21300000, guid: 87ab3435dc6ce8f428fa89dd90289917, type: 3}
+  - name: Obstacle_Trash
+    sprite: {fileID: 21300000, guid: da4a4579a8aceb9489e3d9ba00d74ad3, type: 3}
+  - name: Target_Blue_Happy
+    sprite: {fileID: 21300000, guid: 6d57819c6239b584f9ee6f5aab3e4b52, type: 3}
+  - name: Target_Blue_Worried
+    sprite: {fileID: 21300000, guid: 2a799f0c28543df4c9585f94c0b7289d, type: 3}
+  - name: Target_Red_Happy
+    sprite: {fileID: 21300000, guid: 2a17d14df9f1b5547889e6129c948c1d, type: 3}
+  - name: Target_Red_Worried
+    sprite: {fileID: 21300000, guid: 258fadc7ae52967408bf33160ae2e3c4, type: 3}
+  - name: Truck_Grey
+    sprite: {fileID: 21300000, guid: a4794e1487d65e1438b97f94402c3f0a, type: 3}
+  - name: Truck_Lilac
+    sprite: {fileID: 21300000, guid: 1c51c47d08f3fe9418ff166d019c8f87, type: 3}
+  - name: Truck_Yellow
+    sprite: {fileID: 21300000, guid: 3ef0a62780b41a34f991fdba0a5aa7ae, type: 3}

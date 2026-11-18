@@ -15,12 +15,13 @@
 ## Cartelle
 | Cartella | Contenuto | Chi la scrive |
 |---|---|---|
-| `ArtSource/` | originali di Gemini (`UI/ui_1..8_*.png`, `Cards/*.png`, `Plumber/Fonte_N.png`, `Arrivo_N.png`) | l'utente; **il codice li legge e basta** |
+| `ArtSource/` | originali di Gemini (`UI/ui_1..8_*.png`, `Cards/*.png`, `Plumber/Fonte_N.png`, `Arrivo_N.png`, `TJ/1..4.png`) | l'utente; **il codice li legge e basta** |
 | `Assets/Art/UI/` | 30 elementi di Gemini (`btn_*`, `panel`, `ribbon`, `banner_chapter`, `tile_*`, `star_*`, `icon_*`) + `ui_art.json` (misure e bordi a 9 fette) | `Tools/Art/make_ui_art.py` |
 | `Assets/Art/UI/Generated/` | cornice delle schede della Home (`card`) e pillola con contorno sottile (`circle`: pallini, badge) | `UiKitGenerator` (*UI Kit > Regenerate Sprites*) |
 | `Assets/Art/Icons/` | icone Material segnaposto ancora usate (story, icone dei giochi e dei capitoli) | `Tools/Art/make_icons.py` |
 | `Assets/Art/Cards/` | illustrazioni delle schede della Home (`card_<id>.png`) | `Tools/Art/make_ui_art.py` |
 | `Assets/Art/Plumber/Sources/`, `Targets/` | fonti (`fonte_N` + `fonte_N_mask`) e arrivi (`arrivo_N`) | `Tools/Art/make_plumber_art.py` |
+| `Assets/Art/TrafficJam/` | auto obiettivo (`Target_<Red|Blue>_<Worried|Happy>`), auto (`Car_*`), camion (`Truck_*`), ostacoli (`Obstacle_*`), tutti col muso in alto | `Tools/Art/make_trafficjam_art.py` |
 | `Assets/Art/Fonts/` | Fredoka TTF + font asset SDF e materiale con contorno | `UiArtSetup` (Setup > Apply All) |
 | `Assets/Art/Shaders/` | shader e materiale dei pulsanti disattivati | a mano / `UiArtSetup` |
 | `Assets/TextMesh Pro/` | TMP Essential Resources | importate una volta (vedi sotto) |
@@ -51,16 +52,19 @@ Dopo lo script: *Resolver Master > Setup > Apply All* (o `ConfigAssets.ResetVisu
 - **Acqua** (`WaterGraphic`): una striscia dentro il tubo (`waterWidth` 78% dell'interno) disegnata fino al fronte, con il **fronte arrotondato**; segue i dritti, gli archi delle curve, T e croci. I tempi vengono dalla logica pura (`WaterTiming`, `WaterMotion`): velocità costante `waterSpeed` (4 celle/s) con una leggera accelerazione iniziale (`waterAccelTime` 0,35 s, partenza al 35%); tutto con il tempo reale (uguale a 30 e 60 fps).
 - **Fonti e arrivi**: disegni (4 + 4) scelti dal seed, alti `endpointSize` 78% della cella e sollevati di `endpointLift` 0,08: il moncone di tubo entra **sotto** l'oggetto. Sotto ogni oggetto una **ombra morbida** (`shadowWidth`, `shadowHeight`, `shadowAlpha`, `shadowOffset`). La fontana si riempie (`fountainFill`) quando l'acqua arriva, poi gli spruzzi (`winSpray`).
 
-## Traffic jam (TJ-001, provvisoria)
-- Tutta dal codice (`Games/TrafficJam/View/TrafficSprites.cs`), stile cartoon con contorno nero: veicoli visti dall'alto (ruote, carrozzeria bianca tinta col colore del veicolo, vetri e fari), camion con cabina e cassone, due strisce bianche sulle auto obiettivo, barriere a strisce ambra e antracite, uscite come varco nel bordo colorato come la sua auto (con frecce), freccia della lampadina.
-- Colori in `TrafficJamConfig`: rosso e blu riservati alle auto obiettivo; gli altri veicoli giallo, bianco, beige, grigio, viola chiaro (scelti dal seed del livello).
-- 256 pixel per cella: mai ingranditi (le celle più grandi, 4x6, sono circa 240 unità).
+## Traffic jam (TJ-002: disegni di Gemini)
+- **Script `Tools/Art/make_trafficjam_art.py`**: separa gli oggetti di ogni foglio di `ArtSource/TJ/` (colonne vuote tra un oggetto e l'altro), toglie il bianco **solo dai bordi** (occhi, strisce, nuvoletta e carta restano), ritaglia senza scalare (specchietti, ruote e coperchio del tombino interi), gira i veicoli di 180° (negli originali il muso è in basso, nel gioco ogni disegno ha il muso in alto) e li **allunga ripetendo le righe di una fascia piatta**: auto sul tetto, al massimo +18%; camion sul cassone fino a 3 celle (+89%). Cabina, faccia e contorno restano come disegnati; nessun ingrandimento. Stampa il colore della carrozzeria di ogni veicolo (da copiare in `TrafficJamConfig.vehicleColors`).
+- **Veicoli**: il disegno sta in (lunghezza − 2·`vehicleGap`) x (1 − 2·`vehicleGap`) celle (`vehicleGap` 0,06), con la stessa scala sui due assi, centrato: specchietti compresi, i vicini non si toccano. Auto e camion all'88% della cella in larghezza (a 7x9: 120 px). Con il muso in alto la faccia appare capovolta: è la vista dall'alto.
+- **Scelte dal seed** (`TrafficLook`, logica pura): auto obiettivo rossa/blu col muso verso l'uscita, preoccupata, **felice dal primo fotogramma dell'uscita** (anche con la lampadina; torna preoccupata con Annulla); gli altri veicoli prendono una delle 4 auto o dei 3 camion e un verso lungo la loro linea.
+- **Ostacoli**: barriera, tombino, masso, immondizia, nella casella con margine `obstacleInset`. Quali in ogni tema: `TrafficJamConfig.obstaclesByTheme` (`ThemeVariants` del Core): Cantiere barriera e tombino, Mercato immondizia, Aeroporto barriera, Incrocio tombino e immondizia, Ora di punta e altri temi tutti; nella Challenge tutti.
+- **Riserva**: se manca un disegno si usano gli strati provvisori disegnati dal codice (`TrafficSprites`, TJ-001): ruote, carrozzeria tinta (`vehicleColors`), strisce, vetri; barriera a strisce. Restano dal codice anche le uscite colorate nel bordo e la freccia della lampadina.
+- Colori in `TrafficJamConfig`: rosso e blu riservati alle auto obiettivo (`targetColors` = vernice dei disegni, #ED3331 e #357DC5); `vehicleColors` = vernice degli altri disegni (validatore: ΔE ≥ 20 dal rosso e dal blu).
 - Temi dei capitoli (Core): Parcheggio, Mercato, Città, Cantiere, Aeroporto, Incrocio, Ora di punta; icone Material segnaposto in `Assets/Art/Icons` (`make_icons.py`).
-- La grafica definitiva arriverà da Gemini: le immagini sostituiranno gli sprite di `TrafficSprites`.
 
 ## Come aggiungere o cambiare un'immagine
 - **Elemento dell'interfaccia**: cambia il foglio in `ArtSource/UI/` mantenendo ordine e numero degli elementi, poi `python Tools/Art/make_ui_art.py` e *Setup > Apply All*. Un elemento nuovo: una riga in `SHEETS` (nome e tipo di taglio) e in `UiArtSetup.Elements`.
 - **Fonte o arrivo**: originale in `ArtSource/Plumber/`, `python Tools/Art/make_plumber_art.py`, *UI Kit > Rebuild Sprite Libraries*; se cambia il numero di disegni, `PlumberConfig.artVariants`.
+- **Veicolo o ostacolo di Traffic jam**: originale in `ArtSource/TJ/` (stesso ordine), `python Tools/Art/make_trafficjam_art.py`, *Rebuild Sprite Libraries*; un disegno nuovo: un nome in `NAMES` dello script e in `TrafficLook`.
 - **Scheda della Home**: originale in `ArtSource/Cards/`, una riga in `CARDS` di `make_ui_art.py`, lo script, *Rebuild Sprite Libraries*; il gioco dichiara `GameInfo.CardImage` e `CardColor` (non blu né arancione).
 - Poi sempre *Validate* e *Make Previews*.
 

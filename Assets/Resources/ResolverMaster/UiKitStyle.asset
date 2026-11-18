@@ -25,7 +25,7 @@ MonoBehaviour:
   title: {r: 1, g: 1, b: 1, a: 1}
   disabledTint: {r: 0.92, g: 0.91, b: 0.9, a: 1}
   disabledContentAlpha: 0.55
-  offMark: {r: 0.8509804, g: 0.2509804, b: 0.2901961, a: 1}
+  offMark: {r: 0.72156864, g: 0.19607843, b: 0.2901961, a: 1}
   pressDrop: 8
   pressDarken: 0.86
   cardRadius: 44

@@ -324,3 +324,25 @@
 
 **Problemi aperti / prossimi passi**
 - Generazione Challenge 7x9 con due auto obiettivo sopra 1 s (in sottofondo). Grafica e icone provvisorie.
+
+## Update TJ-002 — Traffic jam: grafica dei veicoli e degli ostacoli (2026-11-18)
+
+**Fatto**
+- **Nota**: l'Editor di Unity era chiuso: batchmode direttamente sul progetto. Cancellati i vecchi `Prompt/Note-*.md` (come chiede il prompt); niente file di note nuovi.
+- **A — Preparazione** (`Tools/Art/make_trafficjam_art.py`): 15 sprite in `Assets/Art/TrafficJam/` dai 4 fogli di `ArtSource/TJ/` (non toccati): `Target_Red/Blue_Worried/Happy`, `Car_Yellow/Lilac/Grey/Beige`, `Truck_Grey/Yellow/Lilac`, `Obstacle_Barrier/Manhole/Rock/Trash`. Sfondo tolto solo dai bordi (bianchi interni intatti, nessun alone), ritaglio senza scalare, veicoli girati col muso in alto. Libreria `Resources/Games/TrafficJam/TrafficJamArt.asset`.
+- **B — Veicoli**: auto obiettivo col muso verso l'uscita, preoccupata, felice dall'inizio dell'uscita (torna preoccupata con Annulla); gli altri: una delle 4 auto o dei 3 camion e il verso dal seed (`TrafficLook`, logica pura). Proporzioni: auto allungate del 18% ripetendo righe del tetto, camion allungati dell'89% ripetendo righe del cassone (cabina e faccia intatte); nel gioco stessa scala sui due assi in (lunghezza − 0,12) x 0,88 celle. Gli strati disegnati dal codice restano come riserva se manca uno sprite.
+- **C — Ostacoli**: 4 disegni, scelti dal seed tra quelli ammessi dal tema (`TrafficJamConfig.obstaclesByTheme`, `ThemeVariants` nuovo nel Core); Challenge: tutti.
+- `targetColors` e `vehicleColors` = vernice dei disegni. `UiKitStyle.offMark` da #D9404A a #B8324A: era a ΔE 19,6 dal rosso vero dei disegni (validatore).
+- Validatore: nuovo controllo `TrafficJamArt`. Anteprime: auto obiettivo a metà uscita (4x6 e 7x9); la scala degli sprite ora si misura anche per immagini ruotate; misura della larghezza dei disegni.
+- **Test**: 4 nuovi (ogni disegno nel file e nella libreria; auto obiettivo verso l'uscita; stesso seed = stessi disegni, versi e ostacoli; faccia felice all'uscita).
+
+**Risultati**
+- Compilazione: 0 errori, 0 warning. Test: 44/44 verdi. Validatore: OK (12 controlli, 0 errori, 0 warning).
+- Anteprime: 320 schermate (578 immagini con il daltonismo), nessun problema misurato, nessuno sprite ingrandito. Veicoli larghi l'88% della cella: 187 px a 4x6, 153 px a 5x7, 138 px a 6x8, 120 px a 7x9.
+
+**Da provare a mano sul telefono**
+- Leggibilità delle facce a 7x9; faccia felice all'uscita (trascinamento e lampadina); Annulla dopo un'uscita.
+
+**Problemi aperti / prossimi passi**
+- Con il muso in alto o di lato la faccia appare capovolta o girata (vista dall'alto).
+- Uscite colorate e freccia della lampadina restano disegnate dal codice.

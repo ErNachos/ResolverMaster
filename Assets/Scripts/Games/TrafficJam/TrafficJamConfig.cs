@@ -22,12 +22,16 @@ namespace ResolverMaster.Games.TrafficJam
         /// The target cars and their exits: red (index 0) and blue (index 1). Reserved: no other vehicle, UI, theme or chapter color may
         /// be within <see cref="minTargetDeltaE"/> of them (validator).
         /// </summary>
-        public List<Color> targetColors = new List<Color> { new Color32(0xE0, 0x2B, 0x20, 0xFF), new Color32(0x2F, 0x7F, 0xE8, 0xFF) };
-        /// <summary>The other vehicles, picked from the level seed: yellow, white, beige, grey, light violet (never red, blue or green).</summary>
+        public List<Color> targetColors = new List<Color> { new Color32(0xED, 0x33, 0x31, 0xFF), new Color32(0x35, 0x7D, 0xC5, 0xFF) };   // TJ-002: the paint of the drawings
+        /// <summary>
+        /// TJ-002: the paint of the other vehicles' drawings, in the order of <see cref="TrafficLook.CarNames"/> (yellow, lilac, grey, beige)
+        /// then <see cref="TrafficLook.TruckNames"/> (dark grey, yellow, lilac): checked against the target colors by the validator, and
+        /// used by the provisional art if a drawing is missing.
+        /// </summary>
         public List<Color> vehicleColors = new List<Color>
         {
-            new Color32(0xF4, 0xC4, 0x30, 0xFF), new Color32(0xF4, 0xF1, 0xEA, 0xFF), new Color32(0xD9, 0xC2, 0x9A, 0xFF),
-            new Color32(0x9A, 0xA0, 0xA8, 0xFF), new Color32(0xB9, 0xA3, 0xE3, 0xFF),
+            new Color32(0xFD, 0xD3, 0x3F, 0xFF), new Color32(0xD9, 0xAE, 0xD5, 0xFF), new Color32(0x8B, 0x94, 0x9C, 0xFF), new Color32(0xD5, 0xC6, 0xAD, 0xFF),
+            new Color32(0x59, 0x61, 0x69, 0xFF), new Color32(0xE2, 0xBB, 0x46, 0xFF), new Color32(0xC5, 0x9D, 0xC1, 0xFF),
         };
         /// <summary>Validator: smallest color difference (CIE76 delta E) between a target color and any other color of the game, UI, themes, chapters.</summary>
         public float minTargetDeltaE = 20f;
@@ -53,6 +57,27 @@ namespace ResolverMaster.Games.TrafficJam
         /// <summary>The exit gate: how far it reaches outside the cells (the board keeps room for it), and its width.</summary>
         [Range(0.05f, 0.5f)] public float exitDepth = 0.26f;
         [Range(0.3f, 1f)] public float exitWidth = 0.86f;
+
+        [Header("Drawings (TJ-002)")]
+        /// <summary>
+        /// Room around a drawn vehicle inside its cells (fraction of a cell, each side): the drawing (mirrors included) is fitted uniformly in
+        /// (length - 2 gap) x (1 - 2 gap) cells, so neighbours never touch. Tools/Art/make_trafficjam_art.py lengthens the drawings for 0.06.
+        /// </summary>
+        [Range(0f, 0.2f)] public float vehicleGap = 0.06f;
+        /// <summary>Room around an obstacle drawing inside its cell (fraction of a cell, each side).</summary>
+        [Range(0f, 0.2f)] public float obstacleInset = 0.05f;
+        /// <summary>
+        /// Obstacle drawings each chapter theme allows (names of <see cref="TrafficLook.ObstacleNames"/>); the seed picks among them.
+        /// Themes not listed (and the Challenge) allow all four.
+        /// </summary>
+        public List<ThemeVariants> obstaclesByTheme = new List<ThemeVariants>
+        {
+            new ThemeVariants(ThemeConfig.Site, "Obstacle_Barrier", "Obstacle_Manhole"),
+            new ThemeVariants(ThemeConfig.Market, "Obstacle_Trash"),
+            new ThemeVariants(ThemeConfig.Airport, "Obstacle_Barrier"),
+            new ThemeVariants(ThemeConfig.Crossroads, "Obstacle_Manhole", "Obstacle_Trash"),
+            new ThemeVariants(ThemeConfig.RushHour, "Obstacle_Barrier", "Obstacle_Manhole", "Obstacle_Rock", "Obstacle_Trash"),
+        };
 
         [Header("Board")]
         public float boardInset = 30;
@@ -123,6 +148,12 @@ namespace ResolverMaster.Games.TrafficJam
 
         public Color VehicleColor(int index) =>
             vehicleColors.Count == 0 ? Color.gray : vehicleColors[((index % vehicleColors.Count) + vehicleColors.Count) % vehicleColors.Count];
+
+        /// <summary>The obstacle drawings allowed in a level of theme <paramref name="themeId"/> (null: the Challenge, all of them).</summary>
+        public IReadOnlyList<string> ObstaclesFor(string themeId) => ThemeVariants.Allowed(obstaclesByTheme, themeId, TrafficLook.ObstacleNames);
+
+        /// <summary>Paint of a car (<paramref name="truck"/> false) or truck drawing, for the provisional art.</summary>
+        public Color PaintOf(bool truck, int variant) => VehicleColor(truck ? TrafficLook.CarNames.Length + variant : variant);
 
         public static TrafficJamConfig LoadOrDefault()
         {

@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using ResolverMaster.Core.UI;
 using ResolverMaster.Games.Plumber.View;
+using ResolverMaster.Games.TrafficJam.View;
 using UnityEditor;
 using UnityEngine;
 
@@ -12,7 +13,7 @@ namespace ResolverMaster.Editor
     /// <summary>
     /// Creates and fills the UI kit assets: the UiKitStyle (TMP fonts, materials, Gemini and generated sprites) and the sprite libraries
     /// (<see cref="IconLibrary"/>): icons (Gemini icon_* drawings in Assets/Art/UI + placeholder masks in Assets/Art/Icons), Home card
-    /// illustrations (Assets/Art/Cards) and the art of the minigames (Plumber fountains).
+    /// illustrations (Assets/Art/Cards) and the art of the minigames (Plumber fountains, Traffic jam vehicles and obstacles).
     /// </summary>
     public static class UiKitAssets
     {
@@ -23,6 +24,7 @@ namespace ResolverMaster.Editor
         public const string IconsDir = "Assets/Art/Icons";
         public const string CardsDir = "Assets/Art/Cards";
         public const string PlumberArtPath = "Assets/Resources/" + PlumberArt.ResourcesPath + ".asset";
+        public const string TrafficJamArtPath = "Assets/Resources/" + TrafficJamArt.ResourcesPath + ".asset";
         public const string FontRegularPath = "Assets/Art/Fonts/Fredoka-Regular.ttf";
         public const string FontBoldPath = "Assets/Art/Fonts/Fredoka-SemiBold.ttf";
 
@@ -40,6 +42,7 @@ namespace ResolverMaster.Editor
             new Library { Dirs = new[] { UiArtSetup.UiArtDir, IconsDir }, Accept = n => !n.Contains("/UI/") || Path.GetFileName(n).StartsWith("icon_"), Asset = IconLibraryPath },
             new Library { Dirs = new[] { CardsDir }, Asset = CardLibraryPath },
             new Library { Dirs = new[] { PlumberArt.AssetDir }, Asset = PlumberArtPath },
+            new Library { Dirs = new[] { TrafficJamArt.AssetDir }, Asset = TrafficJamArtPath },
         };
 
         public static UiKitStyle LoadOrCreateStyle()

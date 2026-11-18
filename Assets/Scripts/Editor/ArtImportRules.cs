@@ -11,7 +11,7 @@ namespace ResolverMaster.Editor
     /// </summary>
     public sealed class ArtImportRules : AssetPostprocessor
     {
-        public static readonly string[] IllustrationDirs = { "Assets/Art/Plumber/", "Assets/Art/Cards/" };
+        public static readonly string[] IllustrationDirs = { "Assets/Art/Plumber/", "Assets/Art/Cards/", "Assets/Art/TrafficJam/" };
 
         static bool IsIcon(string path) => path.StartsWith("Assets/Art/Icons/");
 

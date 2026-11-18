@@ -6,8 +6,9 @@ using UnityEngine.UI;
 namespace ResolverMaster.Games.TrafficJam.View
 {
     /// <summary>
-    /// One pooled vehicle (TJ-001): an unrotated root sized like the vehicle on the grid (takes the touches) and, inside it, the art drawn
-    /// pointing up and turned towards the vehicle's front: wheels, body (tinted), stripes (target cars), details. Touches go to the board,
+    /// One pooled vehicle (TJ-001): an unrotated root sized like the vehicle on the grid and, inside it, the art drawn pointing up and turned
+    /// towards the vehicle's front. TJ-002: the Gemini drawing (<see cref="Picture"/>, takes the touches); if it is missing, the
+    /// provisional layers drawn by code: wheels, body (tinted, takes the touches), stripes (target cars), details. Touches go to the board,
     /// which owns every rule; the view only shows the vehicle at a position along its line (in cells, fractions while dragging or
     /// sliding) and runs the slide and the shake in real time.
     /// </summary>
@@ -15,6 +16,22 @@ namespace ResolverMaster.Games.TrafficJam.View
     {
         public RectTransform Art;
         public Image Wheels, Body, Stripes, Details;
+        /// <summary>TJ-002: the drawing of the vehicle (front up), fitted inside its cells; inactive when the fallback layers are used.</summary>
+        public Image Picture;
+        /// <summary>Target cars: the drawings while waiting and while leaving (null for the other vehicles or without drawings).</summary>
+        public Sprite Waiting, Leaving;
+
+        public bool Drawn => Picture != null && Picture.gameObject.activeSelf;
+
+        /// <summary>A target car is happy from the moment it starts to leave (TJ-002).</summary>
+        public void SetLeaving(bool leaving)
+        {
+            if (!Drawn || Waiting == null) return;
+            var sprite = leaving && Leaving != null ? Leaving : Waiting;
+            if (Picture.sprite != sprite) Picture.sprite = sprite;
+        }
+
+        public bool IsLeaving => Drawn && Leaving != null && Picture.sprite == Leaving;
         public CanvasGroup Group;
         public int Index;
         public Action<TrafficVehicleView, PointerEventData> Pressed, Dragged, Released;

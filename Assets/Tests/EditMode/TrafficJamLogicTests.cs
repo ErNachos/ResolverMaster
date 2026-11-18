@@ -205,6 +205,106 @@ namespace ResolverMaster.Tests
             Assert.IsTrue(levels.Any(l => l.CreateLayout(out _).SideExitCount > 0), "exits on other sides");
         }
 
+        // ------------------------------------------------------------------ TJ-002: drawings
+
+        [Test]
+        public void Art_EveryVehicleAndObstacleHasItsSprite_InTheFolderAndInTheLibrary()
+        {
+            var lib = UnityEditor.AssetDatabase.LoadAssetAtPath<ResolverMaster.Core.UI.IconLibrary>(ResolverMaster.Editor.UiKitAssets.TrafficJamArtPath);
+            Assert.IsNotNull(lib, "TrafficJamArt library");
+            var names = TrafficLook.AllNames().ToList();
+            Assert.AreEqual(4 + 4 + 3 + 4, names.Count, "4 target drawings, 4 cars, 3 trucks, 4 obstacles");
+            foreach (var name in names)
+            {
+                var sprite = UnityEditor.AssetDatabase.LoadAssetAtPath<UnityEngine.Sprite>($"{ResolverMaster.Games.TrafficJam.View.TrafficJamArt.AssetDir}/{name}.png");
+                Assert.IsNotNull(sprite, name);
+                Assert.IsTrue(lib.Has(name), name + " in the library");
+                if (name.StartsWith("Truck")) Assert.Greater(sprite.rect.height / sprite.rect.width, 3f, name + ": lengthened to 3 cells");
+            }
+            // every name a level can ask for is one of them (all four obstacles in the Challenge, the theme ones in the Story)
+            var cfg = UnityEngine.ScriptableObject.CreateInstance<TrafficJamConfig>();
+            foreach (var row in cfg.obstaclesByTheme) CollectionAssert.IsSubsetOf(cfg.ObstaclesFor(row.theme).ToList(), names);
+            CollectionAssert.AreEqual(new[] { "Obstacle_Trash" }, cfg.ObstaclesFor(ResolverMaster.Core.UI.Themes.ThemeConfig.Market).ToList());
+            CollectionAssert.AreEqual(TrafficLook.ObstacleNames, cfg.ObstaclesFor(null).ToList(), "Challenge: all");
+            CollectionAssert.AreEqual(TrafficLook.ObstacleNames, cfg.ObstaclesFor("garden").ToList(), "theme not listed: all");
+            UnityEngine.Object.DestroyImmediate(cfg);
+        }
+
+        [Test]
+        public void Look_TargetCarsFaceTheirExit_OthersAlongTheirLine()
+        {
+            // red exits on top, blue on the right; then a red car exiting at the bottom and a blue one on the left
+            foreach (var cells in new[] { Small, "4x6 R1.0vD B0.5hL C2.2h T0.2v #3.0" })
+            {
+                var layout = TrafficLayout.Parse(cells, out _);
+                for (int seed = 0; seed < 20; seed++)
+                {
+                    var look = TrafficLook.For(layout, seed, TrafficLook.ObstacleNames);
+                    for (int i = 0; i < layout.VehicleCount; i++)
+                    {
+                        var v = layout.Vehicles[i];
+                        if (v.IsTarget)
+                        {
+                            Assert.AreEqual(v.ExitSide, look.Front[i], $"{cells}: target {v.Target} faces its exit");
+                            Assert.AreEqual(TrafficLook.TargetName(v.Target, false), look.Vehicles[i]);
+                        }
+                        else if (v.Horizontal) Assert.IsTrue(look.Front[i] == SquareTopology.Left || look.Front[i] == SquareTopology.Right);
+                        else Assert.IsTrue(look.Front[i] == SquareTopology.Up || look.Front[i] == SquareTopology.Down);
+                    }
+                }
+            }
+        }
+
+        [Test]
+        public void Look_SameSeedSameColorsExpressionsFrontsAndObstacles()
+        {
+            var level = TrafficJamModuleLevels()[40];
+            var layout = level.CreateLayout(out _);
+            string Describe(TrafficLook l) => string.Join(",", l.Vehicles) + "|" + string.Join(",", l.Front) + "|" + string.Join(",", l.Obstacles);
+            var a = TrafficLook.For(layout, level.seed, TrafficLook.ObstacleNames);
+            Assert.AreEqual(Describe(a), Describe(TrafficLook.For(layout, level.seed, TrafficLook.ObstacleNames)));
+            Assert.AreEqual(layout.ObstacleCount, a.Obstacles.Length);
+            for (int i = 0; i < layout.VehicleCount; i++)
+                if (!layout.Vehicles[i].IsTarget)
+                    CollectionAssert.Contains(layout.Vehicles[i].Kind == VehicleKind.Truck ? TrafficLook.TruckNames : TrafficLook.CarNames, a.Vehicles[i]);
+            // other seeds: the choice changes somewhere (not always the same drawing)
+            Assert.IsTrue(Enumerable.Range(1, 10).Any(k => Describe(TrafficLook.For(layout, level.seed + k, TrafficLook.ObstacleNames)) != Describe(a)));
+            // a theme with one obstacle only: every obstacle uses it
+            var market = TrafficLook.For(layout, level.seed, new[] { "Obstacle_Trash" });
+            Assert.IsTrue(market.Obstacles.All(o => o == "Obstacle_Trash"));
+        }
+
+        [Test]
+        public void Look_TargetCarIsHappyWhenItLeaves()
+        {
+            Assert.AreEqual("Target_Red_Worried", TrafficLook.TargetName(0, false));
+            Assert.AreEqual("Target_Red_Happy", TrafficLook.TargetName(0, true));
+            Assert.AreEqual("Target_Blue_Happy", TrafficLook.TargetName(1, true));
+            var go = new UnityEngine.GameObject("Vehicle", typeof(UnityEngine.RectTransform));
+            try
+            {
+                var view = go.AddComponent<ResolverMaster.Games.TrafficJam.View.TrafficVehicleView>();
+                var pic = new UnityEngine.GameObject("Picture", typeof(UnityEngine.RectTransform));
+                pic.transform.SetParent(go.transform, false);
+                view.Picture = pic.AddComponent<UnityEngine.UI.Image>();
+                view.Waiting = UnityEngine.Sprite.Create(UnityEngine.Texture2D.whiteTexture, new UnityEngine.Rect(0, 0, 4, 4), UnityEngine.Vector2.zero);
+                view.Leaving = UnityEngine.Sprite.Create(UnityEngine.Texture2D.whiteTexture, new UnityEngine.Rect(0, 0, 2, 2), UnityEngine.Vector2.zero);
+                view.Picture.sprite = view.Waiting;
+                Assert.IsFalse(view.IsLeaving);
+                view.SetLeaving(true);
+                Assert.IsTrue(view.IsLeaving, "happy from the start of the way out");
+                view.SetLeaving(false);
+                Assert.AreSame(view.Waiting, view.Picture.sprite, "worried again after an undo");
+            }
+            finally { UnityEngine.Object.DestroyImmediate(go); }
+        }
+
+        static System.Collections.Generic.List<TrafficLevel> TrafficJamModuleLevels()
+        {
+            var text = UnityEngine.Resources.Load<UnityEngine.TextAsset>(TrafficJamModule.StoryResourcesPath);
+            return UnityEngine.JsonUtility.FromJson<TrafficLevelSet>(text.text).levels;
+        }
+
         static TrafficSpace Space(string cells) => TrafficSpace.Explore(TrafficLayout.Parse(cells, out ulong start), start);
     }
 }

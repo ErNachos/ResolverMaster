@@ -14,7 +14,8 @@ Dall'ErNa-005 le icone dell'interfaccia (indietro, impostazioni, annulla, ricomi
 **Grafica disegnata con Google Gemini** su richiesta del team (uso secondo i termini di Google per i contenuti generati con Gemini, da verificare per l'uso commerciale prima della pubblicazione). Gli originali sono in `ArtSource/` e non vengono mai modificati:
 - interfaccia: `ArtSource/UI/ui_1..8_*.png` (pulsanti, pannelli, caselle, stelle, icone) → `Assets/Art/UI/` con `Tools/Art/make_ui_art.py`;
 - schede della Home: `ArtSource/Cards/Idraulico.png`, `Trafic.png` → `Assets/Art/Cards/card_plumber.png`, `card_trafficjam.png` con lo stesso script;
-- fonti e arrivi dell'Idraulico: `ArtSource/Plumber/Fonte_1..4.png`, `Arrivo_1..4.png` → `Assets/Art/Plumber/` con `Tools/Art/make_plumber_art.py`.
+- fonti e arrivi dell'Idraulico: `ArtSource/Plumber/Fonte_1..4.png`, `Arrivo_1..4.png` → `Assets/Art/Plumber/` con `Tools/Art/make_plumber_art.py`;
+- veicoli e ostacoli di Traffic jam (TJ-002): `ArtSource/TJ/1..4.png` → `Assets/Art/TrafficJam/` con `Tools/Art/make_trafficjam_art.py`.
 Riferimento di stile previsto in `ArtSource/Reference/` (non ancora presente).
 
 Generati dal progetto, nessuna licenza esterna: cornice delle schede della Home e pillole (`UiKitGenerator`, `Assets/Art/UI/Generated/`), tubi, acqua, ombre e gocce dell'Idraulico (`PipeSprites`, `WaterGraphic`), terreni e sfondi dei temi (`ThemeArt`), shader dei pulsanti disattivati (`Assets/Art/Shaders/UiDesaturate.shader`).

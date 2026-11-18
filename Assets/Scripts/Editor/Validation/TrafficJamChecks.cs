@@ -61,6 +61,46 @@ namespace ResolverMaster.Editor.Validation
     }
 
     /// <summary>
+    /// TJ-002, Traffic jam drawings: every vehicle and obstacle drawing (<see cref="TrafficLook.AllNames"/>) as a non-empty file in
+    /// Assets/Art/TrafficJam and in the sprite library the game reads (Resources/Games/TrafficJam/TrafficJamArt.asset); the obstacle table
+    /// of the themes names known themes and known obstacles only.
+    /// </summary>
+    public sealed class TrafficJamArtCheck : IValidationCheck
+    {
+        public string Name => "TrafficJamArt";
+
+        public void Run(ValidationReport report)
+        {
+            var lib = AssetDatabase.LoadAssetAtPath<IconLibrary>(UiKitAssets.TrafficJamArtPath);
+            if (lib == null) report.Error($"{UiKitAssets.TrafficJamArtPath} missing: run Resolver Master > UI Kit > Rebuild Sprite Libraries");
+            foreach (var name in TrafficLook.AllNames())
+            {
+                string path = $"{ResolverMaster.Games.TrafficJam.View.TrafficJamArt.AssetDir}/{name}.png";
+                var sprite = AssetDatabase.LoadAssetAtPath<Sprite>(path);
+                if (sprite == null)
+                {
+                    report.Error($"{path} missing or not a sprite: run python Tools/Art/make_trafficjam_art.py");
+                    continue;
+                }
+                if (lib != null && !lib.Has(name)) report.Error($"'{name}' not in the Traffic jam sprite library: run Resolver Master > UI Kit > Rebuild Sprite Libraries");
+                if (sprite.rect.width < 64 || sprite.rect.height < 64) report.Error($"{path}: too small ({sprite.rect.width}x{sprite.rect.height})");
+            }
+            var cfg = AssetDatabase.LoadAssetAtPath<TrafficJamConfig>(ConfigAssets.TrafficJamConfigPath);
+            if (cfg == null) return;
+            var themes = AssetDatabase.LoadAssetAtPath<ThemeConfig>(ConfigAssets.ThemeConfigPath);
+            foreach (var row in cfg.obstaclesByTheme)
+            {
+                if (row == null) continue;
+                if (themes != null && !themes.themes.Any(t => t.id == row.theme)) report.Error($"obstaclesByTheme: unknown theme '{row.theme}'");
+                if (row.variants == null || row.variants.Count == 0) report.Error($"obstaclesByTheme '{row.theme}': no obstacle");
+                else
+                    foreach (var v in row.variants)
+                        if (!TrafficLook.ObstacleNames.Contains(v)) report.Error($"obstaclesByTheme '{row.theme}': unknown obstacle '{v}'");
+            }
+        }
+    }
+
+    /// <summary>
     /// TJ-001, Traffic jam parameters and Story levels: chapters with icon, name, valid theme and texts in every language; 9 levels per
     /// chapter, numbered in order; each level readable, its saved minimum = the exact solver, positions under the cap, not solved at the
     /// start, inside its difficulty tier; the difficulty never drops inside a chapter and every chapter starts easier than the end of the
