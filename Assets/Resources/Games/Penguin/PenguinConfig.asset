@@ -13,29 +13,19 @@ MonoBehaviour:
   m_Name: PenguinConfig
   m_EditorClassIdentifier: 
   scarfColors:
-  - {r: 0.9490196, g: 0.54901963, b: 0.15686275, a: 1}
-  - {r: 0.5568628, g: 0.35686275, b: 0.70980394, a: 1}
-  penguinBody: {r: 0.16862746, g: 0.18431373, b: 0.22745098, a: 1}
-  penguinBelly: {r: 0.98039216, g: 0.98039216, b: 0.9607843, a: 1}
-  penguinBeak: {r: 0.9647059, g: 0.69803923, b: 0.23529412, a: 1}
-  fishColor: {r: 0.9490196, g: 0.56078434, b: 0.47843137, a: 1}
-  fishFin: {r: 0.8784314, g: 0.41568628, b: 0.34509805, a: 1}
-  rockColor: {r: 0.5411765, g: 0.56078434, b: 0.5882353, a: 1}
-  rockShade: {r: 0.41960785, g: 0.4392157, b: 0.47058824, a: 1}
-  snowColor: {r: 1, g: 1, b: 1, a: 1}
-  snowShade: {r: 0.84705883, g: 0.89411765, b: 0.9254902, a: 1}
-  waterColor: {r: 0.24313726, g: 0.5568628, b: 0.7882353, a: 1}
-  waterDeep: {r: 0.17254902, g: 0.42352942, b: 0.6509804, a: 1}
-  blockColor: {r: 0.7490196, g: 0.9098039, b: 0.95686275, a: 1}
-  blockShade: {r: 0.54901963, g: 0.7882353, b: 0.87058824, a: 1}
-  iglooColor: {r: 0.96862745, g: 0.98039216, b: 0.9882353, a: 1}
-  iglooShade: {r: 0.7882353, g: 0.8509804, b: 0.89411765, a: 1}
-  iglooDoor: {r: 0.16862746, g: 0.2, b: 0.2509804, a: 1}
-  iglooClosed: {r: 0.6627451, g: 0.83137256, b: 0.9019608, a: 1}
-  hintArrowColor: {r: 1, g: 1, b: 1, a: 1}
+  - {r: 0.89411764, g: 0.49019607, b: 0.28627450, a: 1}
+  - {r: 0.54117647, g: 0.20784313, b: 0.45882352, a: 1}
+  topPenguinHeight: 1.08
+  frontPenguinHeight: 1.3
+  frontPenguinFeet: 0.08
+  iglooWidth: 0.94
+  fishSize: 0.7
+  blockSize: 0.86
+  rockSize: 0.94
   outline: 0.035
   spritePixelsPerCell: 256
-  borderDepth: 0.24
+  borderDepth: 0.3334
+  hintArrowColor: {r: 1, g: 1, b: 1, a: 1}
   boardInset: 30
   compactCellBelow: 150
   compactFrameScale: 0.5
@@ -44,10 +34,13 @@ MonoBehaviour:
   swipeMinUnits: 40
   slideSpeed: 7
   bumpDuration: 0.18
+  turnDuration: 0.16
   dizzyTime: 0.6
-  fishPop: 0.3
+  dizzyMinCells: 3
+  fishPop: 0.4
+  fishJump: 0.45
   iglooOpen: 0.35
-  enterDuration: 0.3
+  scaredHold: 0.25
   fallDuration: 0.55
   failPause: 0.6
   sinkDuration: 0.35

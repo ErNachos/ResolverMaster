@@ -20,7 +20,8 @@ If the number of elements of a sheet differs from SHEETS the script stops with a
 elements of a sheet are written only after the whole sheet was checked).
 
 Writes are safe (temporary file, then replace); the script can be run again at any time.
-Usage (from the project root):  python Tools/Art/make_ui_art.py
+Usage (from the project root):  python Tools/Art/make_ui_art.py            (UI sheets and Home cards)
+                                python Tools/Art/make_ui_art.py --cards    (only the Home cards)
 """
 import glob
 import json
@@ -62,7 +63,7 @@ SHEETS = {
 }
 
 # Home cards: (file name prefix in ArtSource/Cards, case-insensitive) -> output name (= GameInfo.CardImage)
-CARDS = [("idraul", "card_plumber"), ("traf", "card_trafficjam")]
+CARDS = [("idraul", "card_plumber"), ("traf", "card_trafficjam"), ("pg", "card_penguin")]
 
 
 def remove_background(rgb):
@@ -192,7 +193,8 @@ def prepare_card(path, out_name):
 def main():
     problems = []
     results = []
-    for sheet, names in SHEETS.items():
+    cards_only = "--cards" in sys.argv[1:]
+    for sheet, names in ({} if cards_only else SHEETS).items():
         path = os.path.join(SRC_UI, sheet)
         if not os.path.exists(path):
             problems.append(f"{sheet}: missing in ArtSource/UI")
@@ -216,12 +218,23 @@ def main():
             b = e["border"]
             print(f"  {e['name']:<18} {e['w']:>4} x {e['h']:<4} px  slice {e['slice']:<4}" + (f"  border L{b[0]} B{b[1]} R{b[2]} T{b[3]}" if any(b) else ""))
             manifest.append({k: e[k] for k in ("name", "w", "h", "slice", "border", "source", "at")})
+    if cards_only:
+        manifest = None
+    else:
+        write_manifest(manifest)
+    prepare_cards(problems)
+    print("OK" + ("" if manifest is None else f": {len(manifest)} UI elements"))
+
+
+def write_manifest(manifest):
     tmp = os.path.join(OUT_UI, "ui_art.json.tmp")
     with open(tmp, "w", encoding="utf-8", newline="\n") as f:
         json.dump({"generatedBy": "Tools/Art/make_ui_art.py", "elements": manifest}, f, indent=1)
         f.write("\n")
     os.replace(tmp, os.path.join(OUT_UI, "ui_art.json"))
 
+
+def prepare_cards(problems):
     files = glob.glob(os.path.join(SRC_CARDS, "*.png"))
     for prefix, out_name in CARDS:
         match = [f for f in files if os.path.basename(f).lower().startswith(prefix)]
@@ -235,7 +248,6 @@ def main():
         for p in problems:
             print("  - " + p)
         sys.exit(1)
-    print(f"OK: {len(manifest)} UI elements")
 
 
 if __name__ == "__main__":

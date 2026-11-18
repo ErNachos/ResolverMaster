@@ -163,4 +163,39 @@ namespace ResolverMaster.Editor.Validation
             return issues;
         }
     }
+
+    /// <summary>
+    /// PG-002, Pino drawings: every sprite the game uses (<see cref="PenguinLook.AllNames"/>) as a file in Assets/Art/Penguin, imported as
+    /// an uncompressed sprite and present in the sprite library the game reads (Resources/Games/Penguin/PenguinArt.asset); the drawings of
+    /// one family (penguins from the front, from above, igloos) share one canvas size, so they are drawn at one scale and one anchor.
+    /// </summary>
+    public sealed class PenguinArtCheck : IValidationCheck
+    {
+        public string Name => "PenguinArt";
+
+        public void Run(ValidationReport report)
+        {
+            var lib = AssetDatabase.LoadAssetAtPath<IconLibrary>(UiKitAssets.PenguinArtPath);
+            if (lib == null) report.Error($"{UiKitAssets.PenguinArtPath} missing: run Resolver Master > UI Kit > Rebuild Sprite Libraries");
+            var sizes = new System.Collections.Generic.Dictionary<string, Vector2>();
+            foreach (var name in PenguinLook.AllNames())
+            {
+                string path = $"{ResolverMaster.Games.Penguin.View.PenguinArt.AssetDir}/{name}.png";
+                var sprite = AssetDatabase.LoadAssetAtPath<Sprite>(path);
+                if (sprite == null)
+                {
+                    report.Error($"{path} missing or not a sprite: run python Tools/Art/make_penguin_art.py");
+                    continue;
+                }
+                if (lib != null && lib.Get(name) != sprite) report.Error($"'{name}' not linked in the Pino sprite library: run Resolver Master > UI Kit > Rebuild Sprite Libraries");
+                if (sprite.rect.width < 64 || sprite.rect.height < 64) report.Error($"{path}: too small ({sprite.rect.width}x{sprite.rect.height})");
+                if (AssetImporter.GetAtPath(path) is TextureImporter imp && imp.textureCompression != TextureImporterCompression.Uncompressed)
+                    report.Error($"{path}: compressed import ({imp.textureCompression}): the outlines must stay clean (ArtImportRules.CrispIllustrationDirs)");
+                string family = name.Contains("_Front_") ? "front penguins" : name.Contains("_Top_") ? "penguins from above" : name.StartsWith("Igloo_") ? "igloos" : null;
+                if (family == null) continue;
+                if (!sizes.TryGetValue(family, out var size)) sizes[family] = sprite.rect.size;
+                else if (size != sprite.rect.size) report.Error($"{path}: {sprite.rect.width}x{sprite.rect.height}, the other {family} are {size.x}x{size.y} (one canvas per family)");
+            }
+        }
+    }
 }

@@ -35,7 +35,8 @@ namespace ResolverMaster.Editor
     /// TJ-001: Traffic jam too (mode, chapters, levels, two levels per chapter, light bulb, drag, win, Challenge with "Out of moves",
     /// daily challenge, Home with the record) and the short side of the vehicles.
     /// PG-001: Pino too (Home, mode, chapters, levels, two levels per chapter, a slide, a push, a fall, "You are stuck", light bulb,
-    /// win, Challenge also stuck, daily challenge, Home with the record) and the drawn size of the penguins.
+    /// win, Challenge also stuck, daily challenge, Home with the record) and the drawn size of the penguins; PG-002: scared, dizzy, igloo
+    /// open, and the pose of every penguin in the report.
     /// Report: Previews/previews_report.txt (also in the log). Batch: -executeMethod ResolverMaster.Editor.PreviewMaker.MakePreviewsBatch
     /// </summary>
     public static class PreviewMaker
@@ -366,6 +367,11 @@ namespace ResolverMaster.Editor
             PgGameShot("game_pg_slide", 12, after: b => ((ResolverMaster.Games.Penguin.View.PenguinBoardView)b).PreviewSlide(0.5f)),
             PgGameShot("game_pg_push", 36, after: b => ((ResolverMaster.Games.Penguin.View.PenguinBoardView)b).PreviewSlide(0.75f)),
             PgGameShot("game_pg_fall", 35, after: b => ((ResolverMaster.Games.Penguin.View.PenguinBoardView)b).PreviewFall()),
+            // PG-002: the expressions (scared before the fall, dizzy after a hard stop) and the igloo open before the last move
+            PgGameShot("game_pg_scared", 35, after: b => ((ResolverMaster.Games.Penguin.View.PenguinBoardView)b).PreviewFall(scared: true)),
+            PgGameShot("game_pg_dizzy", -2, after: b => ((ResolverMaster.Games.Penguin.View.PenguinBoardView)b).PreviewDizzy()),
+            PgGameShot("game_pg_open", 40, after: b => ((ResolverMaster.Games.Penguin.View.PenguinBoardView)b).PreviewBeforeLast()),
+            PgGameShot("game_pg_open_2p", 50, after: b => ((ResolverMaster.Games.Penguin.View.PenguinBoardView)b).PreviewBeforeLast()),
             PgGameShot("game_pg_hint", 20, after: b => ((ResolverMaster.Games.Penguin.View.PenguinBoardView)b).PreviewHintArrow()),
             PgGameShot("game_pg_hint_2p", 50, after: b => ((ResolverMaster.Games.Penguin.View.PenguinBoardView)b).PreviewHintArrow()),
             PgGameShot("game_pg_stuck", -1, after: b => ((ResolverMaster.Games.Penguin.View.PenguinBoardView)b).PreviewStuck()),
@@ -410,14 +416,17 @@ namespace ResolverMaster.Editor
 
         // ------------------------------------------------------------------ Pino shots (PG-001)
 
-        /// <summary>A Pino level (<paramref name="levelIndex"/> -1: the first Story level from chapter 4 on with a way into "You are stuck").</summary>
+        /// <summary>
+        /// A Pino level (<paramref name="levelIndex"/> -1: the first Story level from chapter 4 on with a way into "You are stuck"; -2: the
+        /// first Story level whose solution has a hard stop that makes a penguin dizzy).
+        /// </summary>
         static Shot PgGameShot(string name, int levelIndex, BoardPreview state = BoardPreview.Start, bool win = false, Action<PuzzleBoard> after = null) => new Shot
         {
             Name = name,
             Setup = (ctx, m) =>
             {
                 var module = (PenguinModule)ctx.Games.FindModule(PenguinModule.Id);
-                int index = levelIndex >= 0 ? levelIndex : PgStuckLevel(module);
+                int index = levelIndex >= 0 ? levelIndex : levelIndex == -2 ? PgDizzyLevel(module) : PgStuckLevel(module);
                 m.Get<GameScreen>(ScreenIds.Game).StartLevel(module, index);
                 m.PushImmediate(ScreenIds.Game);
             },
@@ -440,6 +449,25 @@ namespace ResolverMaster.Editor
                 var p = new PenguinPuzzle();
                 p.Load(levels[i]);
                 if (p.Space.PathToStuck().Count > 0) return i;
+            }
+            return 0;
+        }
+
+        static int PgDizzyLevel(PenguinModule module)
+        {
+            var levels = module.StoryLevels;
+            var cfg = PenguinConfig.LoadOrDefault();
+            var trace = new PenguinTrace();
+            for (int i = 0; i < levels.Count; i++)
+            {
+                var p = new PenguinPuzzle();
+                p.Load(levels[i]);
+                foreach (int d in p.Space.Solution(p.State))
+                {
+                    if (!p.TryPlan(d, out var move, trace)) break;
+                    if (trace.Tracks.Exists(t => t.Actor < PenguinLayout.MaxPenguins && PenguinLook.IsDizzyStop(t.End, t.T1 - t.T0, cfg.dizzyMinCells))) return i;
+                    p.ApplyMove(move);
+                }
             }
             return 0;
         }
@@ -953,7 +981,10 @@ namespace ResolverMaster.Editor
             if (game.Board is ResolverMaster.Games.Penguin.View.PenguinBoardView penguin)
             {
                 var pens = penguin.PenguinRects.Select(r => PixelRect(r, d)).ToList();
-                if (pens.Count > 0) sb.Append($"; {pens.Count} penguin(s) drawn at {pens.Min(r => r.width):0.0} px ({pens.Min(r => r.width) / cell * 100:0}% of a cell)");
+                if (pens.Count > 0) sb.Append($"; {pens.Count} penguin(s) drawn at {pens.Min(r => r.width):0.0}x{pens.Min(r => r.height):0.0} px ({pens.Min(r => r.width) / cell * 100:0}% x {pens.Min(r => r.height) / cell * 100:0}% of a cell)");
+                // PG-002: the drawing each penguin shows (view from above, or an expression from the front)
+                var poses = penguin.PenguinPoses.ToList();
+                if (poses.Count > 0) sb.Append($"; poses {string.Join(", ", poses)}");
             }
             if (game.Board is ResolverMaster.Games.Plumber.View.PlumberBoardView plumber)
             {

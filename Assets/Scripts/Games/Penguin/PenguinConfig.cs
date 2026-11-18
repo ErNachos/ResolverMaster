@@ -7,7 +7,7 @@ using UnityEngine;
 namespace ResolverMaster.Games.Penguin
 {
     /// <summary>
-    /// The single parameter file of Pino (PG-001): colors of the provisional art, board, swipe, animation times, solver and generator
+    /// The single parameter file of Pino (PG-001): sizes of the drawings (PG-002), board, swipe, animation times, solver and generator
     /// limits, the Story chapters (name, icon, color, theme), the Story difficulty table and the Challenge steps and margins.
     /// Asset: Assets/Resources/Games/Penguin/PenguinConfig.asset (Setup > Ensure Config Assets). Sizes are fractions of a cell.
     /// </summary>
@@ -16,38 +16,33 @@ namespace ResolverMaster.Games.Penguin
     {
         public const string ResourcesPath = "Games/Penguin/PenguinConfig";
 
-        [Header("Colors of the provisional art")]
+        [Header("Drawings (PG-002: Assets/Art/Penguin; sizes in cells)")]
         /// <summary>
-        /// Scarf of each penguin and the flag of its igloo: orange (plain) for the first, violet (striped) for the second. The pattern
-        /// always differs too (never the color alone).
+        /// Scarf of each penguin and the flag of its igloo, as painted in the drawings: orange (plain) for the first, purple (striped) for
+        /// the second. The pattern always differs too (never the color alone); the validator keeps the two colors far apart.
         /// </summary>
-        public List<Color> scarfColors = new List<Color> { new Color32(0xF2, 0x8C, 0x28, 0xFF), new Color32(0x8E, 0x5B, 0xB5, 0xFF) };
-        public Color penguinBody = new Color32(0x2B, 0x2F, 0x3A, 0xFF);
-        public Color penguinBelly = new Color32(0xFA, 0xFA, 0xF5, 0xFF);
-        public Color penguinBeak = new Color32(0xF6, 0xB2, 0x3C, 0xFF);
-        public Color fishColor = new Color32(0xF2, 0x8F, 0x7A, 0xFF);
-        public Color fishFin = new Color32(0xE0, 0x6A, 0x58, 0xFF);
-        public Color rockColor = new Color32(0x8A, 0x8F, 0x96, 0xFF);
-        public Color rockShade = new Color32(0x6B, 0x70, 0x78, 0xFF);
-        public Color snowColor = new Color32(0xFF, 0xFF, 0xFF, 0xFF);
-        public Color snowShade = new Color32(0xD8, 0xE4, 0xEC, 0xFF);
-        public Color waterColor = new Color32(0x3E, 0x8E, 0xC9, 0xFF);
-        public Color waterDeep = new Color32(0x2C, 0x6C, 0xA6, 0xFF);
-        public Color blockColor = new Color32(0xBF, 0xE8, 0xF4, 0xFF);
-        public Color blockShade = new Color32(0x8C, 0xC9, 0xDE, 0xFF);
-        public Color iglooColor = new Color32(0xF7, 0xFA, 0xFC, 0xFF);
-        public Color iglooShade = new Color32(0xC9, 0xD9, 0xE4, 0xFF);
-        public Color iglooDoor = new Color32(0x2B, 0x33, 0x40, 0xFF);
-        /// <summary>The ice plate that closes the door of an igloo while fish are missing.</summary>
-        public Color iglooClosed = new Color32(0xA9, 0xD4, 0xE6, 0xFF);
-        public Color hintArrowColor = new Color32(0xFF, 0xFF, 0xFF, 0xFF);
-
-        [Header("Art (fractions of a cell)")]
+        public List<Color> scarfColors = new List<Color> { new Color32(0xE4, 0x7D, 0x49, 0xFF), new Color32(0x8A, 0x35, 0x75, 0xFF) };
+        /// <summary>Height of the drawings of the penguins seen from above (one canvas for still and sliding: the still body is ~80% of it).</summary>
+        [Range(0.5f, 1.5f)] public float topPenguinHeight = 1.08f;
+        /// <summary>Height of the drawings of the penguins seen from the front (one canvas: the body is ~85% of it, the dizzy stars on top).</summary>
+        [Range(0.5f, 2f)] public float frontPenguinHeight = 1.3f;
+        /// <summary>The feet of a penguin seen from the front stand this far above the bottom of its cell (it may stick out upwards).</summary>
+        [Range(0f, 0.5f)] public float frontPenguinFeet = 0.08f;
+        /// <summary>Width of an igloo (its base on the bottom of the cell; the dome and the flag stick out upwards).</summary>
+        [Range(0.5f, 1.2f)] public float iglooWidth = 0.94f;
+        [Range(0.2f, 1f)] public float fishSize = 0.7f;
+        [Range(0.3f, 1f)] public float blockSize = 0.86f;
+        [Range(0.3f, 1f)] public float rockSize = 0.94f;
+        /// <summary>Outline of the effects still drawn by code (light bulb arrow, splash, sparkle).</summary>
         [Range(0f, 0.1f)] public float outline = 0.035f;
-        /// <summary>Texture pixels per cell of the generated sprites (at least the biggest cell, about 230 units on a 4x6 grid: never scaled up).</summary>
+        /// <summary>Texture pixels per cell of the effects drawn by code (at least the biggest cell: never scaled up).</summary>
         public int spritePixelsPerCell = 256;
-        /// <summary>Room kept around the cells for the border (snow wall or water), in cells.</summary>
-        [Range(0f, 0.5f)] public float borderDepth = 0.24f;
+        /// <summary>
+        /// Room kept around the cells for the border, in cells: a row of square pieces (snow wall or water tile), 1 / borderDepth of them
+        /// along each cell side.
+        /// </summary>
+        [Range(0.1f, 0.5f)] public float borderDepth = 0.3334f;
+        public Color hintArrowColor = new Color32(0xFF, 0xFF, 0xFF, 0xFF);
 
         [Header("Board")]
         public float boardInset = 30;
@@ -61,14 +56,19 @@ namespace ResolverMaster.Games.Penguin
         [Header("Animation (seconds, real time)")]
         /// <summary>Slide speed: cells per second, the same for penguins and blocks.</summary>
         public float slideSpeed = 7f;
-        /// <summary>The squash of a stop against something, and the dizzy face after it.</summary>
+        /// <summary>The squash of a stop against something.</summary>
         public float bumpDuration = 0.18f;
+        /// <summary>A penguin "turns towards us" (from above to the front, or back): a horizontal squash that swaps the drawing.</summary>
+        public float turnDuration = 0.16f;
+        /// <summary>The dizzy face after a stop against something after at least <see cref="dizzyMinCells"/> cells (then back to the view from above).</summary>
         public float dizzyTime = 0.6f;
-        /// <summary>A fish taken: it pops and fades; the igloo opening; a penguin going in.</summary>
-        public float fishPop = 0.3f;
+        public int dizzyMinCells = 3;
+        /// <summary>A fish taken: it jumps (<see cref="fishJump"/> cells) and vanishes; the igloo opening.</summary>
+        public float fishPop = 0.4f;
+        [Range(0f, 1.5f)] public float fishJump = 0.45f;
         public float iglooOpen = 0.35f;
-        public float enterDuration = 0.3f;
-        /// <summary>A penguin falling into the water (scared, it shrinks and the water splashes), then the pause before the restart.</summary>
+        /// <summary>A penguin falling into the water: scared (after the turn) for <see cref="scaredHold"/>, then it shrinks and the water splashes; then the pause before the restart.</summary>
+        public float scaredHold = 0.25f;
         public float fallDuration = 0.55f;
         public float failPause = 0.6f;
         /// <summary>A block sinking into a hole (the hole becomes ice at the end).</summary>

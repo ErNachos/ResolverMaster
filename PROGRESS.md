@@ -427,3 +427,25 @@
 
 **Problemi aperti / prossimi passi**
 - Scaricare a mano i 4 pacchetti Kenney in `ArtSource/Audio/Kenney/` e le musiche in `ArtSource/Audio/Music/`, poi *Audio > Importa suoni*; i nomi dei file nella tabella vanno verificati sui pacchetti veri. Normalizzazione dei volumi non fatta (servono i file).
+
+## Update PG-002 — Grafica di Pino (2026-11-18)
+
+**Fatto**
+- **Nota**: l'Editor di Unity era chiuso: batchmode direttamente sul progetto.
+- **A — Ritaglio**: lo strumento di TJ-002 era specifico di Traffic jam: la parte generica è ora `Tools/Art/sprite_cut.py` (sfondo tolto dai bordi, frangia scura senza alone, separazione per colonne, ritaglio senza scalare), usata da `make_trafficjam_art.py` (uscita identica, verificato con git) e dal nuovo `Tools/Art/make_penguin_art.py`. 24 sprite in `Assets/Art/Penguin/` (`Penguin_<Orange|Purple>_Front_<Normal|Happy|Scared|Dizzy>`, `Penguin_<colore>_Top_<Idle|Slide>`, `Igloo_<colore>_<Closed|Open>`, `Fish`, `IceBlock`, `Rock`, `Tile_<Ice|Snow|Water|SunkenBlock|SnowWall>`). Ogni famiglia ha una tela comune: pinguini di fronte 254x283 (piedi in basso, corpo centrato), dall'alto 234x332 (baricentro del corpo nero al centro), igloo 224x259 (base in basso). Import senza compressione con mipmap (`ArtImportRules.CrispIllustrationDirs`). Libreria `Resources/Games/Penguin/PenguinArt.asset`.
+- **B — Pinguini**: in gioco vista dall'alto (fermo o scivola, ruotato verso la mossa); "si gira verso di noi" con uno schiacciamento orizzontale (0,16 s) per le espressioni: normale all'inizio fino al primo swipe, stordito dopo uno stop contro roccia/muro/blocco/pinguino dopo almeno 3 caselle (0,6 s, poi torna dall'alto), spaventato prima della caduta (poi l'effetto), felice nell'igloo fino alla fine. Uno swipe interrompe subito normale e stordito (anche per il pinguino che non si muove). Logica pura in `PenguinLook`/`PenguinMood`. Igloo e pinguini ordinati per riga (le righe in basso sopra).
+- **C — Igloo, oggetti, terreni**: igloo chiuso/aperto con piccolo rimbalzo e cambio a metà; pesce che salta e sparisce; blocco e roccia disegnati; il buco riempito diventa `Tile_SunkenBlock`; tessere di ghiaccio, neve e acqua ruotate e specchiate in modo deterministico per posizione. Bordo: quadratini di muro di neve (mai ruotati, quelli più in basso sopra) o di acqua, 3 per lato di casella (`borderDepth` da 0,24 a 0,333: celle 4x6 da 191 a 186 px, 7x9 da 137 a 133 px). Sfondi dei temi invariati.
+- **D — Scheda della Home**: `ArtSource/Cards/PG.png` → `card_penguin.png` con lo stesso trattamento delle altre (`make_ui_art.py`, nuova opzione `--cards`). Rimosso `make_penguin_card.py`.
+- **E — Pulizia e controlli**: tolta la grafica provvisoria di Pino (`PenguinSprites` tiene solo freccia, spruzzo, scintilla; `SdfArt` resta nel Core) e i suoi colori da `PenguinConfig` (nuovi: misure dei disegni, `turnDuration`, `dizzyMinCells`, `scaredHold`, `fishJump`; `scarfColors` = colori veri dei disegni). Validatore: nuovo controllo `PenguinArt` (file, non compresso, collegato alla libreria, stessa tela per famiglia). Anteprime nuove: `game_pg_scared`, `game_pg_dizzy`, `game_pg_open`, `game_pg_open_2p`; il report riporta la posa di ogni pinguino. Pesci, blocchi, rocce e tessere non superano mai la risoluzione del disegno.
+- **Test**: 4 nuovi (`PenguinLookTests`: sprite per stato con interruzione; rotazione per direzione; tessere deterministiche e varie; ogni nome è un file).
+
+**Risultati**
+- Compilazione: 0 errori, 0 warning. Test: 61/61 verdi. Validatore: OK (14 controlli, 0 errori, 0 warning).
+- Anteprime: 516 schermate, nessun problema misurato, nessuno sprite ingrandito. Pinguino di fronte 117% x 130% della cella, dall'alto 76% x 108%.
+- Daltonismo (ΔE medio delle tessere, Machado 2009): ghiaccio/acqua ≥ 39, neve/acqua ≥ 47, porta igloo chiuso/aperto ≥ 37, sciarpe ≥ 35 (tritanopia) e strisce; ghiaccio/neve solo 7–17 (si distinguono per la trama: crepe lucide contro grumi di neve).
+
+**Da provare a mano sul telefono**
+- Ritmo del "si gira" (stordito, interruzione con uno swipe), pinguino spaventato che cade fuori dal bordo (sporge sopra il contatore per un attimo), ingresso nell'igloo con due pinguini (il primo resta felice davanti al suo igloo), leggibilità di ghiaccio e neve a 7x9.
+
+**Problemi aperti / prossimi passi**
+- Ghiaccio e neve hanno colori vicini (differenza affidata alla trama). Il pinguino felice copre gran parte del suo igloo. Icone dei capitoli ancora segnaposto.

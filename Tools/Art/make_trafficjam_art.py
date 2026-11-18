@@ -24,18 +24,13 @@ import os
 import sys
 
 import numpy as np
-from PIL import Image
-from scipy import ndimage
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from sprite_cut import crop, load_sheet, save_safe, split_columns  # noqa: E402  (shared with every minigame, PG-002)
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 SRC = os.path.join(ROOT, "ArtSource", "TJ")
 OUT = os.path.join(ROOT, "Assets", "Art", "TrafficJam")
-
-WHITE_MIN = 236         # a background pixel has every channel >= this
-FRINGE_MAX = 200        # fringe pixels next to the background lighter than this get a partial alpha
-MIN_GAP = 12            # empty columns that separate two objects of a sheet
-MIN_OBJECT_PX = 2000    # smaller groups are noise
-PAD = 2                 # transparent pixels kept around every sprite (clean filtering at the edges)
 
 # Slot of a vehicle on the grid, in cells: the vehicle is drawn inside (length - 2 * GAP) x (1 - 2 * GAP); keep in sync with
 # TrafficJamConfig.vehicleGap (the game fits the sprite uniformly, so a small difference only leaves a little more room).
@@ -51,45 +46,10 @@ NAMES = {
 }
 
 
-def remove_background(rgb):
-    """rgb: HxWx3 float32. Returns alpha 0..1 (white connected to the borders = 0) and the fringe mask."""
-    whiteish = np.all(rgb >= WHITE_MIN, axis=2)
-    labels, _ = ndimage.label(whiteish)
-    border = np.unique(np.concatenate([labels[0, :], labels[-1, :], labels[:, 0], labels[:, -1]]))
-    border = border[border != 0]
-    background = np.isin(labels, border)
-    alpha = np.where(background, 0.0, 1.0).astype(np.float32)
-    near_bg = ndimage.binary_dilation(background, iterations=2) & ~background
-    lum = rgb.mean(axis=2)
-    fringe = near_bg & (lum > FRINGE_MAX)
-    alpha[fringe] = np.clip((255.0 - lum[fringe]) / (255.0 - FRINGE_MAX), 0.0, 1.0)
-    return alpha, fringe
 
 
-def split_columns(alpha):
-    """Column ranges [x0, x1) of the objects of a sheet, separated by at least MIN_GAP empty columns."""
-    used = (alpha > 0.05).sum(axis=0) > 0
-    ranges, x, w = [], 0, len(used)
-    while x < w:
-        if not used[x]:
-            x += 1
-            continue
-        x0 = x
-        gap = 0
-        while x < w and gap < MIN_GAP:
-            gap = gap + 1 if not used[x] else 0
-            x += 1
-        x1 = x - gap
-        if (alpha[:, x0:x1] > 0.5).sum() >= MIN_OBJECT_PX:
-            ranges.append((x0, x1))
-    return ranges
 
 
-def crop(rgba):
-    ys, xs = np.nonzero(rgba[..., 3] > 2)
-    y0, y1, x0, x1 = ys.min(), ys.max() + 1, xs.min(), xs.max() + 1
-    obj = rgba[y0:y1, x0:x1]
-    return np.pad(obj, ((PAD, PAD), (PAD, PAD), (0, 0)))
 
 
 def flat_band(rgba, lo, hi):
@@ -133,11 +93,6 @@ def body_color(rgba):
     return tuple(int(round(v)) for v in sel.mean(axis=0))
 
 
-def save_safe(arr, path):
-    os.makedirs(os.path.dirname(path), exist_ok=True)
-    tmp = path + ".tmp"
-    Image.fromarray(arr, "RGBA").save(tmp, format="PNG")
-    os.replace(tmp, path)
 
 
 def main():
@@ -147,13 +102,9 @@ def main():
         if not os.path.exists(path):
             problems.append(f"missing {os.path.relpath(path, ROOT)}")
             continue
-        rgb = np.asarray(Image.open(path).convert("RGB"), dtype=np.float32)
-        alpha, fringe = remove_background(rgb)
-        base = rgb.copy()
-        base[fringe] = 0.0   # the outline fading out: dark, never a white halo
-        rgba_sheet = np.dstack([base, alpha * 255.0]).clip(0, 255).astype(np.uint8)
+        rgba_sheet, alpha = load_sheet(path)
         ranges = split_columns(alpha)
-        print(f"{os.path.relpath(path, ROOT)} {rgb.shape[1]}x{rgb.shape[0]}: {len(ranges)} object(s) at columns {ranges}")
+        print(f"{os.path.relpath(path, ROOT)} {alpha.shape[1]}x{alpha.shape[0]}: {len(ranges)} object(s) at columns {ranges}")
         if len(ranges) != len(names):
             problems.append(f"sheet {sheet}: expected {len(names)} objects, found {len(ranges)}")
             continue

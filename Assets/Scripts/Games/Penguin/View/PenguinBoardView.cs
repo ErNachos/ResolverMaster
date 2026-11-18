@@ -4,21 +4,22 @@ using System.Collections.Generic;
 using ResolverMaster.Core.App;
 using ResolverMaster.Core.Puzzle;
 using ResolverMaster.Core.UI;
-using ResolverMaster.Core.UI.Themes;
 using UnityEngine;
 using UnityEngine.UI;
 
 namespace ResolverMaster.Games.Penguin.View
 {
     /// <summary>
-    /// The Pino board on the Core game screen (PG-001), inside the Core <see cref="BoardFrame"/> (cream window, theme ground, ice tiles
-    /// of the theme), with the border (snow wall or water) in the room around the cells. Swipes anywhere on the board (Core
-    /// <see cref="SwipeArea"/>, a tap is not a swipe) move the penguins; swipes are ignored while something moves. The slides come from
-    /// the times computed by the rules (<see cref="PenguinTrace"/>, <see cref="PenguinPlay"/>) and are drawn on the real elapsed time
-    /// (same speed at 30 and 60 fps): a little squash and a dizzy face after a stop, the fish popping, the igloo door opening, the penguin
-    /// going in (happy), falling into the water (scared, a splash: then the level starts again, or the Challenge run is lost), the block
-    /// sliding and sinking into a hole that turns to ice. The light bulb shows an arrow on the penguins, then makes the move (or, when
-    /// stuck, undoes back to the last state with a solution).
+    /// The Pino board on the Core game screen (PG-001), inside the Core <see cref="BoardFrame"/> (cream window, ground of the chapter
+    /// theme between the tiles), with the border (snow wall or water pieces) in the room around the cells. Swipes anywhere on the board
+    /// (Core <see cref="SwipeArea"/>, a tap is not a swipe) move the penguins; swipes are ignored while something moves. The slides come
+    /// from the times computed by the rules (<see cref="PenguinTrace"/>, <see cref="PenguinPlay"/>) and are drawn on the real elapsed time
+    /// (same speed at 30 and 60 fps).
+    /// PG-002, the drawings (<see cref="PenguinArt"/>): tiles of ice, snow and water turned and mirrored by position
+    /// (<see cref="PenguinLook.TileLook"/>), the sunken block where a hole was filled; the penguins seen from above while they play (still or
+    /// sliding, turned towards the move) and "turning towards us" for an expression (<see cref="PenguinMood"/>): normal at the start, dizzy
+    /// after a hard stop, scared when they fall, happy in the igloo; igloos closed/open with a little bounce, the fish jumping away. Rows
+    /// lower on the screen are drawn over the rows above (penguins seen from the front and igloos stick out upwards).
     /// </summary>
     public sealed class PenguinBoardView : PuzzleBoard
     {
@@ -27,14 +28,17 @@ namespace ResolverMaster.Games.Penguin.View
         sealed class PenguinView
         {
             public RectTransform Root;
+            /// <summary>Stretched over the root: the horizontal squash of the turn.</summary>
+            public RectTransform Turn;
             public CanvasGroup Group;
-            public Image Body, Face, Scarf, Stripes;
+            public Image Top, Front;
+            public readonly PenguinMood Mood = new PenguinMood();
         }
 
         sealed class IglooView
         {
             public RectTransform Root;
-            public Image Body, Closed, Flag, Stripes;
+            public Image Image;
         }
 
         enum FxKind
@@ -53,24 +57,34 @@ namespace ResolverMaster.Games.Penguin.View
         PenguinModule _module;
         PenguinConfig _cfg;
         PenguinSprites _sprites;
+        PenguinArt _art;
         UiFactory _ui;
         BoardFrame _board;
-        RectTransform _tilesRoot, _terrainRoot, _borderRoot, _itemsRoot, _blocksRoot, _penguinsRoot, _fxRoot;
+        RectTransform _tilesRoot, _terrainRoot, _borderRoot, _itemsRoot, _blocksRoot, _actorsRoot, _fxRoot;
         ComponentPool<Image> _tiles, _terrain, _edges, _fishPool, _blockPool, _fxPool;
         readonly PenguinView[] _penguins = new PenguinView[PenguinLayout.MaxPenguins];
         readonly IglooView[] _igloos = new IglooView[PenguinLayout.MaxPenguins];
         readonly Image[] _arrows = new Image[PenguinLayout.MaxPenguins];
         readonly List<Image> _fishImages = new List<Image>();
         readonly List<Image> _blockImages = new List<Image>();
+        readonly List<Image> _rockImages = new List<Image>();
+        readonly List<Image> _tileImages = new List<Image>();
+        // sizes of fish, blocks and rocks as a share of the cell, never bigger than their drawings (Refit)
+        float _fishScale = 0.7f, _blockScale = 0.86f, _rockScale = 0.94f, _tileScale = 1f;
         readonly Dictionary<int, Image> _waterImages = new Dictionary<int, Image>();
+        // border pieces: the image, its edge (or -1 - corner), its place along the edge, water or wall
         readonly List<Image> _edgeImages = new List<Image>();
         readonly List<int> _edgeOf = new List<int>();
-        readonly List<Image> _corners = new List<Image>();
+        readonly List<int> _edgePart = new List<int>();
+        readonly List<bool> _edgeWater = new List<bool>();
         readonly List<Fx> _fx = new List<Fx>();
+        readonly List<(float row, int kind, RectTransform rt)> _order = new List<(float, int, RectTransform)>();
         readonly PenguinPuzzle _puzzle = new PenguinPuzzle();
         PenguinPlay _play;
         SwipeArea _swipe;
         Vector2 _fittedSize;
+        /// <summary>No swipe yet since the level started: the penguins look at us (normal face).</summary>
+        bool _fresh = true;
 
         // the move being played: start cells, the block view of each block actor, which track ends and events already ran
         readonly Vector2[] _start = new Vector2[Actors];
@@ -79,8 +93,11 @@ namespace ResolverMaster.Games.Penguin.View
         readonly List<bool> _eventDone = new List<bool>();
         readonly float[] _bump = new float[Actors];
         readonly float[] _vanish = new float[Actors];
+        readonly bool[] _vanishStarted = new bool[Actors];
+        readonly Vector2[] _vanishAt = new Vector2[Actors];
         readonly PenguinTrackEnd[] _vanishKind = new PenguinTrackEnd[Actors];
-        readonly float[] _dizzy = new float[PenguinLayout.MaxPenguins];
+        /// <summary>The penguins that fell in the last move (gone, but not in their igloo).</summary>
+        readonly bool[] _fallen = new bool[PenguinLayout.MaxPenguins];
         float[] _fishPop = Array.Empty<float>();
         float _iglooOpen = -1f;
         float _winTime = -1f, _failTime = -1f, _hintTime = -1f;
@@ -99,13 +116,30 @@ namespace ResolverMaster.Games.Penguin.View
         public override bool ShowsMessages => true;
         public float CellSize => _board.Cell;
 
-        /// <summary>The drawn penguins (previews measure them).</summary>
+        /// <summary>The drawn penguins, the drawing shown now (previews measure them).</summary>
         public IEnumerable<RectTransform> PenguinRects
         {
             get
             {
                 foreach (var p in _penguins)
-                    if (p != null && p.Root.gameObject.activeInHierarchy) yield return p.Root;
+                {
+                    if (p == null || !p.Root.gameObject.activeInHierarchy) continue;
+                    var img = p.Mood.Front ? p.Front : p.Top;
+                    if (img.gameObject.activeInHierarchy) yield return img.rectTransform;
+                }
+            }
+        }
+
+        /// <summary>What the penguins show now: "front Normal", "top Slide", ... (previews report it).</summary>
+        public IEnumerable<string> PenguinPoses
+        {
+            get
+            {
+                for (int i = 0; i < _penguins.Length; i++)
+                {
+                    var p = _penguins[i];
+                    if (p != null && p.Root.gameObject.activeInHierarchy) yield return p.Mood.SpriteName(i);
+                }
             }
         }
 
@@ -126,6 +160,7 @@ namespace ResolverMaster.Games.Penguin.View
             _ui = ctx.Ui;
             _cfg = PenguinConfig.LoadOrDefault();
             _sprites = PenguinSprites.For(_cfg);
+            _art = PenguinArt.Load();
             _puzzle.MaxStates = Mathf.Max(1000, _cfg.maxStates);
             _play = new PenguinPlay(_puzzle) { CellsPerSecond = Mathf.Max(1f, _cfg.slideSpeed) };
             _board = BoardFrame.Create(_ui, transform, _cfg.boardInset, _cfg.compactCellBelow, _cfg.compactFrameScale, _cfg.compactOverflow);
@@ -134,11 +169,11 @@ namespace ResolverMaster.Games.Penguin.View
             _borderRoot = Layer("Border");
             _itemsRoot = Layer("Items");
             _blocksRoot = Layer("Blocks");
-            _penguinsRoot = Layer("Penguins");
+            _actorsRoot = Layer("Actors");
             _fxRoot = Layer("Effects");
             _tiles = new ComponentPool<Image>(() =>
             {
-                var img = _ui.Image("Cell", _tilesRoot, _sprites.Tile, Color.white);
+                var img = _ui.Image("Cell", _tilesRoot, null, Color.white);
                 img.raycastTarget = false;
                 return img;
             });
@@ -155,12 +190,6 @@ namespace ResolverMaster.Games.Penguin.View
                 _arrows[i].sprite = _sprites.Arrow;
                 _arrows[i].color = _cfg.hintArrowColor;
                 _arrows[i].gameObject.SetActive(false);
-            }
-            for (int k = 0; k < 4; k++)
-            {
-                var corner = Piece("Corner" + k, _borderRoot, cellAnchored: false);
-                corner.sprite = _sprites.Corner;
-                _corners.Add(corner);
             }
             // swipes anywhere on the board, on top of everything (a tap is not a swipe)
             _swipe = SwipeArea.Create(transform);
@@ -185,41 +214,39 @@ namespace ResolverMaster.Games.Penguin.View
             return img;
         }
 
-        Image Child(string name, Transform parent, Sprite sprite)
+        /// <summary>A drawing inside an actor, anchored at <paramref name="anchor"/> of its parent with the same pivot.</summary>
+        Image Drawing(string name, Transform parent, Vector2 anchor)
         {
-            var img = _ui.Image(name, parent, sprite, Color.white);
+            var img = _ui.Image(name, parent, null, Color.white);
             img.raycastTarget = false;
             img.gameObject.AddComponent<Decoration>();
-            UiFactory.Stretch(img.rectTransform);
+            var rt = img.rectTransform;
+            rt.anchorMin = rt.anchorMax = rt.pivot = anchor;
+            rt.anchoredPosition = Vector2.zero;
             return img;
         }
 
         PenguinView BuildPenguin(int i)
         {
-            var root = _ui.Rect("Penguin" + (i + 1), _penguinsRoot);
+            var root = _ui.Rect("Penguin" + (i + 1), _actorsRoot);
             Anchor(root);
             var v = new PenguinView { Root = root, Group = root.gameObject.AddComponent<CanvasGroup>() };
             v.Group.blocksRaycasts = false;
-            v.Body = Child("Body", root, _sprites.Body);
-            v.Scarf = Child("Scarf", root, _sprites.Scarf);
-            v.Scarf.color = _cfg.ScarfColor(i);
-            v.Stripes = Child("ScarfStripes", root, _sprites.ScarfStripes);
-            v.Stripes.gameObject.SetActive(i == 1);   // never the color alone: the second penguin has a striped scarf
-            v.Face = Child("Face", root, _sprites.FaceSprite(PenguinSprites.Face.Normal));
+            v.Turn = _ui.Rect("Turn", root);
+            UiFactory.Stretch(v.Turn);
+            v.Top = Drawing("Top", v.Turn, new Vector2(0.5f, 0.5f));      // the body centred: it turns around the centre of the cell
+            v.Front = Drawing("Front", v.Turn, new Vector2(0.5f, 0f));    // the feet near the bottom of the cell
+            v.Mood.TurnTime = Mathf.Max(0.01f, _cfg.turnDuration);
+            v.Mood.DizzyTime = Mathf.Max(0f, _cfg.dizzyTime);
+            v.Mood.MinDizzyCells = Mathf.Max(1, _cfg.dizzyMinCells);
             root.gameObject.SetActive(false);
             return v;
         }
 
         IglooView BuildIgloo(int i)
         {
-            var root = _ui.Rect("Igloo" + (i + 1), _itemsRoot);
-            var v = new IglooView { Root = root };
-            v.Body = Child("Body", root, _sprites.Igloo);
-            v.Flag = Child("Flag", root, _sprites.Flag);
-            v.Flag.color = _cfg.ScarfColor(i);
-            v.Stripes = Child("FlagStripes", root, _sprites.FlagStripes);
-            v.Stripes.gameObject.SetActive(i == 1);   // the flag matches the scarf of its penguin, pattern included
-            v.Closed = Child("Closed", root, _sprites.IglooClosed);
+            var root = _ui.Rect("Igloo" + (i + 1), _actorsRoot);
+            var v = new IglooView { Root = root, Image = Drawing("Igloo", root, new Vector2(0.5f, 0f)) };
             root.gameObject.SetActive(false);
             return v;
         }
@@ -238,6 +265,16 @@ namespace ResolverMaster.Games.Penguin.View
             rt.offsetMin = rt.offsetMax = Vector2.zero;
         }
 
+        /// <summary>The deterministic turn and mirror of a tile (<see cref="PenguinLook.TileLook"/>).</summary>
+        static void TurnTile(RectTransform rt, int x, int y, int salt, float scale = 1f)
+        {
+            PenguinLook.TileLook(x, y, salt, out int quarter, out bool mirrored);
+            rt.localRotation = Quaternion.Euler(0, 0, 90f * quarter);
+            rt.localScale = new Vector3(mirrored ? -scale : scale, scale, 1f);
+        }
+
+        int BorderPieces => Mathf.Max(1, Mathf.RoundToInt(1f / Mathf.Max(0.1f, _cfg.borderDepth)));
+
         // ------------------------------------------------------------------ PuzzleBoard
 
         public override void SetMoveLimit(int limit) => _puzzle.MoveLimit = Mathf.Max(0, limit);
@@ -252,6 +289,7 @@ namespace ResolverMaster.Games.Penguin.View
             if (history == null || history.Count == 0) return true;
             bool ok = _puzzle.ReplayEncoded(history);
             if (!ok) _puzzle.Restart();
+            _fresh = _puzzle.MovesMade == 0;
             SnapVisuals();
             RaiseChanged();
             return ok;
@@ -274,52 +312,63 @@ namespace ResolverMaster.Games.Penguin.View
         {
             StopAll();
             _puzzle.Load(level);
-            BuildPieces(level.seed);
+            _fresh = true;
+            BuildPieces();
             SnapVisuals();
             Refit();
             RaiseChanged();
         }
 
-        void BuildPieces(int seed)
+        void BuildPieces()
         {
             var l = _puzzle.Layout;
             int w = l.Width, h = l.Height;
-            var theme = Theme;
-            _board.SetTheme(theme);
+            _board.SetTheme(Theme);
+            // the ground: ice, snow and water tiles (rocks stand on ice), each turned and mirrored by its position
             _tiles.ReleaseAll();
-            for (int c = 0; c < l.CellCount; c++)
-            {
-                var tile = _tiles.Get();
-                SetCellAnchors(tile.rectTransform, c % w, c / w, w, h);
-                tile.sprite = theme != null ? ThemeArt.Slab(theme, ArtVariants.Pick(seed, 3, c, ThemeArt.SlabVariants)) : _sprites.Tile;
-                tile.name = $"Cell_{c % w}_{c / w}";
-            }
-            _terrain.ReleaseAll();
+            _tileImages.Clear();
             _waterImages.Clear();
             for (int c = 0; c < l.CellCount; c++)
             {
+                var tile = _tiles.Get();
                 var t = l.Terrain(c);
-                if (t == PenguinTerrain.Ice) continue;
+                int x = c % w, y = c / w;
+                SetCellAnchors(tile.rectTransform, x, y, w, h);
+                tile.sprite = _art.Get(t == PenguinTerrain.Snow ? PenguinLook.TileSnow : t == PenguinTerrain.Water ? PenguinLook.TileWater : PenguinLook.TileIce);
+                tile.color = Color.white;
+                tile.name = $"{(t == PenguinTerrain.Rock ? PenguinTerrain.Ice : t)}_{x}_{y}";
+                TurnTile(tile.rectTransform, x, y, (int)t, _tileScale);
+                _tileImages.Add(tile);
+                if (t == PenguinTerrain.Water) _waterImages[c] = tile;
+            }
+            _terrain.ReleaseAll();
+            _rockImages.Clear();
+            for (int c = 0; c < l.CellCount; c++)
+            {
+                if (l.Terrain(c) != PenguinTerrain.Rock) continue;
                 var img = _terrain.Get();
                 SetCellAnchors(img.rectTransform, c % w, c / w, w, h);
-                img.sprite = t == PenguinTerrain.Rock ? _sprites.Rock : t == PenguinTerrain.Snow ? _sprites.Snow : _sprites.Water;
-                img.name = t + $"_{c % w}_{c / w}";
-                img.rectTransform.localScale = Vector3.one;
+                img.sprite = _art.Get(PenguinLook.Rock);
+                img.preserveAspect = true;
+                img.name = $"Rock_{c % w}_{c / w}";
+                img.rectTransform.localScale = Vector3.one * _rockScale;
                 img.color = Color.white;
-                if (t == PenguinTerrain.Water) _waterImages[c] = img;
+                _rockImages.Add(img);
             }
+            // the border: square pieces of snow wall (never turned: the visible side is at the bottom) or water, corners included
             _edges.ReleaseAll();
             _edgeImages.Clear();
             _edgeOf.Clear();
+            _edgePart.Clear();
+            _edgeWater.Clear();
+            int n = BorderPieces;
             for (int e = 0; e < l.EdgeCount; e++)
-            {
-                var img = _edges.Get();
-                bool water = l.EdgeWater(e);
-                img.sprite = water ? _sprites.WaterEdge : _sprites.WallEdge;
-                img.name = (water ? "EdgeWater_" : "EdgeWall_") + e;
-                _edgeImages.Add(img);
-                _edgeOf.Add(e);
-            }
+                for (int k = 0; k < n; k++)
+                    AddBorderPiece(e, k, l.EdgeWater(e));
+            int[] cornerCells = { l.Cell(0, 0), l.Cell(w - 1, 0), l.Cell(w - 1, h - 1), l.Cell(0, h - 1) };
+            int[,] cornerDirs = { { SquareTopology.Up, SquareTopology.Left }, { SquareTopology.Up, SquareTopology.Right }, { SquareTopology.Down, SquareTopology.Right }, { SquareTopology.Down, SquareTopology.Left } };
+            for (int k = 0; k < 4; k++)
+                AddBorderPiece(-1 - k, 0, l.EdgeWaterAt(cornerCells[k], cornerDirs[k, 0]) && l.EdgeWaterAt(cornerCells[k], cornerDirs[k, 1]));
             _fishPool.ReleaseAll();
             _fishImages.Clear();
             for (int f = 0; f < l.FishCount; f++)
@@ -327,7 +376,8 @@ namespace ResolverMaster.Games.Penguin.View
                 var img = _fishPool.Get();
                 int c = l.FishCell(f);
                 SetCellAnchors(img.rectTransform, c % w, c / w, w, h);
-                img.sprite = _sprites.Fish;
+                img.sprite = _art.Get(PenguinLook.Fish);
+                img.preserveAspect = true;
                 img.name = "Fish_" + f;
                 _fishImages.Add(img);
             }
@@ -343,15 +393,29 @@ namespace ResolverMaster.Games.Penguin.View
             for (int j = 0; j < l.BlockCount; j++)
             {
                 var img = _blockPool.Get();
-                img.sprite = _sprites.Block;
+                img.sprite = _art.Get(PenguinLook.IceBlock);
+                img.preserveAspect = true;
                 img.name = "Block_" + j;
                 _blockImages.Add(img);
             }
         }
 
+        void AddBorderPiece(int edge, int part, bool water)
+        {
+            var img = _edges.Get();
+            img.sprite = _art.Get(water ? PenguinLook.TileWater : PenguinLook.TileSnowWall);
+            img.name = (water ? "EdgeWater_" : "EdgeWall_") + (edge >= 0 ? edge + "_" + part : "Corner" + (-1 - edge));
+            img.color = Color.white;
+            _edgeImages.Add(img);
+            _edgeOf.Add(edge);
+            _edgePart.Add(part);
+            _edgeWater.Add(water);
+        }
+
         public override void Undo()
         {
             if (IsBusy || !_puzzle.Undo(out _)) return;
+            _fresh = _puzzle.MovesMade == 0;
             SnapVisuals();
             RaiseChanged();
         }
@@ -360,6 +424,7 @@ namespace ResolverMaster.Games.Penguin.View
         {
             if (IsBusy) return;
             _puzzle.Restart();
+            _fresh = true;
             SnapVisuals();
             RaiseChanged();
         }
@@ -374,6 +439,7 @@ namespace ResolverMaster.Games.Penguin.View
             if (_puzzle.IsStuck)
             {
                 _play.Hint();
+                _fresh = _puzzle.MovesMade == 0;
                 SnapVisuals();
                 RaiseChanged();
                 return;
@@ -390,25 +456,38 @@ namespace ResolverMaster.Games.Penguin.View
             var size = ((RectTransform)transform).rect.size;
             if (l == null || !_board.Fit(size, l.Width, l.Height, _cfg.borderDepth)) return;
             _fittedSize = size;
-            float cell = _board.Cell, depth = Mathf.Max(1f, _board.Margin - _board.Inset);
-            for (int k = 0; k < _edgeImages.Count; k++)
+            float cell = _board.Cell;
+            _fishScale = Share(PenguinLook.Fish, _cfg.fishSize, cell);
+            _blockScale = Share(PenguinLook.IceBlock, _cfg.blockSize, cell);
+            _rockScale = Share(PenguinLook.Rock, _cfg.rockSize, cell);
+            foreach (var rock in _rockImages) rock.rectTransform.localScale = Vector3.one * _rockScale;
+            // the tiles fill their cell, but never bigger than their drawing (a thin gap shows the ground of the theme on big cells)
+            _tileScale = 1f;
+            foreach (var name in new[] { PenguinLook.TileIce, PenguinLook.TileSnow, PenguinLook.TileWater, PenguinLook.TileSunkenBlock })
             {
-                l.EdgeCell(_edgeOf[k], out int c, out int dir);
-                var rt = _edgeImages[k].rectTransform;
-                float x = (l.X(c) + 0.5f) * cell, y = -(l.Y(c) + 0.5f) * cell, half = cell / 2f + depth / 2f;
-                rt.sizeDelta = new Vector2(cell, depth);
-                rt.anchoredPosition = new Vector2(x + PenguinLayout.Dx(dir) * half, y - PenguinLayout.Dy(dir) * half);
-                rt.localRotation = Quaternion.Euler(0, 0, -90f * dir);
+                var sprite = _art.Get(name);
+                if (sprite != null) _tileScale = Mathf.Min(_tileScale, Mathf.Min(sprite.rect.width, sprite.rect.height) / cell);
             }
-            float wpx = l.Width * cell, hpx = l.Height * cell;
-            var corners = new[] { new Vector2(-depth / 2f, depth / 2f), new Vector2(wpx + depth / 2f, depth / 2f), new Vector2(wpx + depth / 2f, -hpx - depth / 2f), new Vector2(-depth / 2f, -hpx - depth / 2f) };
-            for (int k = 0; k < 4; k++)
+            foreach (var tile in _tileImages)
             {
-                var rt = _corners[k].rectTransform;
-                rt.sizeDelta = new Vector2(depth, depth);
-                rt.anchoredPosition = corners[k];
-                // the quarter disc of snow is centred on the corner of the grid (the sprite draws it around its bottom-left corner)
-                rt.localRotation = Quaternion.Euler(0, 0, k == 0 ? 90f : k == 1 ? 0f : k == 2 ? -90f : 180f);
+                var ts = tile.rectTransform.localScale;
+                tile.rectTransform.localScale = new Vector3(Mathf.Sign(ts.x) * _tileScale, _tileScale, 1f);
+            }
+            foreach (var fish in _fishImages)
+                if (fish.gameObject.activeSelf) fish.rectTransform.localScale = Vector3.one * _fishScale;
+            PlaceBorder(l, cell);
+            // drawings inside the actors: one size per family (the drawings of a family share one canvas)
+            for (int i = 0; i < _penguins.Length; i++)
+            {
+                var v = _penguins[i];
+                float th = _cfg.topPenguinHeight * cell, fh = _cfg.frontPenguinHeight * cell;
+                v.Top.rectTransform.sizeDelta = new Vector2(th * _art.Aspect(PenguinLook.TopName(i, false)), th);
+                v.Front.rectTransform.sizeDelta = new Vector2(fh * _art.Aspect(PenguinLook.FrontName(i, PenguinFace.Normal)), fh);
+                v.Front.rectTransform.anchoredPosition = new Vector2(0f, _cfg.frontPenguinFeet * cell);
+                var ig = _igloos[i].Image.rectTransform;
+                float iw = _cfg.iglooWidth * cell;
+                ig.sizeDelta = new Vector2(iw, iw / _art.Aspect(PenguinLook.IglooName(i, false)));
+                ig.anchoredPosition = new Vector2(0f, cell * 0.02f);
             }
             if (_play.Busy) Animate(_play.TraceTime);
             else PlaceActors();
@@ -416,12 +495,77 @@ namespace ResolverMaster.Games.Penguin.View
                 if (_arrows[i].gameObject.activeSelf) PlaceArrow(i, _hintDir);
         }
 
+        /// <summary>
+        /// A drawing in a square of <paramref name="share"/> of the cell (aspect kept): the share, made smaller if the drawing would be
+        /// scaled up (never bigger than its resolution).
+        /// </summary>
+        float Share(string name, float share, float cell)
+        {
+            var s = _art.Get(name);
+            if (s == null || cell <= 0f) return share;
+            return Mathf.Min(share, Mathf.Max(s.rect.width, s.rect.height) / cell);
+        }
+
+        /// <summary>
+        /// The border pieces around the cells: <see cref="BorderPieces"/> squares along each cell side, one in each corner. The snow wall
+        /// keeps its proportions (top aligned: its visible side may stick out over the piece below); water tiles fill their square, turned
+        /// and mirrored like the ground. Pieces lower on the screen are drawn over the ones above.
+        /// </summary>
+        void PlaceBorder(PenguinLayout l, float cell)
+        {
+            float depth = Mathf.Max(1f, _board.Margin - _board.Inset), len = cell / BorderPieces;
+            float wpx = l.Width * cell, hpx = l.Height * cell;
+            float wallAspect = _art.Aspect(PenguinLook.TileSnowWall);
+            _order.Clear();
+            for (int k = 0; k < _edgeImages.Count; k++)
+            {
+                int e = _edgeOf[k], part = _edgePart[k];
+                float x0, top, w, h;
+                if (e >= 0)
+                {
+                    l.EdgeCell(e, out int c, out int dir);
+                    float along = l.X(c) * cell + part * len, down = l.Y(c) * cell + part * len;
+                    switch (dir)
+                    {
+                        case SquareTopology.Up: x0 = along; top = depth; w = len; h = depth; break;
+                        case SquareTopology.Down: x0 = along; top = -hpx; w = len; h = depth; break;
+                        case SquareTopology.Left: x0 = -depth; top = -down; w = depth; h = len; break;
+                        default: x0 = wpx; top = -down; w = depth; h = len; break;
+                    }
+                }
+                else
+                {
+                    int corner = -1 - e;
+                    x0 = corner == 0 || corner == 3 ? -depth : wpx;
+                    top = corner < 2 ? depth : -hpx;
+                    w = h = depth;
+                }
+                var rt = _edgeImages[k].rectTransform;
+                if (_edgeWater[k])
+                {
+                    rt.sizeDelta = new Vector2(w, h);
+                    rt.anchoredPosition = new Vector2(x0 + w / 2f, top - h / 2f);
+                    TurnTile(rt, e, part, 101);
+                }
+                else
+                {
+                    float wh = w / Mathf.Max(0.01f, wallAspect);
+                    rt.sizeDelta = new Vector2(w, wh);
+                    rt.anchoredPosition = new Vector2(x0 + w / 2f, top - wh / 2f);
+                    rt.localRotation = Quaternion.identity;
+                    rt.localScale = Vector3.one;
+                }
+                _order.Add((-top + x0 / (wpx + 4f * depth + 1f) * 0.01f, 0, rt));
+            }
+            ApplyOrder();
+        }
+
         /// <summary>Every animation jumps to its end (the board shows the state of the rules).</summary>
         public override void SnapVisuals()
         {
             StopAll();
             if (_puzzle.Layout == null) return;
-            ShowState();
+            ShowState(resetPoses: true);
             if (_board.Cell > 0) PlaceActors();
         }
 
@@ -436,42 +580,60 @@ namespace ResolverMaster.Games.Penguin.View
                 _vanish[a] = -1f;
                 _actorBlock[a] = null;
             }
-            for (int i = 0; i < _dizzy.Length; i++) _dizzy[i] = -1f;
             for (int f = 0; f < _fishPop.Length; f++) _fishPop[f] = -1f;
             foreach (var fx in _fx) _fxPool.Release(fx.Image);
             _fx.Clear();
             foreach (var a in _arrows) a.gameObject.SetActive(false);
         }
 
-        /// <summary>What is visible in the current state of the rules: penguins out, fish not taken, igloo doors, blocks, water holes.</summary>
-        void ShowState()
+        /// <summary>A penguin gone from the grid that is in its igloo (not one that fell in the last move).</summary>
+        bool InIgloo(ulong s, int i) =>
+            i < _puzzle.Layout.PenguinCount && PenguinLayout.PenguinPos(s, i) == PenguinLayout.Gone && !(_puzzle.Fell && _fallen[i]);
+
+        /// <summary>
+        /// What is visible in the current state of the rules: penguins on the grid or in their igloo, fish not taken, igloos closed or open,
+        /// blocks, water holes and sunken blocks. <paramref name="resetPoses"/>: the penguins also take the pose of the state (normal before
+        /// the first swipe, from above while playing, happy in the igloo); otherwise a running expression goes on.
+        /// </summary>
+        void ShowState(bool resetPoses)
         {
             var l = _puzzle.Layout;
             ulong s = _puzzle.State;
+            if (!_puzzle.Fell)
+                for (int i = 0; i < _fallen.Length; i++) _fallen[i] = false;
+            for (int a = 0; a < Actors; a++) _vanish[a] = -1f;
+            bool open = l.IglooOpen(s);
             for (int i = 0; i < PenguinLayout.MaxPenguins; i++)
             {
                 var v = _penguins[i];
-                bool shown = i < l.PenguinCount && PenguinLayout.PenguinPos(s, i) != PenguinLayout.Gone;
+                bool used = i < l.PenguinCount;
+                bool inIgloo = used && InIgloo(s, i);
+                bool shown = used && (PenguinLayout.PenguinPos(s, i) != PenguinLayout.Gone || inIgloo);
                 v.Root.gameObject.SetActive(shown);
                 v.Group.alpha = 1f;
                 v.Root.localScale = Vector3.one;
-                v.Face.sprite = _sprites.FaceSprite(PenguinSprites.Face.Normal);
-                if (i < l.PenguinCount)
+                if (resetPoses)
+                {
+                    if (inIgloo) v.Mood.Show(true, PenguinFace.Happy);
+                    else v.Mood.Show(_fresh, PenguinFace.Normal);
+                }
+                ApplyPose(i);
+                if (used)
                 {
                     var ig = _igloos[i];
-                    ig.Closed.gameObject.SetActive(!l.IglooOpen(s));
-                    ig.Closed.color = Color.white;
-                    ig.Closed.rectTransform.localScale = Vector3.one;
-                    ig.Body.rectTransform.localScale = Vector3.one;
+                    ig.Image.sprite = _art.Get(PenguinLook.IglooName(i, open));
+                    ig.Image.rectTransform.localScale = Vector3.one;
                 }
             }
             for (int f = 0; f < _fishImages.Count; f++)
             {
-                _fishImages[f].gameObject.SetActive(!l.FishTaken(s, f));
-                _fishImages[f].color = Color.white;
-                _fishImages[f].rectTransform.localScale = Vector3.one;
+                var img = _fishImages[f];
+                img.gameObject.SetActive(!l.FishTaken(s, f));
+                img.color = Color.white;
+                img.rectTransform.localScale = Vector3.one * _fishScale;
+                img.rectTransform.anchoredPosition = Vector2.zero;
             }
-            foreach (var kv in _waterImages) kv.Value.gameObject.SetActive(l.IsWater(s, kv.Key));
+            foreach (var kv in _waterImages) kv.Value.sprite = _art.Get(l.IsWater(s, kv.Key) ? PenguinLook.TileWater : PenguinLook.TileSunkenBlock);
             for (int j = 0; j < _blockImages.Count; j++)
             {
                 var img = _blockImages[j];
@@ -482,7 +644,22 @@ namespace ResolverMaster.Games.Penguin.View
             }
         }
 
-        /// <summary>Penguins and blocks on the cells of the current state.</summary>
+        /// <summary>The drawing of the pose of penguin <paramref name="i"/>: from above (turned towards its move) or from the front, and the squash of the turn.</summary>
+        void ApplyPose(int i)
+        {
+            var v = _penguins[i];
+            var m = v.Mood;
+            var img = m.Front ? v.Front : v.Top;
+            var other = m.Front ? v.Top : v.Front;
+            var sprite = _art.Get(m.SpriteName(i));
+            other.gameObject.SetActive(false);
+            img.gameObject.SetActive(sprite != null);
+            img.sprite = sprite;
+            if (!m.Front) img.rectTransform.localRotation = Quaternion.Euler(0, 0, PenguinLook.TopRotation(m.Dir));
+            v.Turn.localScale = new Vector3(m.SquashX, 1f, 1f);
+        }
+
+        /// <summary>Penguins (on the grid or in their igloo) and blocks on the cells of the current state.</summary>
         void PlaceActors()
         {
             var l = _puzzle.Layout;
@@ -491,21 +668,44 @@ namespace ResolverMaster.Games.Penguin.View
             {
                 int p = PenguinLayout.PenguinPos(s, i);
                 if (p != PenguinLayout.Gone) Place(_penguins[i].Root, CellPos(p));
+                else if (InIgloo(s, i)) Place(_penguins[i].Root, CellPos(l.Igloo(i)));
             }
             for (int j = 0; j < _blockImages.Count; j++)
             {
                 int b = PenguinLayout.BlockPos(s, j);
-                if (b != PenguinLayout.Gone) Place(_blockImages[j].rectTransform, CellPos(b));
+                if (b != PenguinLayout.Gone) Place(_blockImages[j].rectTransform, CellPos(b), _blockScale);
             }
+            SortActors();
         }
 
         Vector2 CellPos(int cell) => new Vector2(_puzzle.Layout.X(cell), _puzzle.Layout.Y(cell));
 
-        void Place(RectTransform rt, Vector2 cellPos)
+        void Place(RectTransform rt, Vector2 cellPos, float size = 1f)
         {
             float cell = _board.Cell;
-            rt.sizeDelta = new Vector2(cell, cell);
+            rt.sizeDelta = new Vector2(cell * size, cell * size);
             rt.anchoredPosition = new Vector2((cellPos.x + 0.5f) * cell, -(cellPos.y + 0.5f) * cell);
+        }
+
+        /// <summary>Igloos and penguins: rows lower on the screen drawn over the rows above (at equal rows the penguin over the igloo).</summary>
+        void SortActors()
+        {
+            var l = _puzzle.Layout;
+            float cell = Mathf.Max(1f, _board.Cell);
+            _order.Clear();
+            for (int i = 0; i < l.PenguinCount; i++)
+            {
+                _order.Add((l.Y(l.Igloo(i)), 0, _igloos[i].Root));
+                var root = _penguins[i].Root;
+                if (root.gameObject.activeSelf) _order.Add((-root.anchoredPosition.y / cell - 0.5f, 1 + i, root));
+            }
+            ApplyOrder();
+        }
+
+        void ApplyOrder()
+        {
+            _order.Sort((a, b) => a.row != b.row ? a.row.CompareTo(b.row) : a.kind.CompareTo(b.kind));
+            for (int k = 0; k < _order.Count; k++) _order[k].rt.SetSiblingIndex(k);
         }
 
         public override void PreparePreview(BoardPreview state)
@@ -514,6 +714,7 @@ namespace ResolverMaster.Games.Penguin.View
             var dirs = _puzzle.Space.Solution(_puzzle.State);
             int moves = state == BoardPreview.Partial ? dirs.Count / 2 : state == BoardPreview.Solved ? dirs.Count : 0;
             for (int i = 0; i < moves; i++) _puzzle.Swipe(dirs[i]);
+            _fresh = moves == 0;
             SnapVisuals();
             RaiseChanged();
         }
@@ -534,8 +735,11 @@ namespace ResolverMaster.Games.Penguin.View
             Seek(Mathf.Clamp01(fraction) * _play.Trace.Duration / _play.CellsPerSecond);
         }
 
-        /// <summary>Previews: along the solution, the first swipe that makes a penguin fall, frozen in the middle of the fall (with its message).</summary>
-        public void PreviewFall()
+        /// <summary>
+        /// Previews: along the solution, the first swipe that makes a penguin fall, frozen while it is scared (<paramref name="scared"/>)
+        /// or in the middle of the fall (with its message).
+        /// </summary>
+        public void PreviewFall(bool scared = false)
         {
             var dirs = _puzzle.Space.Solution(_puzzle.State);
             for (int k = 0; k <= dirs.Count; k++)
@@ -551,7 +755,8 @@ namespace ResolverMaster.Games.Penguin.View
                     foreach (var t in _play.Trace.Tracks)
                         if (t.End == PenguinTrackEnd.Fall || t.End == PenguinTrackEnd.FallOff) end = t.T1;
                     float overshoot = _play.Trace.Tracks.Exists(t => t.End == PenguinTrackEnd.FallOff) ? _play.FallOffOvershoot : 0f;
-                    Seek((end + overshoot) / _play.CellsPerSecond + _cfg.fallDuration * 0.45f);
+                    float after = scared ? _cfg.turnDuration + _cfg.scaredHold * 0.5f : FallDelay + _cfg.fallDuration * 0.45f;
+                    Seek((end + overshoot) / _play.CellsPerSecond + after);
                     RaiseMessage(PenguinKeys.Splash);
                     return;
                 }
@@ -560,11 +765,46 @@ namespace ResolverMaster.Games.Penguin.View
             SnapVisuals();
         }
 
+        /// <summary>
+        /// Previews: along the solution, the first swipe where a penguin stops against something after at least
+        /// <see cref="PenguinConfig.dizzyMinCells"/> cells, frozen while it is dizzy. False if the solution has none.
+        /// </summary>
+        public bool PreviewDizzy()
+        {
+            var dirs = _puzzle.Space.Solution(_puzzle.State);
+            foreach (int dir in dirs)
+            {
+                SnapVisuals();
+                if (!StartSwipe(dir)) return false;
+                foreach (var t in _play.Trace.Tracks)
+                {
+                    if (t.Actor >= FirstBlock || !PenguinLook.IsDizzyStop(t.End, Cells(t), Mathf.Max(1, _cfg.dizzyMinCells))) continue;
+                    Seek(t.T1 / _play.CellsPerSecond + _cfg.turnDuration + Mathf.Min(0.1f, _cfg.dizzyTime * 0.5f));
+                    return true;
+                }
+                Seek(_play.Seconds + 0.05f);
+            }
+            SnapVisuals();
+            return false;
+        }
+
+        /// <summary>Previews: the solution but its last move: the igloo is open (all the fish taken), the penguins seen from above.</summary>
+        public void PreviewBeforeLast()
+        {
+            _puzzle.Restart();
+            var dirs = _puzzle.Space.Solution(_puzzle.State);
+            for (int i = 0; i + 1 < dirs.Count; i++) _puzzle.Swipe(dirs[i]);
+            _fresh = false;
+            SnapVisuals();
+            RaiseChanged();
+        }
+
         /// <summary>Previews: the shortest way into a state with no solution left (the game screen shows "You are stuck").</summary>
         public void PreviewStuck()
         {
             _puzzle.Restart();
             foreach (int dir in _puzzle.Space.PathToStuck()) _puzzle.Swipe(dir);
+            _fresh = _puzzle.MovesMade == 0;
             SnapVisuals();
             RaiseChanged();
         }
@@ -573,15 +813,16 @@ namespace ResolverMaster.Games.Penguin.View
         void Seek(float seconds)
         {
             float step = 1f / 120f;
+            bool playing = true;
             for (float t = 0f; t < seconds; t += step)
             {
-                if (_play.Tick(step))
+                if (playing && _play.Tick(step))
                 {
                     Animate(float.MaxValue);
                     FinishMove();
-                    return;
+                    playing = false;
                 }
-                Animate(_play.TraceTime);
+                else if (playing) Animate(_play.TraceTime);
                 TickTimers(step);
             }
         }
@@ -603,7 +844,15 @@ namespace ResolverMaster.Games.Penguin.View
             return true;
         }
 
-        /// <summary>The swipe was accepted: the start cells, the view of each block actor, the extra time of the end effects.</summary>
+        static int Cells(PenguinTrace.Track t) => Mathf.Max(0, t.T1 - t.T0);
+
+        /// <summary>A fall: the penguin turns and stays scared for a moment, then the fall effect.</summary>
+        float FallDelay => _cfg.turnDuration + _cfg.scaredHold;
+
+        /// <summary>
+        /// The swipe was accepted: the start cells, the view of each block actor, the extra time of the end effects; the penguins that
+        /// slide are seen from above at once, the others drop a normal or dizzy face (an expression never slows the game down).
+        /// </summary>
         void BeginMove()
         {
             var l = _puzzle.Layout;
@@ -615,7 +864,18 @@ namespace ResolverMaster.Games.Penguin.View
                     ? (a < l.PenguinCount ? PenguinLayout.PenguinPos(before, a) : PenguinLayout.Gone)
                     : (a - FirstBlock < l.BlockCount ? PenguinLayout.BlockPos(before, a - FirstBlock) : PenguinLayout.Gone);
                 if (p != PenguinLayout.Gone) _start[a] = CellPos(p);
+                else if (a < l.PenguinCount) _start[a] = CellPos(l.Igloo(a));   // already in its igloo: stays there
                 if (a >= FirstBlock && a - FirstBlock < _blockImages.Count) _actorBlock[a] = _blockImages[a - FirstBlock];
+            }
+            _fresh = false;
+            int dir = _play.Trace.Dir;
+            for (int i = 0; i < l.PenguinCount; i++)
+            {
+                if (PenguinLayout.PenguinPos(before, i) == PenguinLayout.Gone) continue;
+                bool slides = _play.Trace.Tracks.Exists(t => t.Actor == i);
+                if (slides) _penguins[i].Mood.BeginSlide(dir);
+                else _penguins[i].Mood.Interrupt();
+                ApplyPose(i);
             }
             _trackDone.Clear();
             foreach (var _ in _play.Trace.Tracks) _trackDone.Add(false);
@@ -625,9 +885,9 @@ namespace ResolverMaster.Games.Penguin.View
             foreach (var t in _play.Trace.Tracks)
                 switch (t.End)
                 {
-                    case PenguinTrackEnd.Enter: tail = Mathf.Max(tail, _cfg.enterDuration); break;
+                    case PenguinTrackEnd.Enter: tail = Mathf.Max(tail, _cfg.turnDuration); break;
                     case PenguinTrackEnd.Fall:
-                    case PenguinTrackEnd.FallOff: tail = Mathf.Max(tail, _cfg.fallDuration); break;
+                    case PenguinTrackEnd.FallOff: tail = Mathf.Max(tail, FallDelay + _cfg.fallDuration); break;
                     case PenguinTrackEnd.Sink: tail = Mathf.Max(tail, _cfg.sinkDuration); break;
                 }
             if (_play.Trace.Events.Count > 0) tail = Mathf.Max(tail, Mathf.Max(_cfg.fishPop, _cfg.iglooOpen));
@@ -683,6 +943,7 @@ namespace ResolverMaster.Games.Penguin.View
                     {
                         // Story: the level starts again with 0 moves, as after a failed opening of the water
                         _puzzle.Restart();
+                        _fresh = true;
                         SnapVisuals();
                         RaiseChanged();
                     }
@@ -740,29 +1001,37 @@ namespace ResolverMaster.Games.Penguin.View
             for (int i = 0; i < _puzzle.Layout.PenguinCount; i++)
                 if (_penguins[i].Root.gameObject.activeSelf) Place(_penguins[i].Root, pos[i]);
             for (int a = FirstBlock; a < Actors; a++)
-                if (_actorBlock[a] != null && _actorBlock[a].gameObject.activeSelf) Place(_actorBlock[a].rectTransform, pos[a]);
+                if (_actorBlock[a] != null && _actorBlock[a].gameObject.activeSelf) Place(_actorBlock[a].rectTransform, pos[a], _blockScale);
+            SortActors();
         }
 
         void EndOfSlide(PenguinTrace.Track tr, Vector2 at)
         {
             int a = tr.Actor;
+            if (a < FirstBlock)
+            {
+                _penguins[a].Mood.EndSlide(tr.End, Cells(tr));
+                ApplyPose(a);
+            }
             switch (tr.End)
             {
                 case PenguinTrackEnd.Bump:
                 case PenguinTrackEnd.Push:
                     GameAudio.Play(tr.End == PenguinTrackEnd.Push ? AudioEvents.PenguinPush : AudioEvents.PenguinBump);
                     _bump[a] = 0f;
-                    if (a < FirstBlock) _dizzy[a] = 0f;
                     break;
                 case PenguinTrackEnd.Enter:
+                    GameAudio.Play(AudioEvents.PenguinEnter);
+                    break;
                 case PenguinTrackEnd.Fall:
                 case PenguinTrackEnd.FallOff:
                 case PenguinTrackEnd.Sink:
+                    // a penguin is scared first (the turn, then a moment), then it falls; a block sinks at once
                     _vanish[a] = 0f;
+                    _vanishStarted[a] = false;
                     _vanishKind[a] = tr.End;
-                    GameAudio.Play(tr.End == PenguinTrackEnd.Enter ? AudioEvents.PenguinEnter : tr.End == PenguinTrackEnd.Sink ? AudioEvents.PenguinSink : AudioEvents.PenguinSplash);
-                    if (tr.End == PenguinTrackEnd.Fall || tr.End == PenguinTrackEnd.FallOff) GameAudio.Vibrate();
-                    if (tr.End != PenguinTrackEnd.Enter) AddFx(FxKind.Splash, at, tr.End == PenguinTrackEnd.Sink ? _cfg.sinkDuration : _cfg.fallDuration);
+                    _vanishAt[a] = at;
+                    if (a < FirstBlock) _fallen[a] = true;
                     break;
                 case PenguinTrackEnd.Snow:
                     GameAudio.Play(AudioEvents.PenguinSnow);
@@ -770,10 +1039,11 @@ namespace ResolverMaster.Games.Penguin.View
             }
         }
 
-        /// <summary>Squashes, faces, vanishing actors, fish, the igloo door and the effects (real time).</summary>
+        /// <summary>Squashes, poses, falling and sinking actors, fish, the igloo doors and the effects (real time).</summary>
         void TickTimers(float dt)
         {
             var l = _puzzle.Layout;
+            if (l == null) return;
             for (int a = 0; a < Actors; a++)
             {
                 RectTransform rt = a < FirstBlock ? _penguins[a].Root : _actorBlock[a] != null ? _actorBlock[a].rectTransform : null;
@@ -790,63 +1060,71 @@ namespace ResolverMaster.Games.Penguin.View
                 if (_vanish[a] >= 0f)
                 {
                     _vanish[a] += dt;
-                    float dur = _vanishKind[a] == PenguinTrackEnd.Enter ? _cfg.enterDuration : _vanishKind[a] == PenguinTrackEnd.Sink ? _cfg.sinkDuration : _cfg.fallDuration;
-                    float u = Mathf.Clamp01(_vanish[a] / Mathf.Max(0.01f, dur));
-                    float s = Mathf.Lerp(1f, _vanishKind[a] == PenguinTrackEnd.Sink ? 0.55f : 0.25f, u);
-                    scale = new Vector3(s, s, 1f);
-                    if (a < FirstBlock) _penguins[a].Group.alpha = 1f - u;
-                    else _actorBlock[a].color = new Color(1f, 1f, 1f, 1f - u);
-                    if (u >= 1f)
+                    bool sink = _vanishKind[a] == PenguinTrackEnd.Sink;
+                    float t = _vanish[a] - (a < FirstBlock ? FallDelay : 0f);
+                    if (t >= 0f)
                     {
-                        _vanish[a] = -1f;
-                        rt.gameObject.SetActive(false);
-                        if (a >= FirstBlock)
+                        if (!_vanishStarted[a])
                         {
-                            // the hole is ice now
-                            foreach (var tr in _play.Trace.Tracks)
-                                if (tr.Actor == a && tr.End == PenguinTrackEnd.Sink && _waterImages.TryGetValue(tr.To, out var water)) water.gameObject.SetActive(false);
+                            _vanishStarted[a] = true;
+                            GameAudio.Play(sink ? AudioEvents.PenguinSink : AudioEvents.PenguinSplash);
+                            if (!sink) GameAudio.Vibrate();
+                            AddFx(FxKind.Splash, _vanishAt[a], sink ? _cfg.sinkDuration : _cfg.fallDuration);
+                        }
+                        float dur = sink ? _cfg.sinkDuration : _cfg.fallDuration;
+                        float u = Mathf.Clamp01(t / Mathf.Max(0.01f, dur));
+                        float s = Mathf.Lerp(1f, sink ? 0.55f : 0.25f, u);
+                        scale = new Vector3(s, s, 1f);
+                        if (a < FirstBlock) _penguins[a].Group.alpha = 1f - u;
+                        else _actorBlock[a].color = new Color(1f, 1f, 1f, 1f - u);
+                        if (u >= 1f)
+                        {
+                            _vanish[a] = -1f;
+                            rt.gameObject.SetActive(false);
+                            if (a >= FirstBlock)
+                            {
+                                // the hole is filled: the water tile becomes the sunken block
+                                foreach (var tr in _play.Trace.Tracks)
+                                    if (tr.Actor == a && tr.End == PenguinTrackEnd.Sink && _waterImages.TryGetValue(tr.To, out var water))
+                                        water.sprite = _art.Get(PenguinLook.TileSunkenBlock);
+                            }
                         }
                     }
                 }
                 rt.localScale = scale;
             }
-            for (int i = 0; i < PenguinLayout.MaxPenguins; i++)
+            for (int i = 0; i < l.PenguinCount; i++)
             {
-                if (_dizzy[i] >= 0f)
-                {
-                    _dizzy[i] += dt;
-                    if (_dizzy[i] >= _cfg.dizzyTime) _dizzy[i] = -1f;
-                }
-                var face = PenguinSprites.Face.Normal;
-                if (_vanish[i] >= 0f) face = _vanishKind[i] == PenguinTrackEnd.Enter ? PenguinSprites.Face.Happy : PenguinSprites.Face.Scared;
-                else if (_dizzy[i] >= 0f) face = PenguinSprites.Face.Dizzy;
-                _penguins[i].Face.sprite = _sprites.FaceSprite(face);
+                _penguins[i].Mood.Tick(dt);
+                ApplyPose(i);
             }
             for (int f = 0; f < _fishPop.Length; f++)
             {
                 if (_fishPop[f] < 0f) continue;
                 _fishPop[f] += dt;
+                // the fish jumps up and away, and fades in the second half
                 float u = Mathf.Clamp01(_fishPop[f] / Mathf.Max(0.01f, _cfg.fishPop));
-                _fishImages[f].rectTransform.localScale = Vector3.one * Mathf.Lerp(1f, 1.5f, u);
-                _fishImages[f].color = new Color(1f, 1f, 1f, 1f - u);
+                var rt = _fishImages[f].rectTransform;
+                rt.localScale = Vector3.one * (_fishScale * Mathf.Lerp(1f, 1.25f, u));
+                rt.anchoredPosition = new Vector2(0f, Mathf.Sin(u * Mathf.PI * 0.8f) * _cfg.fishJump * _board.Cell);
+                _fishImages[f].color = new Color(1f, 1f, 1f, u < 0.5f ? 1f : 1f - (u - 0.5f) * 2f);
                 if (u >= 1f)
                 {
                     _fishPop[f] = -1f;
                     _fishImages[f].gameObject.SetActive(false);
                 }
             }
-            if (_iglooOpen >= 0f && l != null)
+            if (_iglooOpen >= 0f)
             {
                 _iglooOpen += dt;
+                // the door opens half way through a little squash and stretch
                 float u = Mathf.Clamp01(_iglooOpen / Mathf.Max(0.01f, _cfg.iglooOpen));
+                float k = Mathf.Sin(u * Mathf.PI) * 0.1f;
                 for (int i = 0; i < l.PenguinCount; i++)
                 {
                     var ig = _igloos[i];
-                    ig.Closed.rectTransform.localScale = Vector3.one * Mathf.Lerp(1f, 0.2f, u);
-                    ig.Closed.color = new Color(1f, 1f, 1f, 1f - u);
-                    float bounce = 1f + Mathf.Sin(u * Mathf.PI) * 0.08f;
-                    ig.Body.rectTransform.localScale = new Vector3(bounce, bounce, 1f);
-                    if (u >= 1f) ig.Closed.gameObject.SetActive(false);
+                    if (u >= 0.5f) ig.Image.sprite = _art.Get(PenguinLook.IglooName(i, true));
+                    ig.Image.rectTransform.localScale = new Vector3(1f + k, 1f - k * 0.6f, 1f);
                 }
                 if (u >= 1f) _iglooOpen = -1f;
             }
@@ -879,11 +1157,11 @@ namespace ResolverMaster.Games.Penguin.View
             _fx.Add(new Fx { Image = img, Kind = kind, Time = 0f, Duration = Mathf.Max(0.05f, duration) });
         }
 
-        /// <summary>The move is over: what the rules say is shown; a fall starts the failure, the last penguin in the win.</summary>
+        /// <summary>The move is over: what the rules say is shown (running expressions go on); a fall starts the failure, the last penguin in the win.</summary>
         void FinishMove()
         {
             foreach (var p in _penguins) p.Root.localScale = Vector3.one;
-            ShowStateKeepingFaces();
+            ShowState(resetPoses: false);
             if (_board.Cell > 0) PlaceActors();
             if (_puzzle.Fell)
             {
@@ -892,15 +1170,6 @@ namespace ResolverMaster.Games.Penguin.View
             }
             else if (_puzzle.IsSolved) _winTime = 0f;
             RaiseChanged();
-        }
-
-        void ShowStateKeepingFaces()
-        {
-            var faces = new Sprite[PenguinLayout.MaxPenguins];
-            for (int i = 0; i < faces.Length; i++) faces[i] = _penguins[i].Face.sprite;
-            for (int a = 0; a < Actors; a++) _vanish[a] = -1f;
-            ShowState();
-            for (int i = 0; i < faces.Length; i++) _penguins[i].Face.sprite = faces[i];
         }
 
         int _hintDir;

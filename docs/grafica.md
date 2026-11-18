@@ -15,13 +15,14 @@
 ## Cartelle
 | Cartella | Contenuto | Chi la scrive |
 |---|---|---|
-| `ArtSource/` | originali di Gemini (`UI/ui_1..8_*.png`, `Cards/*.png`, `Plumber/Fonte_N.png`, `Arrivo_N.png`, `TJ/1..4.png`) | l'utente; **il codice li legge e basta** |
+| `ArtSource/` | originali di Gemini (`UI/ui_1..8_*.png`, `Cards/*.png`, `Plumber/Fonte_N.png`, `Arrivo_N.png`, `TJ/1..4.png`, `PG/1..6.png`) | l'utente; **il codice li legge e basta** |
 | `Assets/Art/UI/` | 30 elementi di Gemini (`btn_*`, `panel`, `ribbon`, `banner_chapter`, `tile_*`, `star_*`, `icon_*`) + `ui_art.json` (misure e bordi a 9 fette) | `Tools/Art/make_ui_art.py` |
 | `Assets/Art/UI/Generated/` | cornice delle schede della Home (`card`) e pillola con contorno sottile (`circle`: pallini, badge) | `UiKitGenerator` (*UI Kit > Regenerate Sprites*) |
 | `Assets/Art/Icons/` | icone Material segnaposto ancora usate (story, icone dei giochi e dei capitoli) | `Tools/Art/make_icons.py` |
 | `Assets/Art/Cards/` | illustrazioni delle schede della Home (`card_<id>.png`) | `Tools/Art/make_ui_art.py` |
 | `Assets/Art/Plumber/Sources/`, `Targets/` | fonti (`fonte_N` + `fonte_N_mask`) e arrivi (`arrivo_N`) | `Tools/Art/make_plumber_art.py` |
 | `Assets/Art/TrafficJam/` | auto obiettivo (`Target_<Red|Blue>_<Worried|Happy>`), auto (`Car_*`), camion (`Truck_*`), ostacoli (`Obstacle_*`), tutti col muso in alto | `Tools/Art/make_trafficjam_art.py` |
+| `Assets/Art/Penguin/` | Pino (PG-002): pinguini di fronte `Penguin_<Orange|Purple>_Front_<Normal|Happy|Scared|Dizzy>` (una tela comune, piedi sul bordo basso), dall'alto `Penguin_<colore>_Top_<Idle|Slide>` (una tela, corpo al centro, testa in alto), igloo `Igloo_<colore>_<Closed|Open>` (una tela, base in basso), `Fish`, `IceBlock`, `Rock`, tessere `Tile_<Ice|Snow|Water|SunkenBlock|SnowWall>`; importati **senza compressione** (`ArtImportRules.CrispIllustrationDirs`) | `Tools/Art/make_penguin_art.py` |
 | `Assets/Art/Fonts/` | Fredoka TTF + font asset SDF e materiale con contorno | `UiArtSetup` (Setup > Apply All) |
 | `Assets/Art/Shaders/` | shader e materiale dei pulsanti disattivati | a mano / `UiArtSetup` |
 | `Assets/TextMesh Pro/` | TMP Essential Resources | importate una volta (vedi sotto) |
@@ -32,7 +33,10 @@ Uso, dalla root del progetto: `python Tools/Art/make_ui_art.py` (Python 3 con Pi
 2. Separa gli elementi (gruppi di pixel separati da spazio bianco; pezzi a meno di 26 px sono lo stesso elemento: onde del suono, X del "suono no") e li nomina in ordine di lettura secondo la tabella `SHEETS`.
 3. Se il numero di elementi di un foglio non corrisponde, **si ferma senza scrivere nulla**.
 4. Ritaglia con 3 px di margine, **mai ingrandito né rimpicciolito**, scrittura sicura; scrive `ui_art.json` con misure e bordi a 9 fette (pillole, pannello, banner, caselle; il nastro e le icone non si affettano).
-5. Prepara le schede della Home da `ArtSource/Cards/` (nomi riconosciuti dall'inizio: `idraul…` → `card_plumber`, `traf…` → `card_trafficjam`), al massimo 1024 px.
+5. Prepara le schede della Home da `ArtSource/Cards/` (nomi riconosciuti dall'inizio: `idraul…` → `card_plumber`, `traf…` → `card_trafficjam`, `pg…` → `card_penguin`), al massimo 1024 px. Solo le schede: `python Tools/Art/make_ui_art.py --cards`.
+
+## Ritaglio comune dei disegni dei giochi (`Tools/Art/sprite_cut.py`, PG-002)
+Fogli con oggetti in riga su sfondo bianco: sfondo tolto dai bordi (bianchi interni intatti, frangia scura: niente alone), oggetti separati dalle colonne vuote, ritaglio senza scalare, scrittura sicura. Lo usano `make_trafficjam_art.py` e `make_penguin_art.py` (regola del Core: mai copiarlo).
 
 Dopo lo script: *Resolver Master > Setup > Apply All* (o `ConfigAssets.ResetVisualDefaultsBatch`) applica i bordi, riempie lo stile e ricostruisce le librerie.
 

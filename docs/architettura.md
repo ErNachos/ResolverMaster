@@ -39,7 +39,9 @@ Assets/
         Logic/                 PenguinLayout (campo, stato impacchettato, forma testuale), PenguinSimulator (regole dello swipe, PenguinTrace con i tempi),
                                PenguinSpace (risolutore: tutti gli stati, distanze, "Sei bloccato", lampadina), PenguinPuzzle (: PuzzleBase) + PenguinPlay
                                (swipe solo da fermo, orologio dell'animazione), PenguinGenerator, PenguinDifficulty, PenguinLevel(+Set), PenguinChallenge
-        View/                  PenguinBoardView (: PuzzleBoard; swipe, animazioni, lampadina), PenguinSprites (grafica dal codice)
+                               PenguinLook + PenguinMood (PG-002: nomi dei disegni, rotazione, tessere, pose ed espressioni)
+        View/                  PenguinBoardView (: PuzzleBoard; swipe, animazioni, lampadina), PenguinArt (libreria dei disegni),
+                               PenguinSprites (solo freccia, spruzzo, scintilla dal codice)
       TrafficJam/              TrafficJamModule, TrafficJamConfig, TrafficJamKeys (Traffic jam, TJ-001)
         Logic/                 TrafficLayout (veicoli, ostacoli, uscite, stato impacchettato, forma testuale), TrafficSpace (risolutore:
                                ricerca in ampiezza in avanti e all'indietro, tabella delle distanze), TrafficGenerator (disposizione casuale +
@@ -91,7 +93,7 @@ Release/Site, Release/PlayStore  materiale di pubblicazione
 - **Cosa resta in Traffic jam (TJ-001)**: le regole (`TrafficLayout`, `TrafficPuzzle`), il risolutore e la tabella delle distanze
   (`TrafficSpace`), il generatore, i valori dei gradini (`cols`, `rows`, `minMoves`, `cars`, `trucks`, `obstacles`, `targets`, `sideExits`),
   i capitoli in `TrafficJamConfig` e la grafica (`TrafficBoardView`, `TrafficSprites`). Regole complete: `docs/trafficjam-regole.md`.
-- **Cosa resta in Pino (PG-001)**: regole (`PenguinLayout`, `PenguinSimulator`, `PenguinPuzzle`), risolutore (`PenguinSpace`), generatore, gradini, capitoli in `PenguinConfig`, grafica (`PenguinBoardView`, `PenguinSprites`). Regole: `docs/penguin-regole.md`.
+- **Cosa resta in Pino (PG-001)**: regole (`PenguinLayout`, `PenguinSimulator`, `PenguinPuzzle`), risolutore (`PenguinSpace`), generatore, gradini, capitoli in `PenguinConfig`, grafica (`PenguinBoardView`, `PenguinArt`, `PenguinLook`/`PenguinMood`, `PenguinSprites`). Regole: `docs/penguin-regole.md`.
 - **Spostato/aggiunto nel Core con PG-001**: "Sei bloccato" (`PuzzleBoard.IsStuck`, `ChallengeRunState.StuckIsLost`, pannelli nella `GameScreen`), `PuzzleBoard.ShowsMessages`, `SwipeGesture` e `SwipeArea`, `SdfArt` (disegno dal codice, prima in Traffic jam), terreno `Snow` e sfondi `Icefield`/`Aurora`, temi Lago ghiacciato, Banchisa, Bufera, Disgelo, Ghiacciaio, Polo, Aurora.
 - **Spostato nel Core con TJ-001**: costruzione dei capitoli dai livelli (`StoryBook.Build`), finestra della griglia (`BoardFrame`),
   mosse gratuite della lampadina (`PuzzleBase.ApplyFreeMove`), "Mosse finite" della Challenge (`PuzzleBoard.LosesWhenOutOfMoves`,

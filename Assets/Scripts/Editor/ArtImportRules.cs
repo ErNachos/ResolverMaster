@@ -7,15 +7,23 @@ namespace ResolverMaster.Editor
     /// Assets/Art/Icons (placeholder masks) are crisp, uncompressed UI sprites; Assets/Art/UI (Gemini interface art, drawn smaller than
     /// its size) and Assets/Art/UI/Generated are uncompressed sprites with mipmaps; the illustrations (Assets/Art/Plumber, Assets/Art/Cards,
     /// and the art folder of every future minigame listed in <see cref="IllustrationDirs"/>) are sprites with mipmaps (they are drawn from
-    /// 512 px down to ~100 px) and high-quality compression, at most 1024 px.
+    /// 512 px down to ~100 px) and high-quality compression, at most 1024 px. PG-002: the drawings in <see cref="CrispIllustrationDirs"/>
+    /// (Pino: a little blurry already) are imported like the Gemini UI art: mipmaps, no compression (clean outlines).
     /// </summary>
     public sealed class ArtImportRules : AssetPostprocessor
     {
         public static readonly string[] IllustrationDirs = { "Assets/Art/Plumber/", "Assets/Art/Cards/", "Assets/Art/TrafficJam/" };
+        public static readonly string[] CrispIllustrationDirs = { "Assets/Art/Penguin/" };
 
         static bool IsIcon(string path) => path.StartsWith("Assets/Art/Icons/");
 
-        static bool IsUiArt(string path) => path.StartsWith("Assets/Art/UI/");
+        static bool IsUiArt(string path)
+        {
+            if (path.StartsWith("Assets/Art/UI/")) return true;
+            foreach (var dir in CrispIllustrationDirs)
+                if (path.StartsWith(dir)) return true;
+            return false;
+        }
 
         static bool IsIllustration(string path)
         {
