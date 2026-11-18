@@ -7,7 +7,7 @@ using UnityEngine;
 namespace ResolverMaster.Games.Penguin
 {
     /// <summary>
-    /// The single parameter file of Pingù (PG-001): colors of the provisional art, board, swipe, animation times, solver and generator
+    /// The single parameter file of Pino (PG-001): colors of the provisional art, board, swipe, animation times, solver and generator
     /// limits, the Story chapters (name, icon, color, theme), the Story difficulty table and the Challenge steps and margins.
     /// Asset: Assets/Resources/Games/Penguin/PenguinConfig.asset (Setup > Ensure Config Assets). Sizes are fractions of a cell.
     /// </summary>

@@ -45,6 +45,15 @@ namespace ResolverMaster.Editor.Validation
                     others.Add(($"theme '{t.id}'.{f.Name}", (Color)f.GetValue(t)));
             for (int i = 0; i < cfg.chapters.Count; i++) others.Add(($"Traffic jam chapter {i + 1} color", cfg.chapters[i].color));
             for (int i = 0; i < cfg.vehicleColors.Count; i++) others.Add(($"vehicleColors[{i}]", cfg.vehicleColors[i]));
+            // ErNa-010: the Home background of every game (base, gradient ends and pattern)
+            foreach (var g in ResolverMaster.Core.Games.GameRegistry.Discover().Games)
+            {
+                if (g.BackgroundColor.a <= 0f) continue;
+                others.Add(($"{g.Id} BackgroundColor", g.BackgroundColor));
+                others.Add(($"{g.Id} background top", ResolverMaster.Core.UI.BackgroundColors.Top(g.BackgroundColor)));
+                others.Add(($"{g.Id} background bottom", ResolverMaster.Core.UI.BackgroundColors.Bottom(g.BackgroundColor)));
+                others.Add(($"{g.Id} background pattern", ResolverMaster.Core.UI.BackgroundColors.Pattern(g.BackgroundColor)));
+            }
             others.Add(("barrierColorA", cfg.barrierColorA));
             others.Add(("barrierColorB", cfg.barrierColorB));
             foreach (var (what, color) in others)

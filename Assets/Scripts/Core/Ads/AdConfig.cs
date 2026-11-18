@@ -10,10 +10,12 @@ namespace ResolverMaster.Core.Ads
     {
         public const string ResourcesPath = "ResolverMaster/AdConfig";
 
-        /// <summary>The test ad is used in the Editor and in development builds.</summary>
+        /// <summary>The test ad is used in the Editor, in the test APK and in development builds (never in the release AAB).</summary>
         public bool testAdsInTestBuilds = true;
         /// <summary>Seconds before the buttons of the test ad can be pressed.</summary>
         public float testAdSeconds = 1.5f;
+        /// <summary>ErNa-010, Editor only: closing the test ad gives no reward (to try the "ad not watched" case).</summary>
+        public bool editorAdNotWatched;
 
         public static AdConfig LoadOrDefault()
         {

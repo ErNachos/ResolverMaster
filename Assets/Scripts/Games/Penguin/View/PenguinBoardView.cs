@@ -1,3 +1,4 @@
+using ResolverMaster.Core.Audio;
 using System;
 using System.Collections.Generic;
 using ResolverMaster.Core.App;
@@ -10,7 +11,7 @@ using UnityEngine.UI;
 namespace ResolverMaster.Games.Penguin.View
 {
     /// <summary>
-    /// The Pingù board on the Core game screen (PG-001), inside the Core <see cref="BoardFrame"/> (cream window, theme ground, ice tiles
+    /// The Pino board on the Core game screen (PG-001), inside the Core <see cref="BoardFrame"/> (cream window, theme ground, ice tiles
     /// of the theme), with the border (snow wall or water) in the room around the cells. Swipes anywhere on the board (Core
     /// <see cref="SwipeArea"/>, a tap is not a swipe) move the penguins; swipes are ignored while something moves. The slides come from
     /// the times computed by the rules (<see cref="PenguinTrace"/>, <see cref="PenguinPlay"/>) and are drawn on the real elapsed time
@@ -264,7 +265,7 @@ namespace ResolverMaster.Games.Penguin.View
                 return;
             }
             var levels = _module.StoryLevels;
-            if (levels.Count == 0) throw new InvalidOperationException("no Pingù Story levels");
+            if (levels.Count == 0) throw new InvalidOperationException("no Pino Story levels");
             LoadLevel(levels[Mathf.Clamp(request.Index, 0, levels.Count - 1)]);
         }
 
@@ -597,6 +598,7 @@ namespace ResolverMaster.Games.Penguin.View
         bool StartSwipe(int dir)
         {
             if (!_play.Swipe(dir)) return false;
+            GameAudio.Play(AudioEvents.PenguinSlide);
             BeginMove();
             return true;
         }
@@ -725,9 +727,14 @@ namespace ResolverMaster.Games.Penguin.View
                 if (e.Kind == PenguinTrace.EventKind.Fish)
                 {
                     if (e.Index < _fishPop.Length) _fishPop[e.Index] = 0f;
+                    GameAudio.Play(AudioEvents.PenguinFish);
                     AddFx(FxKind.Sparkle, CellPos(_puzzle.Layout.FishCell(e.Index)), _cfg.fishPop);
                 }
-                else _iglooOpen = 0f;
+                else
+                {
+                    _iglooOpen = 0f;
+                    GameAudio.Play(AudioEvents.PenguinIglooOpen);
+                }
             }
             if (_board.Cell <= 0) return;
             for (int i = 0; i < _puzzle.Layout.PenguinCount; i++)
@@ -743,6 +750,7 @@ namespace ResolverMaster.Games.Penguin.View
             {
                 case PenguinTrackEnd.Bump:
                 case PenguinTrackEnd.Push:
+                    GameAudio.Play(tr.End == PenguinTrackEnd.Push ? AudioEvents.PenguinPush : AudioEvents.PenguinBump);
                     _bump[a] = 0f;
                     if (a < FirstBlock) _dizzy[a] = 0f;
                     break;
@@ -752,7 +760,12 @@ namespace ResolverMaster.Games.Penguin.View
                 case PenguinTrackEnd.Sink:
                     _vanish[a] = 0f;
                     _vanishKind[a] = tr.End;
+                    GameAudio.Play(tr.End == PenguinTrackEnd.Enter ? AudioEvents.PenguinEnter : tr.End == PenguinTrackEnd.Sink ? AudioEvents.PenguinSink : AudioEvents.PenguinSplash);
+                    if (tr.End == PenguinTrackEnd.Fall || tr.End == PenguinTrackEnd.FallOff) GameAudio.Vibrate();
                     if (tr.End != PenguinTrackEnd.Enter) AddFx(FxKind.Splash, at, tr.End == PenguinTrackEnd.Sink ? _cfg.sinkDuration : _cfg.fallDuration);
+                    break;
+                case PenguinTrackEnd.Snow:
+                    GameAudio.Play(AudioEvents.PenguinSnow);
                     break;
             }
         }

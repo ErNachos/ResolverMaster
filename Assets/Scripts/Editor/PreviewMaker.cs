@@ -34,7 +34,7 @@ namespace ResolverMaster.Editor
     /// the free space above and below the grid, the size of the fountain drawings and the position of the main action button.
     /// TJ-001: Traffic jam too (mode, chapters, levels, two levels per chapter, light bulb, drag, win, Challenge with "Out of moves",
     /// daily challenge, Home with the record) and the short side of the vehicles.
-    /// PG-001: Pingù too (Home, mode, chapters, levels, two levels per chapter, a slide, a push, a fall, "You are stuck", light bulb,
+    /// PG-001: Pino too (Home, mode, chapters, levels, two levels per chapter, a slide, a push, a fall, "You are stuck", light bulb,
     /// win, Challenge also stuck, daily challenge, Home with the record) and the drawn size of the penguins.
     /// Report: Previews/previews_report.txt (also in the log). Batch: -executeMethod ResolverMaster.Editor.PreviewMaker.MakePreviewsBatch
     /// </summary>
@@ -332,7 +332,7 @@ namespace ResolverMaster.Editor
                 },
             },
 
-            // PG-001: Pingù: Home, mode choice, chapters, levels, two levels per chapter (also color-blind), a slide, a push, a fall,
+            // PG-001: Pino: Home, mode choice, chapters, levels, two levels per chapter (also color-blind), a slide, a push, a fall,
             // stuck, light bulb (one and two penguins), win, Challenge (playing and stuck), daily challenge, Home with the record
             HomeShot("home_penguin", PenguinModule.Id),
             new Shot
@@ -408,9 +408,9 @@ namespace ResolverMaster.Editor
             },
         };
 
-        // ------------------------------------------------------------------ Pingù shots (PG-001)
+        // ------------------------------------------------------------------ Pino shots (PG-001)
 
-        /// <summary>A Pingù level (<paramref name="levelIndex"/> -1: the first Story level from chapter 4 on with a way into "You are stuck").</summary>
+        /// <summary>A Pino level (<paramref name="levelIndex"/> -1: the first Story level from chapter 4 on with a way into "You are stuck").</summary>
         static Shot PgGameShot(string name, int levelIndex, BoardPreview state = BoardPreview.Start, bool win = false, Action<PuzzleBoard> after = null) => new Shot
         {
             Name = name,
@@ -463,7 +463,7 @@ namespace ResolverMaster.Editor
         }
 
         /// <summary>
-        /// A sample Pingù run (fixed seed) at <paramref name="level"/>: two moves of the solution, or (<paramref name="stuck"/>) the way into a
+        /// A sample Pino run (fixed seed) at <paramref name="level"/>: two moves of the solution, or (<paramref name="stuck"/>) the way into a
         /// state with no solution left, with 2 undos.
         /// </summary>
         static ResolverMaster.Core.Challenge.ChallengeRunState PgSampleRun(AppServices ctx, int level, bool stuck)

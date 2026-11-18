@@ -5,7 +5,7 @@ using ResolverMaster.Core.Puzzle;
 namespace ResolverMaster.Games.Penguin
 {
     /// <summary>
-    /// Builds a Pingù level from a seed inside a difficulty tier (PG-001), with the Core <see cref="SeededRandom"/>:
+    /// Builds a Pino level from a seed inside a difficulty tier (PG-001), with the Core <see cref="SeededRandom"/>:
     /// 1. random draft: igloos and penguins, then rocks, snow, water holes, fish and ice blocks on random free cells, and runs of water on
     ///    the border, as many as the tier asks;
     /// 2. every reachable state and the exact minimum (<see cref="PenguinSpace"/>); drafts with more states than the cap, or with no
@@ -164,7 +164,7 @@ namespace ResolverMaster.Games.Penguin
                     },
                 };
             }
-            throw new InvalidOperationException($"Pingù: no level for tier '{tierId}' from seed {seed} in {attempts} attempts");
+            throw new InvalidOperationException($"Pino: no level for tier '{tierId}' from seed {seed} in {attempts} attempts");
         }
 
         static void Count(Settings s, string reason)

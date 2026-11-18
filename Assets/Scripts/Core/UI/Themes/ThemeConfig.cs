@@ -22,7 +22,7 @@ namespace ResolverMaster.Core.UI.Themes
         public const string Parking = "parking", Market = "market", Airport = "airport", Crossroads = "crossroads", RushHour = "rushhour";
         /// <summary>ErNa-009 (Plumber chapters 10-13).</summary>
         public const string Spa = "spa", Station = "station", Mine = "mine", Palace = "palace";
-        /// <summary>PG-001 (Pingù chapters): frozen lake, pack ice, blizzard, thaw, glacier, pole, northern lights.</summary>
+        /// <summary>PG-001 (Pino chapters): frozen lake, pack ice, blizzard, thaw, glacier, pole, northern lights.</summary>
         public const string Lake = "lake", PackIce = "packice", Blizzard = "blizzard", Thaw = "thaw", Glacier = "glacier", Pole = "pole",
             NorthernLights = "aurora";
 
@@ -196,7 +196,7 @@ namespace ResolverMaster.Core.UI.Themes
                 backdrop = BackdropPattern.Castle,
                 skyTop = C(0xE5DDE2), skyBottom = C(0xF6F2F2), landA = C(0xC4B49C), landB = C(0x5F7F4E), landDetail = C(0x8E7F6B),
             },
-            // PG-001, Pingù: pale ice and snow, never close to the water colors nor to the Traffic jam target cars (checked by the validators)
+            // PG-001, Pino: pale ice and snow, never close to the water colors nor to the Traffic jam target cars (checked by the validators)
             Ice(Lake, 2001, Icy(0xF2F5F7, 0xD9E4EA, 0xE8F1F3, 0xBFD3DA, 0xA9C6CF), BackdropPattern.Icefield, 0xCFE3EC, 0xF2F7F8, 0xE9F0F2, 0xBFD3DA, 0x8FA9B3, 0xA9C9D2),
             Ice(PackIce, 2002, Icy(0xEEF3F2, 0xD3E1DF, 0xE6EFEF, 0xBCD3D4, 0x9FBEC2), BackdropPattern.Icefield, 0xD7E6E8, 0xF3F7F6, 0xEEF3F2, 0x9FC3C2, 0x7FA3A3, 0x9FC3BC),
             Ice(Blizzard, 2003, Icy(0xE9ECEF, 0xCDD4DA, 0xE3EAEE, 0xC2CFD6, 0xA3B1BA), BackdropPattern.Icefield, 0xB8C0C8, 0xDDE2E6, 0xE6EAED, 0xC9D3DA, 0x9AA6AF, 0xB8C2CA),
@@ -206,10 +206,10 @@ namespace ResolverMaster.Core.UI.Themes
             Ice(NorthernLights, 2007, Icy(0xE6ECF0, 0xC8D3DB, 0xDDE8EE, 0xAFC4CF, 0x8DA5B2), BackdropPattern.Aurora, 0x1C2433, 0x2E3B52, 0xDCE4EA, 0xAEBFCB, 0x7FD8A6, 0x8FCBB0),
         };
 
-        /// <summary>PG-001: the snow ground and the ice tiles of a Pingù theme (ground, ground detail, slab, slab detail, slab rim).</summary>
+        /// <summary>PG-001: the snow ground and the ice tiles of a Pino theme (ground, ground detail, slab, slab detail, slab rim).</summary>
         static int[] Icy(int ground, int groundDetail, int slab, int slabDetail, int slabEdge) => new[] { ground, groundDetail, slab, slabDetail, slabEdge };
 
-        /// <summary>PG-001: a Pingù theme (snow terrain; backdrop colors: sky top and bottom, land A and B, detail; accent).</summary>
+        /// <summary>PG-001: a Pino theme (snow terrain; backdrop colors: sky top and bottom, land A and B, detail; accent).</summary>
         static VisualTheme Ice(string id, int seed, int[] cells, BackdropPattern backdrop, int skyTop, int skyBottom, int landA, int landB, int landDetail, int accent) =>
             new VisualTheme
             {

@@ -5,7 +5,7 @@ using ResolverMaster.Core.Puzzle;
 namespace ResolverMaster.Games.Penguin
 {
     /// <summary>
-    /// The Pingù Challenge (PG-001): only its step table and margins (PenguinConfig) and its generator with the exact solver; run, score,
+    /// The Pino Challenge (PG-001): only its step table and margins (PenguinConfig) and its generator with the exact solver; run, score,
     /// record, pause, save, Continue, Change level and the daily challenge are Core. Pure and thread-safe (the Core generates the next
     /// levels off the main thread): it only reads the copied table and settings.
     /// </summary>

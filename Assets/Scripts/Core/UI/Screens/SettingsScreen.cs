@@ -34,8 +34,8 @@ namespace ResolverMaster.Core.UI.Screens
             const int padX = 56, padTop = 48, padBottom = 56;
             var card = ui.Panel("SettingsCard", layout.Body);
             ui.Column(card.rectTransform, 24, new RectOffset(padX, padX, padTop, padBottom));
-            // header row, pills, gap, sound row, vibration row: 5 spacings of 24
-            UiFactory.Layout(card, preferredHeight: padTop + s.rowHeight * 3 + s.buttonHeight + 24 + 5 * 24 + padBottom);
+            // header row, pills, gap, music row, effects row, vibration row: 6 spacings of 24
+            UiFactory.Layout(card, preferredHeight: padTop + s.rowHeight * 4 + s.buttonHeight + 24 + 6 * 24 + padBottom);
 
             // ---- language: globe + label, then the two pills ----
             CreateRowHeader(ctx, card.transform, "icon_language", LocKeys.SettingsLanguage);
@@ -52,12 +52,14 @@ namespace ResolverMaster.Core.UI.Screens
             var gap = ui.Rect("Gap", card.transform);
             UiFactory.Layout(gap, preferredHeight: 24);
 
-            // ---- sound and vibration: label on the left, round toggle on the right ----
+            // ---- music, effects (ErNa-010: two switches) and vibration: label on the left, round toggle on the right ----
+            var music = CreateToggleRow(ctx, card.transform, "Music", LocKeys.SettingsMusic,
+                () => ctx.Data.settings.music, v => ctx.Data.settings.music = v, "icon_sound_on", "icon_sound_off", false);
             var sound = CreateToggleRow(ctx, card.transform, "Sound", LocKeys.SettingsSound,
                 () => ctx.Data.settings.sound, v => ctx.Data.settings.sound = v, "icon_sound_on", "icon_sound_off", false);
             var vibration = CreateToggleRow(ctx, card.transform, "Vibration", LocKeys.SettingsVibration,
                 () => ctx.Data.settings.vibration, v => ctx.Data.settings.vibration = v, "icon_vibration", "icon_vibration", true);
-            screen._refreshToggles = () => { sound(); vibration(); };
+            screen._refreshToggles = () => { music(); sound(); vibration(); };
             return screen;
         }
 

@@ -98,6 +98,8 @@ namespace ResolverMaster.Core.UI
         public float homeDotSize = 30;
         public float homeDotGap = 22;
         public float homeDotsHeight = 64;
+        /// <summary>ErNa-010: the round arrows of the Home carousel, from the screen edges (outside the centred card).</summary>
+        public float homeArrowInset = 24;
         public Vector2 playButtonSize = new Vector2(560, 156);
         public int playTextSize = 80;
         /// <summary>Settings button of Home (round yellow, gear).</summary>

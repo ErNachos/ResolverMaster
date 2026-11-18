@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace ResolverMaster.Games.Penguin
 {
     /// <summary>
-    /// A saved Pingù level (Story levels are generated once in the Editor and shipped as data, never regenerated on the phone).
+    /// A saved Pino level (Story levels are generated once in the Editor and shipped as data, never regenerated on the phone).
     /// <see cref="cells"/> is the <see cref="PenguinLayout"/> text form.
     /// </summary>
     [Serializable]

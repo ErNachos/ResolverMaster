@@ -14,6 +14,11 @@ namespace ResolverMaster.Core.UI
         /// <summary>Called every time the screen becomes the top one.</summary>
         public virtual void OnShow() { }
 
+        /// <summary>
+        /// ErNa-010: the game whose music plays on this screen (<c>GameInfo.Id</c>; "" = the Home music; null = keep the current music).
+        /// </summary>
+        public virtual string MusicGame => null;
+
         /// <summary>Return true to consume the Back key (e.g. close an inner popup) instead of leaving the screen.</summary>
         public virtual bool HandleBack() => false;
     }

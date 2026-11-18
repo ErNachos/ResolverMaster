@@ -12,7 +12,8 @@ mode.placeholder = Questa modalità arriverà in un prossimo aggiornamento.
 
 settings.title = Impostazioni
 settings.language = Lingua
-settings.sound = Suono
+settings.sound = Effetti
+settings.music = Musica
 settings.vibration = Vibrazione
 common.on = Sì
 common.off = No
@@ -53,7 +54,6 @@ theme.rushhour.name = Ora di punta
 ad.test.title = Annuncio di prova
 ad.test.wait = Attendi {0} s…
 ad.test.ready = Fine dell'annuncio
-ad.test.watched = Guardato
 ad.test.closed = Chiudi
 
 # Challenge (ErNa-007)
@@ -102,7 +102,7 @@ theme.station.name = Stazione
 theme.mine.name = Miniera
 theme.palace.name = Reggia
 
-# PG-001: "Sei bloccato" (nessuna soluzione da qui) e temi di Pingù
+# PG-001: "Sei bloccato" (nessuna soluzione da qui) e temi di Pino
 game.stuck = Sei bloccato
 game.stuck.hint = Da qui non c'è più soluzione.
 challenge.stuck.hint = Annulla per tornare indietro (ne hai {0}).

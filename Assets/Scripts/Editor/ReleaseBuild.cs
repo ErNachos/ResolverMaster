@@ -38,6 +38,9 @@ namespace ResolverMaster.Editor
 
         public static void BuildApkBatch() => EditorApplication.Exit(BuildSigned(appBundle: false) ? 0 : 6);
 
+        /// <summary>ErNa-010: scripting symbols added to one build only: the test APK gets the test ads, the release AAB nothing.</summary>
+        public static string[] ExtraDefines(bool appBundle) => appBundle ? Array.Empty<string>() : new[] { ResolverMaster.Core.Ads.RewardedAds.TestBuildDefine };
+
         /// <summary>Names of the signing variables that are not set (empty = all present).</summary>
         public static string[] MissingSigningVariables() =>
             EnvNames.Where(n => string.IsNullOrEmpty(Environment.GetEnvironmentVariable(n))).ToArray();
@@ -90,6 +93,7 @@ namespace ResolverMaster.Editor
                     targetGroup = BuildTargetGroup.Android,
                     locationPathName = path,
                     options = BuildOptions.None,
+                    extraScriptingDefines = ExtraDefines(appBundle),   // ErNa-010: the test APK shows the test ad, the AAB no ad
                 });
                 bool ok = report.summary.result == BuildResult.Succeeded;
                 long bytes = ok && File.Exists(path) ? new FileInfo(path).Length : 0;

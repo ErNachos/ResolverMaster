@@ -14,7 +14,7 @@ using UnityEngine;
 namespace ResolverMaster.Editor.Validation
 {
     /// <summary>
-    /// PG-001, Pingù parameters and Story levels: chapters with icon, name, valid theme and texts in every language; tiers on the vertical
+    /// PG-001, Pino parameters and Story levels: chapters with icon, name, valid theme and texts in every language; tiers on the vertical
     /// grids; scarf colors far apart; 9 levels per chapter, numbered in order; each level readable, not solved at the start, its saved
     /// minimum = the exact solver, states under the cap, inside its difficulty tier, using the novelty of its tier and without too many
     /// useless elements (<see cref="PenguinGenerator.Problems"/>); the difficulty never drops inside a chapter and every chapter starts
@@ -36,7 +36,7 @@ namespace ResolverMaster.Editor.Validation
             var text = AssetDatabase.LoadAssetAtPath<TextAsset>(ConfigAssets.PenguinStoryPath);
             if (text == null)
             {
-                report.Error($"{ConfigAssets.PenguinStoryPath} missing: run Resolver Master > Pingù > Genera livelli Storia");
+                report.Error($"{ConfigAssets.PenguinStoryPath} missing: run Resolver Master > Pino > Genera livelli Storia");
                 return;
             }
             var set = JsonUtility.FromJson<PenguinLevelSet>(text.text);
@@ -110,7 +110,7 @@ namespace ResolverMaster.Editor.Validation
                 .Concat(cfg.chapters.Select(c => c.nameKey));
             foreach (var key in keys.Distinct())
             foreach (var lang in LanguageCodes.All)
-                if (!loc.Has(lang, key)) report.Error($"key '{key}' used by Pingù is missing in '{LanguageCodes.ToCode(lang)}'");
+                if (!loc.Has(lang, key)) report.Error($"key '{key}' used by Pino is missing in '{LanguageCodes.ToCode(lang)}'");
         }
 
         /// <summary>The problems of one level: (true = error, false = warning, message). Pure: runs on any thread.</summary>

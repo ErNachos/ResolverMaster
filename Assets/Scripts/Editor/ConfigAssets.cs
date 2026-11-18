@@ -15,7 +15,7 @@ namespace ResolverMaster.Editor
     /// <summary>
     /// Creates the parameter files that do not exist yet, with the default values written in their classes
     /// (Core <see cref="PuzzleConfig"/> and <see cref="ThemeConfig"/>, Plumber <see cref="PlumberConfig"/>, Traffic jam
-    /// <see cref="TrafficJamConfig"/>, PG-001 Pingù <see cref="PenguinConfig"/>). Existing files are never overwritten; TJ-001: themes added to the classes later are appended to
+    /// <see cref="TrafficJamConfig"/>, PG-001 Pino <see cref="PenguinConfig"/>). Existing files are never overwritten; TJ-001: themes added to the classes later are appended to
     /// the existing ThemeConfig (the themes already there are not touched).
     /// Batch: -executeMethod ResolverMaster.Editor.ConfigAssets.EnsureAllBatch
     /// </summary>
@@ -24,6 +24,7 @@ namespace ResolverMaster.Editor
         public const string PuzzleConfigPath = UiKitAssets.ResourcesDir + "/PuzzleConfig.asset";
         public const string ThemeConfigPath = UiKitAssets.ResourcesDir + "/ThemeConfig.asset";
         public const string AdConfigPath = UiKitAssets.ResourcesDir + "/AdConfig.asset";
+        public const string AudioConfigPath = UiKitAssets.ResourcesDir + "/AudioConfig.asset";
         public const string PlumberDir = "Assets/Resources/Games/Plumber";
         public const string PlumberConfigPath = PlumberDir + "/PlumberConfig.asset";
         public const string PlumberStoryPath = PlumberDir + "/plumber_story.json";
@@ -43,6 +44,7 @@ namespace ResolverMaster.Editor
             Ensure<PlumberConfig>(PlumberConfigPath);
             Ensure<TrafficJamConfig>(TrafficJamConfigPath);
             Ensure<PenguinConfig>(PenguinConfigPath);
+            Ensure<ResolverMaster.Core.Audio.AudioConfig>(AudioConfigPath);
             AddMissingThemes();
             AssetDatabase.SaveAssets();
         }

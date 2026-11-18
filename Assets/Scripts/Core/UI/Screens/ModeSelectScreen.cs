@@ -105,6 +105,8 @@ namespace ResolverMaster.Core.UI.Screens
             return card;
         }
 
+        public override string MusicGame => Game != null ? Game.Id : null;
+
         public void SetGame(GameInfo game)
         {
             Game = game;

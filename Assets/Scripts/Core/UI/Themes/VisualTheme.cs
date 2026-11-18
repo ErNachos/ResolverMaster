@@ -14,7 +14,7 @@ namespace ResolverMaster.Core.UI.Themes
         Dirt,
         /// <summary>Light grey sidewalk tiles (City).</summary>
         Pavement,
-        /// <summary>PG-001: snow with sparkles between the cells; cells are pale ice tiles with cracks and glints (Pingù).</summary>
+        /// <summary>PG-001: snow with sparkles between the cells; cells are pale ice tiles with cracks and glints (Pino).</summary>
         Snow,
     }
 

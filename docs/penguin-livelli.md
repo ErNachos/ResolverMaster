@@ -1,6 +1,6 @@
-# Pingù — livelli della Storia
+# Pino — livelli della Storia
 
-File generato da *Resolver Master > Pingù > Genera livelli Storia* (non modificare a mano). Regole: `docs/penguin-regole.md`.
+File generato da *Resolver Master > Pino > Genera livelli Storia* (non modificare a mano). Regole: `docs/penguin-regole.md`.
 Dati del gioco: `Assets/Resources/Games/Penguin/penguin_story.json`. Seed del livello n = 5101000 + n (se quel seed non dà un livello: + 1000, + 2000...). Generazione: 2 s in parallelo. Mosse minime esatte (ricerca in ampiezza su tutti gli stati).
 
 | Cap. | Livelli | Griglie | Mosse minime |
@@ -222,7 +222,7 @@ Formato di `PenguinLayout`: `LxA:righe[:bordo]`; `.` ghiaccio, `#` roccia, `s` n
 ## Tempi
 
 ```
-Pingù timing (Editor, Mono; exact minimum, no estimate)
+Pino timing (Editor, Mono; exact minimum, no estimate)
   solver (table of every state), 13 Story levels 7x9 (34-921 states): average 0,4 ms, max 2,0 ms
   "You are stuck" + light bulb with the table: average 0,1 µs, max 1,0 µs
   Challenge generator ch-13 (7x9, 2 penguin(s), blocks 0), 20 seeds: average 6 ms, max 27 ms, minimum moves 7-10

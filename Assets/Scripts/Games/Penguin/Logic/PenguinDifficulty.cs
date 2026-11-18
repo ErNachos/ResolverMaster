@@ -4,7 +4,7 @@ using ResolverMaster.Core.Puzzle;
 namespace ResolverMaster.Games.Penguin
 {
     /// <summary>
-    /// Keys of the Pingù difficulty tiers (PG-001). cols / rows: grid; minMoves: exact minimum; rocks, snow, holes (water cells inside the
+    /// Keys of the Pino difficulty tiers (PG-001). cols / rows: grid; minMoves: exact minimum; rocks, snow, holes (water cells inside the
     /// grid), waterEdges (runs of water on the border), fish, blocks, penguins (1 or 2). Checks of the novelty (0 or 1, or a count):
     /// needSnow (the level is longer or impossible with the snow turned to ice), danger (states of an optimal solution from which a swipe
     /// falls into the water, at least), needPush (impossible or longer with frozen blocks), needFill (impossible or longer when blocks

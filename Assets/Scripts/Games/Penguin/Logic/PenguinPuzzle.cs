@@ -14,7 +14,7 @@ namespace ResolverMaster.Games.Penguin
     }
 
     /// <summary>
-    /// The Pingù rules on the Core puzzle contract (PG-001). A move = one swipe that changes something (an empty swipe is no move).
+    /// The Pino rules on the Core puzzle contract (PG-001). A move = one swipe that changes something (an empty swipe is no move).
     /// A swipe that makes a penguin fall is a move that fails the level (<see cref="Fell"/>): the board shows the fall, then the level
     /// starts again (Story) or the run is lost (Challenge). Solved = every penguin in its igloo. Undo puts back the state before the
     /// swipe. The table of every reachable state (<see cref="Space"/>, built the first time it is needed) tells at once whether the

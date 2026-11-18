@@ -1,6 +1,6 @@
-# Pingù — regole (PG-001)
+# Pino — regole (PG-001)
 
-Nome tecnico nel codice: `Penguin` (`Assets/Scripts/Games/Penguin/`). Il nome mostrato, "Pingù", sta nei file delle lingue (`game.penguin.name`).
+Nome tecnico nel codice: `Penguin` (`Assets/Scripts/Games/Penguin/`). Il nome mostrato, "Pino", sta nei file delle lingue (`game.penguin.name`).
 
 ## Il campo
 - Griglie verticali: 4x6, 5x7, 6x8, 7x9 (colonne x righe).

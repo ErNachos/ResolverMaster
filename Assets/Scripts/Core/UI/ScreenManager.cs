@@ -1,3 +1,4 @@
+using ResolverMaster.Core.Audio;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -72,6 +73,7 @@ namespace ResolverMaster.Core.UI
             below.transform.SetAsLastSibling();
             closing.transform.SetAsLastSibling();
             below.OnShow();
+            PlayMusicOf(below);
             StartCoroutine(Fade(closing, 1f, 0f, () => closing.gameObject.SetActive(false)));
         }
 
@@ -89,6 +91,14 @@ namespace ResolverMaster.Core.UI
             screen.Group.blocksRaycasts = true;
             screen.Group.interactable = true;
             screen.OnShow();
+            PlayMusicOf(screen);
+        }
+
+        /// <summary>ErNa-010: the music of the screen on top (Home, or the game of the screen).</summary>
+        static void PlayMusicOf(UiScreen screen)
+        {
+            var game = screen != null ? screen.MusicGame : null;
+            if (game != null) GameAudio.PlayMusic(AudioCatalog.MusicFor(game));
         }
 
         IEnumerator Fade(UiScreen screen, float from, float to, System.Action done)

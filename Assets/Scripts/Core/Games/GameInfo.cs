@@ -29,6 +29,11 @@ namespace ResolverMaster.Core.Games
         public string CardImage;
         /// <summary>Color of the rounded frame of the Home card (not blue or orange: those are the water colors). Transparent = not set (validator error).</summary>
         public Color CardColor = new Color(0, 0, 0, 0);
+        /// <summary>
+        /// ErNa-010: the soft background of Home while this card is in the centre (and of its chapter list). Transparent = the
+        /// UiKitStyle background. Never close to the water colors nor to the target cars (validators).
+        /// </summary>
+        public Color BackgroundColor = new Color(0, 0, 0, 0);
     }
 
     /// <summary>Which Home card to show at start-up (pure logic, tested in EditMode).</summary>

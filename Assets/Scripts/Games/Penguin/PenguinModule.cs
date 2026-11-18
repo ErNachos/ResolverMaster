@@ -12,7 +12,7 @@ using UnityEngine.Scripting;
 namespace ResolverMaster.Games.Penguin
 {
     /// <summary>
-    /// Pingù (PG-001): a penguin slides on the ice until something stops it, and must reach its igloo (after taking every fish).
+    /// Pino (PG-001): a penguin slides on the ice until something stops it, and must reach its igloo (after taking every fish).
     /// The game gives only its rules, generator, solver, difficulty tables and art; Story, Challenge, daily challenge, stars, undo,
     /// light bulb, "You are stuck" and rewarded ads are Core. Technical name: Penguin (the shown name is a text key).
     /// </summary>
@@ -32,6 +32,7 @@ namespace ResolverMaster.Games.Penguin
             Availability = GameAvailability.Available,
             Order = 30,
             CardImage = "card_penguin",
+            BackgroundColor = UiKitStyle.Hex(0xDDEEF4),   // ErNa-010: soft ice blue
             CardColor = UiKitStyle.Hex(0x9ED3E0),
         };
 
@@ -50,7 +51,7 @@ namespace ResolverMaster.Games.Penguin
 
         public override PuzzleBoard CreateBoard(AppServices ctx, RectTransform parent) => PenguinBoardView.Create(ctx, parent, this);
 
-        /// <summary>The Pingù Challenge: step table and margins from PenguinConfig, generator with the exact solver.</summary>
+        /// <summary>The Pino Challenge: step table and margins from PenguinConfig, generator with the exact solver.</summary>
         public override IChallengeSource Challenge => _challenge ??= PenguinConfig.LoadOrDefault().CreateChallenge();
 
         /// <summary>The Story chapters (Core <see cref="StoryBook.Build"/>), themes from PenguinConfig.</summary>
@@ -62,7 +63,7 @@ namespace ResolverMaster.Games.Penguin
             var text = Resources.Load<TextAsset>(StoryResourcesPath);
             if (text == null)
             {
-                Debug.LogWarning("PenguinModule: Story levels missing (Resources/" + StoryResourcesPath + "). Run Resolver Master > Pingù > Genera livelli Storia.");
+                Debug.LogWarning("PenguinModule: Story levels missing (Resources/" + StoryResourcesPath + "). Run Resolver Master > Pino > Genera livelli Storia.");
                 return new List<PenguinLevel>();
             }
             var set = JsonUtility.FromJson<PenguinLevelSet>(text.text);

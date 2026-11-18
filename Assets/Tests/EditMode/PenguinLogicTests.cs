@@ -7,7 +7,7 @@ using ResolverMaster.Games.Penguin;
 
 namespace ResolverMaster.Tests
 {
-    /// <summary>PG-001: Pingù rules, exact solver, "You are stuck", light bulb, generator, Challenge save, Story levels.</summary>
+    /// <summary>PG-001: Pino rules, exact solver, "You are stuck", light bulb, generator, Challenge save, Story levels.</summary>
     public sealed class PenguinLogicTests
     {
         const int Up = SquareTopology.Up, Right = SquareTopology.Right, Down = SquareTopology.Down, Left = SquareTopology.Left;

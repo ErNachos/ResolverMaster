@@ -1,3 +1,4 @@
+using ResolverMaster.Core.Audio;
 using ResolverMaster.Core.Localization;
 using TMPro;
 using UnityEngine;
@@ -265,6 +266,7 @@ namespace ResolverMaster.Core.UI
         {
             var b = Button(name, parent, sprite, color, pill);
             b.gameObject.AddComponent<PressableButton>().Init((Image)b.targetGraphic, Style.pressDrop, Style.pressDarken, Style.disabledMaterial, Style.disabledContentAlpha);
+            b.onClick.AddListener(() => GameAudio.Play(AudioEvents.UiClick));   // ErNa-010
             return b;
         }
 

@@ -14,18 +14,17 @@ namespace ResolverMaster.Tests
         sealed class FakePresenter : ITestAdPresenter
         {
             public bool Showing { get; set; }
-            public Action Watched, Closed;
+            public Action Close;
 
-            public void Present(Action onWatched, Action onClosed)
+            public void Present(Action onClosed)
             {
                 Showing = true;
-                Watched = () => { Showing = false; onWatched?.Invoke(); };
-                Closed = () => { Showing = false; onClosed?.Invoke(); };
+                Close = () => { Showing = false; onClosed?.Invoke(); };
             }
         }
 
         [Test]
-        public void Ads_ButtonsDisabledWithoutAnAd_RewardOnlyWhenWatched()
+        public void Ads_ButtonsDisabledWithoutAnAd_TestAdAlwaysRewardsOnClose_EditorOptionNotWatched()
         {
             // no ad service, or no ad available: the buttons that need one are disabled
             Assert.IsFalse(RewardedAds.CanOffer(null, true));
@@ -43,15 +42,38 @@ namespace ResolverMaster.Tests
             int rewards = 0, closes = 0;
             test.Show(() => rewards++, () => closes++);
             Assert.IsFalse(test.IsAvailable, "one ad at a time");
-            presenter.Closed();
-            Assert.AreEqual(0, rewards, "closed early: no reward");
-            Assert.AreEqual(1, closes);
-            test.Show(() => rewards++, () => closes++);
-            presenter.Watched();
-            Assert.AreEqual(1, rewards);
+            presenter.Close();
+            Assert.AreEqual(1, rewards, "ErNa-010: closing the test ad always gives the reward");
+            Assert.AreEqual(0, closes);
             Assert.IsTrue(test.IsAvailable);
+
+            // the "not watched" case: only in the Editor, with the option of AdConfig
+            var cfg = UnityEngine.ScriptableObject.CreateInstance<AdConfig>();
+            cfg.editorAdNotWatched = true;
+            var editor = (TestRewardedAdService)RewardedAds.Create(BuildKind.Editor, cfg, presenter);
+            editor.Show(() => rewards++, () => closes++);
+            presenter.Close();
+            Assert.AreEqual(1, rewards, "Editor option: no reward");
+            Assert.AreEqual(1, closes);
+            Assert.IsTrue(((TestRewardedAdService)RewardedAds.Create(BuildKind.TestApk, cfg, presenter)).RewardOnClose, "the option never reaches the phone");
             test.Enabled = false;
             Assert.IsFalse(RewardedAds.CanOffer(test, true));
+            UnityEngine.Object.DestroyImmediate(cfg);
+        }
+
+        [Test]
+        public void Ads_TestApkHasTheTestAd_ReleaseAabHasNone()
+        {
+            var cfg = UnityEngine.ScriptableObject.CreateInstance<AdConfig>();
+            Assert.IsInstanceOf<TestRewardedAdService>(RewardedAds.Create(BuildKind.TestApk, cfg, null), "test APK");
+            Assert.IsInstanceOf<TestRewardedAdService>(RewardedAds.Create(BuildKind.Editor, cfg, null));
+            Assert.IsInstanceOf<TestRewardedAdService>(RewardedAds.Create(BuildKind.Development, cfg, null));
+            Assert.IsInstanceOf<UnavailableRewardedAdService>(RewardedAds.Create(BuildKind.Release, cfg, null), "release AAB: no ad until AdMob");
+            // the build decides, not a manual switch: the APK gets the symbol, the AAB never
+            CollectionAssert.Contains(ResolverMaster.Editor.ReleaseBuild.ExtraDefines(appBundle: false), RewardedAds.TestBuildDefine);
+            CollectionAssert.DoesNotContain(ResolverMaster.Editor.ReleaseBuild.ExtraDefines(appBundle: true), RewardedAds.TestBuildDefine);
+            Assert.AreEqual(BuildKind.Editor, RewardedAds.CurrentKind);
+            UnityEngine.Object.DestroyImmediate(cfg);
         }
 
         [Test]

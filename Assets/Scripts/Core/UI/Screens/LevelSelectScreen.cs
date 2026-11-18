@@ -1,3 +1,4 @@
+using ResolverMaster.Core.Audio;
 using System.Collections.Generic;
 using ResolverMaster.Core.App;
 using ResolverMaster.Core.Games;
@@ -45,9 +46,9 @@ namespace ResolverMaster.Core.UI.Screens
         AppServices _ctx;
         ScreenLayout _layout;
         LocalizedText _title;
-        RectTransform _pager, _dots;
+        RectTransform _pager;
+        CarouselArrows _arrows;
         readonly List<Page> _pages = new List<Page>();
-        readonly List<Image> _dotImages = new List<Image>();
         CardCarousel _carousel = new CardCarousel(0, 1f);
         int _shownChapter = -1;
         bool _wasMoving;
@@ -62,6 +63,7 @@ namespace ResolverMaster.Core.UI.Screens
         public StoryChapter Chapter => Module != null && _pages.Count > 0 ? Module.Story.Chapter(_carousel.Target + 1) : null;
         /// <summary>The page logic (previews, tests of the view).</summary>
         public CardCarousel Pager => _carousel;
+        public override string MusicGame => Module != null ? Module.Info.Id : null;
 
         public static LevelSelectScreen Create(AppServices ctx, Transform parent)
         {
@@ -75,17 +77,13 @@ namespace ResolverMaster.Core.UI.Screens
             ScreenLayout.TopBarButton(ctx, layout.TopBar, "icon_back", left: true).onClick.AddListener(() => ctx.Screens.Back());
             screen._title = ScreenLayout.TopBarTitle(ctx, layout.TopBar, null, s.headerSize).gameObject.AddComponent<LocalizedText>();
 
-            // dots at the bottom, one per chapter
-            screen._dots = ui.Rect("Dots", layout.Body);
-            screen._dots.anchorMin = new Vector2(0, 0);
-            screen._dots.anchorMax = new Vector2(1, 0);
-            screen._dots.pivot = new Vector2(0.5f, 0);
-            screen._dots.sizeDelta = new Vector2(0, s.homeDotsHeight);
-            screen._dots.anchoredPosition = new Vector2(0, s.screenPadding);
+            // ErNa-010: round arrows at the bottom, left and right (previous / next chapter), instead of the dots
+            screen._arrows = new CarouselArrows(ctx, layout.Body, () => screen.StepPage(-1), () => screen.StepPage(1));
+            screen._arrows.Place(new Vector2(0, 0), new Vector2(s.screenPadding, s.screenPadding), new Vector2(1, 0), new Vector2(-s.screenPadding, s.screenPadding), s.iconButtonSize);
 
             // the pages: a drag anywhere on them moves them (the tiles are buttons, which take only taps)
             screen._pager = ui.Rect("Pages", layout.Body);
-            UiFactory.Stretch(screen._pager, 0, s.screenPadding + s.homeDotsHeight + 8, 0, 0);
+            UiFactory.Stretch(screen._pager, 0, s.screenPadding + s.iconButtonSize + 8, 0, 0);
             var hit = screen._pager.gameObject.AddComponent<Image>();
             hit.color = Color.clear;
             screen._pager.gameObject.AddComponent<RectMask2D>();   // the next page slides in from the edge of the screen
@@ -136,8 +134,6 @@ namespace ResolverMaster.Core.UI.Screens
                 page.GridLayout.preferredHeight = h;
                 page.GridLayout.minHeight = h;
             }
-            while (_dotImages.Count < count) _dotImages.Add(_ctx.Ui.Image("Dot" + (_dotImages.Count + 1), _dots, _ctx.Style.circleSprite, _ctx.Style.surface));
-            for (int i = 0; i < _dotImages.Count; i++) _dotImages[i].gameObject.SetActive(i < count);
             _carousel = new CardCarousel(count, Mathf.Max(1f, _pageWidth));
         }
 
@@ -273,27 +269,26 @@ namespace ResolverMaster.Core.UI.Screens
             }
             int centred = _carousel.Centered;
             if (centred != _shownChapter) ShowChapter(centred);
+            _arrows.Refresh(_carousel.Target, count);
         }
 
-        /// <summary>Title, backdrop and dots follow the chapter in the centre.</summary>
+        /// <summary>Title and backdrop follow the chapter in the centre.</summary>
         void ShowChapter(int index)
         {
+            if (_shownChapter >= 0 && _shownChapter != index) GameAudio.Play(AudioEvents.UiSwipe);
             _shownChapter = index;
             var chapter = Module.Story.Chapter(index + 1);
             _title.Bind(_ctx.Loc, chapter.Theme.nameKey);
             _layout.SetTheme(_ctx.Themes != null ? _ctx.Themes.ForChapter(chapter) : null);
-            var s = _ctx.Style;
-            int count = Module.Story.Chapters.Count;
-            float total = 0;
-            for (int i = 0; i < count; i++) total += (i == index ? s.homeDotSize * 2f : s.homeDotSize) + (i > 0 ? s.homeDotGap : 0);
-            float x = -total / 2f;
-            for (int i = 0; i < count; i++)
-            {
-                float w = i == index ? s.homeDotSize * 2f : s.homeDotSize;
-                UiFactory.Place(_dotImages[i].rectTransform, 0.5f, 0.5f, new Vector2(w, s.homeDotSize), new Vector2(x + w / 2f, 0));
-                _dotImages[i].color = i == index ? s.primary : s.surface;
-                x += w + s.homeDotGap;
-            }
+        }
+
+        /// <summary>ErNa-010: an arrow: the previous or the next chapter page (the finger still scrolls).</summary>
+        void StepPage(int delta)
+        {
+            if (Module == null) return;
+            int target = Mathf.Clamp(_carousel.Target + delta, 0, Module.Story.Chapters.Count - 1);
+            if (target != _carousel.Target) _carousel.MoveTo(target);
+            _wasMoving = true;
         }
 
         void Update()

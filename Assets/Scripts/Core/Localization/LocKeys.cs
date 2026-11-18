@@ -20,7 +20,9 @@ namespace ResolverMaster.Core.Localization
 
         public const string SettingsTitle = "settings.title";
         public const string SettingsLanguage = "settings.language";
+        /// <summary>ErNa-010: the effects (was "Sound") and the music, two switches.</summary>
         public const string SettingsSound = "settings.sound";
+        public const string SettingsMusic = "settings.music";
         public const string SettingsVibration = "settings.vibration";
         public const string CommonOn = "common.on";
         public const string CommonOff = "common.off";
@@ -49,7 +51,6 @@ namespace ResolverMaster.Core.Localization
         /// <summary>"Wait {0} s..."</summary>
         public const string AdTestWait = "ad.test.wait";
         public const string AdTestReady = "ad.test.ready";
-        public const string AdTestWatched = "ad.test.watched";
         public const string AdTestClosed = "ad.test.closed";
 
         // ErNa-007: Challenge

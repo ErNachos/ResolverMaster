@@ -1,4 +1,4 @@
-"""PG-001: provisional illustration of the Pingù card on Home (until the Gemini drawing arrives).
+"""PG-001: provisional illustration of the Pino card on Home (until the Gemini drawing arrives).
 
 Cartoon style with black outlines, transparent background: an ice floe with an igloo (orange flag), the penguin (orange scarf) sliding
 towards it, a fish and a few rocks. Drawn at 4x and scaled down (smooth edges).

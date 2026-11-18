@@ -12,7 +12,8 @@ mode.placeholder = This mode is coming in a future update.
 
 settings.title = Settings
 settings.language = Language
-settings.sound = Sound
+settings.sound = Effects
+settings.music = Music
 settings.vibration = Vibration
 common.on = On
 common.off = Off
@@ -53,7 +54,6 @@ theme.rushhour.name = Rush hour
 ad.test.title = Test ad
 ad.test.wait = Wait {0} s…
 ad.test.ready = End of the ad
-ad.test.watched = Watched
 ad.test.closed = Close
 
 # Challenge (ErNa-007)
@@ -102,7 +102,7 @@ theme.station.name = Station
 theme.mine.name = Mine
 theme.palace.name = Palace
 
-# PG-001: "You are stuck" (no solution from here) and the Pingù themes
+# PG-001: "You are stuck" (no solution from here) and the Pino themes
 game.stuck = You are stuck
 game.stuck.hint = There is no way out from here.
 challenge.stuck.hint = Undo to go back ({0} left).

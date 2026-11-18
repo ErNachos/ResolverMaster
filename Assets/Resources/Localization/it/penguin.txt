@@ -1,6 +1,6 @@
-# Pingù minigame texts (Italian). Keys used by code: Scripts/Games/Penguin/PenguinKeys.cs
+# Pino minigame texts (Italian). Keys used by code: Scripts/Games/Penguin/PenguinKeys.cs
 # The name is the same in every language, but it lives here so it can be changed in one place.
-game.penguin.name = Pingù
+game.penguin.name = Pino
 
 penguin.chapter1.name = Lago ghiacciato
 penguin.chapter2.name = Banchisa

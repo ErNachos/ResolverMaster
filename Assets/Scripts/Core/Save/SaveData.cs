@@ -34,7 +34,10 @@ namespace ResolverMaster.Core.Save
     public sealed class SettingsBlock
     {
         public string language = "";
+        /// <summary>The sound effects (ErNa-010: the old "sound" switch, now "Effects").</summary>
         public bool sound = true;
+        /// <summary>ErNa-010: the music, switched on and off apart from the effects. Missing in older files: on.</summary>
+        public bool music = true;
         public bool vibration = true;
     }
 }

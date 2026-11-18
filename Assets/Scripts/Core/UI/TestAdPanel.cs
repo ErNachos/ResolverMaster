@@ -10,15 +10,15 @@ namespace ResolverMaster.Core.UI
 {
     /// <summary>
     /// The test rewarded ad (ErNa-007): a dim layer over everything with a cream window "Test ad", a short wait (seconds counting
-    /// down), then two buttons: "Watched" (the reward) and "Close" (no reward). Built once, above every screen.
+    /// down), then one button "Close" (ErNa-010: the service decides the reward, given on closing). Built once, above every screen.
     /// </summary>
     public sealed class TestAdPanel : MonoBehaviour, ITestAdPresenter
     {
         AppServices _ctx;
         float _wait, _time = -1f;
-        Button _watched, _closed;
+        Button _closed;
         TextMeshProUGUI _countdown;
-        Action _onWatched, _onClosed;
+        Action _onClosed;
 
         public bool Showing => gameObject.activeSelf;
 
@@ -50,10 +50,8 @@ namespace ResolverMaster.Core.UI
             buttons.offsetMin = new Vector2(pad, 72);
             buttons.offsetMax = new Vector2(-pad, 72 + s.buttonHeight);
             ui.Row(buttons, 32);
-            panel._closed = ui.SecondaryButton("Closed", buttons, LocKeys.AdTestClosed, out _);
-            panel._closed.onClick.AddListener(() => panel.Finish(false));
-            panel._watched = ui.PrimaryButton("Watched", buttons, LocKeys.AdTestWatched, out _);
-            panel._watched.onClick.AddListener(() => panel.Finish(true));
+            panel._closed = ui.PrimaryButton("Close", buttons, LocKeys.AdTestClosed, out _);
+            panel._closed.onClick.AddListener(panel.Finish);
             dim.gameObject.SetActive(false);
             return panel;
         }
@@ -67,9 +65,8 @@ namespace ResolverMaster.Core.UI
             rt.offsetMax = new Vector2(-sidePad, -top);
         }
 
-        public void Present(Action onWatched, Action onClosed)
+        public void Present(Action onClosed)
         {
-            _onWatched = onWatched;
             _onClosed = onClosed;
             _time = 0f;
             gameObject.SetActive(true);
@@ -80,17 +77,17 @@ namespace ResolverMaster.Core.UI
         /// <summary>Previews: the panel with the wait over (buttons enabled).</summary>
         public void ShowForPreview()
         {
-            Present(null, null);
+            Present(null);
             Tick(_wait + 0.01f);
         }
 
-        void Finish(bool watched)
+        void Finish()
         {
             if (_time < _wait) return;
             gameObject.SetActive(false);
             _time = -1f;
-            var cb = watched ? _onWatched : _onClosed;
-            _onWatched = _onClosed = null;
+            var cb = _onClosed;
+            _onClosed = null;
             cb?.Invoke();
         }
 
@@ -101,7 +98,6 @@ namespace ResolverMaster.Core.UI
             float left = Mathf.Max(0f, _wait - _time);
             bool ready = left <= 0f;
             _countdown.text = ready ? _ctx.Loc.Get(LocKeys.AdTestReady) : string.Format(_ctx.Loc.Get(LocKeys.AdTestWait), Mathf.CeilToInt(left));
-            UiFactory.SetInteractable(_watched, ready);
             UiFactory.SetInteractable(_closed, ready);
         }
 

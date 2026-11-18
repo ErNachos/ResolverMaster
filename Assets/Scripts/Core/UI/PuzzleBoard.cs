@@ -62,7 +62,7 @@ namespace ResolverMaster.Core.UI
 
         /// <summary>
         /// PG-001: no sequence of moves reaches the end any more from the current position (games whose moves cannot all be undone by
-        /// another move, e.g. Pingù). Read when nothing is busy: the game screen then shows "You are stuck" (Story: undo or restart;
+        /// another move, e.g. Pino). Read when nothing is busy: the game screen then shows "You are stuck" (Story: undo or restart;
         /// Challenge: undo or end the run, lost with no undo left). False (default) for games where this cannot happen.
         /// </summary>
         public virtual bool IsStuck => false;

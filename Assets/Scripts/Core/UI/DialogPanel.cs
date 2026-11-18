@@ -1,3 +1,4 @@
+using ResolverMaster.Core.Audio;
 using System;
 using System.Collections.Generic;
 using ResolverMaster.Core.App;
@@ -138,11 +139,16 @@ namespace ResolverMaster.Core.UI
         {
             _primary = primary;
             _secondary = secondary;
+            if (!_root.activeSelf) GameAudio.Play(AudioEvents.PanelOpen);
             _root.SetActive(true);
             _root.transform.SetAsLastSibling();
         }
 
-        public void Hide() => _root.SetActive(false);
+        public void Hide()
+        {
+            if (_root.activeSelf) GameAudio.Play(AudioEvents.PanelClose);
+            _root.SetActive(false);
+        }
 
         public void SetLine(int index, string text, Color? color = null)
         {

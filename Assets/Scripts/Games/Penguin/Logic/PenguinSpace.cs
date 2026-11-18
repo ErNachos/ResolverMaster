@@ -5,7 +5,7 @@ using ResolverMaster.Core.Puzzle;
 namespace ResolverMaster.Games.Penguin
 {
     /// <summary>
-    /// The exact solver of Pingù (PG-001): breadth-first search over every state reachable from the start (positions of the penguins,
+    /// The exact solver of Pino (PG-001): breadth-first search over every state reachable from the start (positions of the penguins,
     /// fish taken, positions of the blocks, holes filled, penguins already in), with the 4 swipes of each state; then the distance of every
     /// state to the end, by a backward search from the solved states. Moves that make a penguin fall are dead ends.
     /// <see cref="MinMoves"/> is exact. The same table answers, at once, "is there still a solution?" (<see cref="IsStuck"/>) and "which

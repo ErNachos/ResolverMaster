@@ -18,7 +18,7 @@ namespace ResolverMaster.Games.Penguin
     }
 
     /// <summary>
-    /// A Pingù level (PG-001): the fixed board (terrain, border, fish, igloos) and the packed start state. Pure logic, immutable after
+    /// A Pino level (PG-001): the fixed board (terrain, border, fish, igloos) and the packed start state. Pure logic, immutable after
     /// creation, thread-safe to read. Rules: <c>docs/penguin-regole.md</c>.
     /// Cells: index = y * Width + x, y = 0 the top row. Directions: the Core <see cref="SquareTopology"/> ones (0 up, 1 right, 2 down, 3 left).
     /// The border of the grid is made of segments, one per cell side along the edge: snow wall (stops like a rock) or water (a penguin

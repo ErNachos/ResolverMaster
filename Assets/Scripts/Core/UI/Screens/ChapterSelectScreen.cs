@@ -40,11 +40,16 @@ namespace ResolverMaster.Core.UI.Screens
 
         public MinigameModule Module { get; private set; }
 
+        PatternBackground _background;
+
+        public override string MusicGame => Module != null ? Module.Info.Id : null;
+
         public static ChapterSelectScreen Create(AppServices ctx, Transform parent)
         {
             var layout = ScreenLayout.Create<ChapterSelectScreen>(ctx, parent, "ChapterSelectScreen");
             var screen = layout.Root.gameObject.AddComponent<ChapterSelectScreen>();
             screen._ctx = ctx;
+            screen._background = PatternBackground.Create(layout.Root);   // ErNa-010: the Home background, in the color of the game
             var s = ctx.Style;
             ScreenLayout.TopBarButton(ctx, layout.TopBar, "icon_back", left: true).onClick.AddListener(() => ctx.Screens.Back());
             screen._title = ScreenLayout.TopBarTitle(ctx, layout.TopBar, null, s.headerSize).gameObject.AddComponent<LocalizedText>();
@@ -60,6 +65,7 @@ namespace ResolverMaster.Core.UI.Screens
         {
             Module = module;
             _title.Bind(_ctx.Loc, module.Info.NameKey);
+            _background.SetColor(module.Info.BackgroundColor.a > 0f ? module.Info.BackgroundColor : _ctx.Style.background);
             var chapters = module.Story.Chapters;
             while (_cards.Count < chapters.Count) _cards.Add(CreateCard(_cards.Count));
             for (int i = 0; i < _cards.Count; i++) _cards[i].Button.gameObject.SetActive(i < chapters.Count);

@@ -101,7 +101,7 @@ namespace ResolverMaster.Core.Challenge
         public bool OutOfMovesIsLost(bool solved) => IsOutOfMoves(solved) && undosLeft <= 0;
 
         /// <summary>
-        /// PG-001, games whose moves cannot all be undone by another move (Pingù): no solution is left from the current position ("You are
+        /// PG-001, games whose moves cannot all be undone by another move (Pino): no solution is left from the current position ("You are
         /// stuck"). With undos left the player may undo or end the run; with none the run is lost at once (then "Continue").
         /// </summary>
         public bool StuckIsLost(bool stuck) => stuck && !over && !lost && HasLevel && undosLeft <= 0;

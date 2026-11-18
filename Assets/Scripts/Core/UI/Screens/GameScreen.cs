@@ -1,3 +1,4 @@
+using ResolverMaster.Core.Audio;
 using System.Collections.Generic;
 using ResolverMaster.Core.Ads;
 using ResolverMaster.Core.App;
@@ -327,6 +328,7 @@ namespace ResolverMaster.Core.UI.Screens
             }
             if (busy || _win.Visible || _stuck.Visible) return;
             _stuck.SetLine(0, _ctx.Loc.Get(LocKeys.GameStuckHint));
+            GameAudio.Play(AudioEvents.Blocked);
             _stuck.Show(() =>
             {
                 // "Undo" (the green button): the last move back
@@ -382,6 +384,11 @@ namespace ResolverMaster.Core.UI.Screens
                 int earned = StarRating.Compute(session.MovesMade, session.MinMoves, _ctx.Puzzle.stars);
                 int moves = session.MovesMade, min = session.MinMoves;
                 _run.OnSolved(earned);
+                if (animate)
+                {
+                    GameAudio.Play(AudioCatalog.WinFor(Module.Info.Id));
+                    GameAudio.Vibrate();
+                }
                 if (_run.IsComplete) FinishRun();   // ErNa-008: the last level of the daily challenge: result and streak saved now
                 else
                 {
@@ -393,7 +400,15 @@ namespace ResolverMaster.Core.UI.Screens
                 return;
             }
             int stars = StarRating.Compute(session.MovesMade, session.MinMoves, _ctx.Puzzle.stars, Board.HintUsed);
+            var nextChapter = Module.Story.Chapter(Module.Story.ChapterOf(LevelIndex).Number + 1);
+            bool wasLocked = nextChapter != null && !StoryProgress.IsChapterUnlocked(_ctx.Data.progress, Module.Story, nextChapter);
             if (_ctx.Data.progress.SetBest(StoryProgress.Mode, Level, stars)) _ctx.Save();
+            if (animate)
+            {
+                GameAudio.Play(AudioCatalog.WinFor(Module.Info.Id));
+                GameAudio.Vibrate();
+                if (wasLocked && StoryProgress.IsChapterUnlocked(_ctx.Data.progress, Module.Story, nextChapter)) GameAudio.Play(AudioEvents.ChapterUnlocked);
+            }
             Refresh();
             _win.Show(stars, session.MovesMade, session.MinMoves, HasNext(), animate);
         }
@@ -479,6 +494,7 @@ namespace ResolverMaster.Core.UI.Screens
                 }
                 if (_stuckChallenge.Visible) return;
                 _stuckChallenge.SetLine(0, string.Format(_ctx.Loc.Get(LocKeys.ChallengeStuckHint), _run.undosLeft));
+                GameAudio.Play(AudioEvents.Blocked);
                 _stuckChallenge.Show(() =>
                 {
                     _stuckChallenge.Hide();
@@ -506,6 +522,7 @@ namespace ResolverMaster.Core.UI.Screens
             }
             if (_outOfMoves.Visible) return;
             _outOfMoves.SetLine(0, string.Format(_ctx.Loc.Get(LocKeys.ChallengeOutOfMovesHint), _run.undosLeft));
+            GameAudio.Play(AudioEvents.Blocked);
             _outOfMoves.Show(() =>
             {
                 // "Undo" (the green button): one move back, the run goes on
@@ -526,6 +543,7 @@ namespace ResolverMaster.Core.UI.Screens
             {
                 if (_run == null || !_run.TryUndo(out _)) return;   // 3 per run; the move goes off the counter
             }
+            GameAudio.Play(AudioEvents.Undo);
             Board.Undo();
             Refresh();
         }
@@ -539,6 +557,8 @@ namespace ResolverMaster.Core.UI.Screens
             if (_run == null || _run.over || _run.lost) return;
             _run.OnFailed();
             _lastNewRecord = false;
+            GameAudio.Play(AudioEvents.ChallengeLost);
+            GameAudio.Vibrate();
             if (_run.over) FinishRun();
             else _ctx.Save();
             ShowEnd(_run);
@@ -557,6 +577,7 @@ namespace ResolverMaster.Core.UI.Screens
             {
                 _run.Finish();
                 _lastNewRecord = block.SubmitScore(Module.Info.Id, _run.stars, _run.levelsCleared);
+                if (_lastNewRecord) GameAudio.Play(AudioEvents.NewRecord);
                 block.EndRun(Module.Info.Id);
             }
             _ctx.Save();
@@ -632,6 +653,7 @@ namespace ResolverMaster.Core.UI.Screens
             _ctx.Ads.Show(() =>
             {
                 if (run != _run || !run.Continue()) return;
+                GameAudio.Play(AudioEvents.Continue);
                 _ctx.Save();
                 _end.Hide();
                 _dailyEnd.Hide();
@@ -711,12 +733,18 @@ namespace ResolverMaster.Core.UI.Screens
             var board = Board;
             _ctx.Ads.Show(() =>
             {
-                if (board == Board && !board.IsBusy && !board.Session.IsSolved) board.ApplyHint();
+                if (board == Board && !board.IsBusy && !board.Session.IsSolved)
+                {
+                    GameAudio.Play(AudioEvents.Hint);
+                    board.ApplyHint();
+                }
                 Refresh();
             }, Refresh);
         }
 
         public override void OnShow() => Refresh();
+
+        public override string MusicGame => Module != null ? Module.Info.Id : null;
 
         void Update()
         {
@@ -842,6 +870,8 @@ namespace ResolverMaster.Core.UI.Screens
                 for (int i = 0; i < _earned; i++)
                 {
                     float t = (_time - s.winPanelFade - i * s.starStagger) / Mathf.Max(0.01f, s.starPop);
+                    float before = (_time - dt - s.winPanelFade - i * s.starStagger) / Mathf.Max(0.01f, s.starPop);
+                    if (before <= 0f && t > 0f) GameAudio.Play(AudioEvents.Star, 1f + 0.12f * i);   // ErNa-010: one per star, rising
                     float scale = t <= 0 ? 0 : t >= 1 ? 1 : (t < 0.6f ? Mathf.Lerp(0, 1.15f, t / 0.6f) : Mathf.Lerp(1.15f, 1f, (t - 0.6f) / 0.4f));
                     _stars[i].rectTransform.localScale = new Vector3(scale, scale, 1);
                     if (t < 1) done = false;

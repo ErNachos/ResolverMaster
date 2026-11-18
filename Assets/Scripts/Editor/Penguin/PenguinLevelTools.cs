@@ -15,7 +15,7 @@ using Debug = UnityEngine.Debug;
 namespace ResolverMaster.Editor.Penguin
 {
     /// <summary>
-    /// Pingù tools (PG-001), on the model of the other games.
+    /// Pino tools (PG-001), on the model of the other games.
     /// Genera livelli Storia: every Story level of the PenguinConfig table from its fixed seed (storySeedBase + n; when a seed gives no
     /// level within the attempts, the next fixed seeds storySeedBase + n + 1000·k are tried), in parallel (each level is independent and
     /// deterministic); the exact minimum is measured again by the solver; chapters of 9; saved as game data
@@ -31,17 +31,17 @@ namespace ResolverMaster.Editor.Penguin
         public const int ChallengeTrialSeed = 20261118;
         public const int TimingSamples = 20, TimingSeedBase = 700000;
 
-        [MenuItem("Resolver Master/Pingù/Genera livelli Storia")]
+        [MenuItem("Resolver Master/Pino/Genera livelli Storia")]
         public static void GenerateStoryLevels() => Debug.Log(Run());
 
         public static void GenerateStoryLevelsBatch() => Batch(() => Debug.Log(Run()));
 
-        [MenuItem("Resolver Master/Pingù/Prova Challenge")]
+        [MenuItem("Resolver Master/Pino/Prova Challenge")]
         public static void TryChallenge() => Debug.Log(ChallengeTrial(ChallengeTrialSeed));
 
         public static void TryChallengeBatch() => Batch(() => Debug.Log(ChallengeTrial(ChallengeTrialSeed)));
 
-        [MenuItem("Resolver Master/Pingù/Misura risolutore")]
+        [MenuItem("Resolver Master/Pino/Misura risolutore")]
         public static void MeasureSolver() => Debug.Log(Timing(LoadConfig()));
 
         public static void MeasureSolverBatch() => Batch(() => Debug.Log(Timing(LoadConfig())));
@@ -97,7 +97,7 @@ namespace ResolverMaster.Editor.Penguin
                 }
                 catch (InvalidOperationException) { attempts += settings.MaxAttempts; }
             }
-            throw new InvalidOperationException($"Pingù: no Story level {n} (tier {tier.id}) from {SeedRetries + 1} seeds");
+            throw new InvalidOperationException($"Pino: no Story level {n} (tier {tier.id}) from {SeedRetries + 1} seeds");
         }
 
         static string Run()
@@ -192,7 +192,7 @@ namespace ResolverMaster.Editor.Penguin
         /// </summary>
         public static string Timing(PenguinConfig cfg)
         {
-            var sb = new StringBuilder("Pingù timing (Editor, Mono; exact minimum, no estimate)\n");
+            var sb = new StringBuilder("Pino timing (Editor, Mono; exact minimum, no estimate)\n");
             var text = AssetDatabase.LoadAssetAtPath<TextAsset>(ConfigAssets.PenguinStoryPath);
             var levels = text != null ? JsonUtility.FromJson<PenguinLevelSet>(text.text)?.levels : null;
             var big = levels?.Where(l => l.width == 7).ToList() ?? new List<PenguinLevel>();
@@ -259,8 +259,8 @@ namespace ResolverMaster.Editor.Penguin
                 level.milliseconds = sw.Elapsed.TotalMilliseconds;
                 levels.Add(level);
             }
-            var sb = new StringBuilder("# Pingù — prova della Challenge\n\n");
-            sb.Append("File generato da *Resolver Master > Pingù > Prova Challenge* (non modificare a mano). ");
+            var sb = new StringBuilder("# Pino — prova della Challenge\n\n");
+            sb.Append("File generato da *Resolver Master > Pino > Prova Challenge* (non modificare a mano). ");
             sb.Append($"Seed della run {runSeed}, livelli 1–{lastLevel}, 0 cambi. Massimo = minimo + margine ");
             sb.Append($"(dal {cfg.challenge.marginStartPercent}% al {cfg.challenge.marginEndPercent}% del minimo, almeno +1). ");
             sb.Append($"Generatore: al massimo {cfg.challengeMaxAttempts} tentativi per seed, {cfg.challengeMaxStates} stati per bozza esplorata.\n\n");
@@ -289,8 +289,8 @@ namespace ResolverMaster.Editor.Penguin
         static void WriteDoc(PenguinConfig cfg, List<Generated> levels, string timing, double seconds)
         {
             var sb = new StringBuilder();
-            sb.Append("# Pingù — livelli della Storia\n\n");
-            sb.Append("File generato da *Resolver Master > Pingù > Genera livelli Storia* (non modificare a mano). Regole: `docs/penguin-regole.md`.\n");
+            sb.Append("# Pino — livelli della Storia\n\n");
+            sb.Append("File generato da *Resolver Master > Pino > Genera livelli Storia* (non modificare a mano). Regole: `docs/penguin-regole.md`.\n");
             sb.Append($"Dati del gioco: `{ConfigAssets.PenguinStoryPath}`. Seed del livello n = {cfg.storySeedBase} + n (se quel seed non dà un livello: + {SeedRetryStep}, + {2 * SeedRetryStep}...). ");
             sb.Append($"Generazione: {seconds:0} s in parallelo. Mosse minime esatte (ricerca in ampiezza su tutti gli stati).\n\n");
             sb.Append("| Cap. | Livelli | Griglie | Mosse minime |\n|---|---|---|---|\n");

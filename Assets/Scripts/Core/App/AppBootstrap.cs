@@ -1,3 +1,4 @@
+using ResolverMaster.Core.Audio;
 using ResolverMaster.Core.Games;
 using ResolverMaster.Core.Localization;
 using ResolverMaster.Core.Puzzle;
@@ -50,6 +51,7 @@ namespace ResolverMaster.Core.App
 
             if (EventSystem.current == null)
                 new GameObject("EventSystem", typeof(EventSystem), typeof(InputSystemUIInputModule));
+            AudioManager.Create(transform, data.settings, AudioConfig.LoadOrDefault());   // ErNa-010: music and effects
             var canvas = AppUi.CreateCanvas(style);
             canvas.transform.SetParent(transform, false);
             AppUi.Build(Context, (RectTransform)canvas.transform);

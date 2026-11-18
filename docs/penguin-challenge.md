@@ -1,6 +1,6 @@
-# Pingù — prova della Challenge
+# Pino — prova della Challenge
 
-File generato da *Resolver Master > Pingù > Prova Challenge* (non modificare a mano). Seed della run 20261118, livelli 1–70, 0 cambi. Massimo = minimo + margine (dal 60% al 10% del minimo, almeno +1). Generatore: al massimo 600 tentativi per seed, 15000 stati per bozza esplorata.
+File generato da *Resolver Master > Pino > Prova Challenge* (non modificare a mano). Seed della run 20261118, livelli 1–70, 0 cambi. Massimo = minimo + margine (dal 60% al 10% del minimo, almeno +1). Generatore: al massimo 600 tentativi per seed, 15000 stati per bozza esplorata.
 
 | Livello | Gradino | Griglia | Rocce | Neve | Buchi | Tratti d'acqua | Pesci | Blocchi | Pinguini | Minimo | Massimo | Seed usato | Tempo (ms) |
 |---:|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|

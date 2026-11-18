@@ -409,3 +409,21 @@
 
 **Problemi aperti / prossimi passi**
 - Grafica, icone e immagine della scheda provvisorie. Livelli generati relativamente brevi (massimo 15 mosse).
+
+## Update ErNa-010 — Nome Pino, annuncio di prova, sfondo della Home e audio (2026-11-18)
+
+**Fatto**
+- **A — Nome**: il gioco del pinguino si chiama "Pino" (testi, menu *Resolver Master > Pino*, commenti, documenti); nel codice resta `Penguin`. La cancellazione dei prompt vuoti `Update-ErNa-011…015.md` è stata bloccata dai permessi della sessione: da fare a mano.
+- **B — Annuncio di prova sul telefono**: l'APK di test usa l'annuncio di prova (simbolo `RESOLVERMASTER_TEST_BUILD` aggiunto dalla build), l'AAB nessun annuncio; pannello con un solo "Chiudi" che dà sempre il premio; "non guardato" solo nell'Editor (`AdConfig.editorAdNotWatched`).
+- **C — Home**: sfumatura e trama di sagome (goccia, tubo, auto, pesce, fiocco di neve, dalle icone esistenti) che scorre in diagonale; colore per scheda (lilla, giallo tenue, azzurro ghiaccio) sfumato durante lo scorrimento; frecce tonde al posto dei pallini (Home e pagine dei capitoli); la lista dei capitoli usa lo sfondo nel colore del gioco. Tutto nel Core.
+- **D — Audio**: gestore con musica (un brano, dissolvenza 1 s, pausa in background) ed effetti (più voci, limite dello stesso suono), interruttori separati Musica / Effetti, vibrazione su vittoria, errore e sconfitta; 34 eventi agganciati in UI, Idraulico, Traffic jam, Pino e parti comuni. I pacchetti Kenney non si sono potuti scaricare dalla sessione (il sito richiede il browser): tabella eventi → file pronta e importatore *Audio > Importa suoni*; oggi silenzio. Musiche: collegamento pronto, file assenti.
+- **Test**: 3 nuovi (tipo di build ⇒ annunci; sfondo e frecce; audio: eventi, musica per schermata, volumi, limite) + 1 adattato (premio alla chiusura).
+
+**Risultati**
+- Compilazione: 0 errori, 0 warning. Test: 57/57 verdi. Validatore: OK (13 controlli, 0 errori, 0 warning).
+
+**Da provare a mano sul telefono**
+- APK di test: lampadina, Continua e Cambia livello attivi con l'annuncio di prova. Home: scorrimento, frecce, colore che cambia. Dopo aver importato i suoni: volumi, musica in pausa e ripresa, vibrazione.
+
+**Problemi aperti / prossimi passi**
+- Scaricare a mano i 4 pacchetti Kenney in `ArtSource/Audio/Kenney/` e le musiche in `ArtSource/Audio/Music/`, poi *Audio > Importa suoni*; i nomi dei file nella tabella vanno verificati sui pacchetti veri. Normalizzazione dei volumi non fatta (servono i file).

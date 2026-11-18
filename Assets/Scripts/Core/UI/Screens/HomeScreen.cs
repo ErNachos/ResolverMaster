@@ -1,3 +1,4 @@
+using ResolverMaster.Core.Audio;
 using System.Collections.Generic;
 using ResolverMaster.Core.App;
 using ResolverMaster.Core.Challenge;
@@ -11,8 +12,10 @@ namespace ResolverMaster.Core.UI.Screens
 {
     /// <summary>
     /// Home: the title on top, one big card per registered minigame (colored rounded frame, illustration, translated name) that
-    /// scrolls with the finger and stops centred, the side cards peeking in smaller and fainter, the position dots, the big PLAY
-    /// button (opens the mode choice of the centred game; disabled for a "coming soon" game) and the round Settings button bottom left.
+    /// scrolls with the finger and stops centred, the side cards peeking in smaller and fainter, the big PLAY button (opens the mode
+    /// choice of the centred game; disabled for a "coming soon" game) and the round Settings button bottom left.
+    /// ErNa-010: a soft gradient background with a slowly drifting pattern whose color follows the centred card (blended while
+    /// scrolling, <see cref="PatternBackground"/>), and two round arrow buttons at the sides of the card instead of the dots.
     /// The last card chosen is saved (save block <c>home</c>) and shown again at start-up. Scroll and snap logic: <see cref="CardCarousel"/>.
     /// </summary>
     public sealed class HomeScreen : UiScreen
@@ -39,13 +42,19 @@ namespace ResolverMaster.Core.UI.Screens
         RectTransform _carouselRect;
         CardCarousel _carousel;
         readonly List<Card> _cards = new List<Card>();
-        readonly List<Image> _dots = new List<Image>();
+        PatternBackground _background;
+        CarouselArrows _arrows;
+        readonly List<Color> _backgroundColors = new List<Color>();
         Button _play;
         int _shownCentered = -1;
         float _velocity;
         Vector2 _dragStartLocal;
         float _lastDragX;
         float _cardHeight;
+
+        /// <summary>ErNa-010: the base color of the background now (previews, tests).</summary>
+        public Color BackgroundColor => _background.BaseColor;
+        public CarouselArrows Arrows => _arrows;
 
         /// <summary>The card in the centre (or the one the carousel is moving to).</summary>
         public int SelectedIndex => _carousel.Target;
@@ -75,17 +84,12 @@ namespace ResolverMaster.Core.UI.Screens
             UiFactory.Place((RectTransform)screen._play.transform, 0.5f, 0, s.playButtonSize, new Vector2(0, s.screenPadding));
             screen._play.onClick.AddListener(screen.Play);
 
-            // ---- dots ----
-            var dots = ui.Rect("Dots", layout.Body);
-            dots.anchorMin = new Vector2(0, 0);
-            dots.anchorMax = new Vector2(1, 0);
-            dots.pivot = new Vector2(0.5f, 0);
-            dots.sizeDelta = new Vector2(0, s.homeDotsHeight);
-            dots.anchoredPosition = new Vector2(0, strip + s.spacing);
+            // ---- ErNa-010: the background (gradient + drifting pattern), its color follows the centred card ----
+            screen._background = PatternBackground.Create(layout.Root);
 
             // ---- carousel: takes the drags; cards are children ----
             screen._carouselRect = ui.Rect("Carousel", layout.Body);
-            UiFactory.Stretch(screen._carouselRect, 0, strip + s.spacing + s.homeDotsHeight + 8, 0, 0);
+            UiFactory.Stretch(screen._carouselRect, 0, strip + s.spacing, 0, 0);
             var hit = screen._carouselRect.gameObject.AddComponent<Image>();
             hit.color = Color.clear;   // a drag anywhere in the band moves the cards
             screen._carouselRect.gameObject.AddComponent<CarouselDragRelay>().Target = screen;
@@ -95,9 +99,14 @@ namespace ResolverMaster.Core.UI.Screens
             for (int i = 0; i < games.Count; i++)
             {
                 screen._cards.Add(screen.CreateCard(games[i], i));
-                var dot = ui.Image("Dot" + (i + 1), dots, s.circleSprite, s.surface);
-                screen._dots.Add(dot);
+                screen._backgroundColors.Add(games[i].BackgroundColor.a > 0f ? games[i].BackgroundColor : s.background);
             }
+            // ---- ErNa-010: round arrows at the sides of the centred card (over the peeking side cards), in a band like the carousel ----
+            var band = ui.Rect("Arrows", layout.Body);
+            UiFactory.Stretch(band, 0, strip + s.spacing, 0, 0);
+            screen._arrows = new CarouselArrows(ctx, band, () => screen.StepCard(-1), () => screen.StepCard(1));
+            float edge = s.homeArrowInset;
+            screen._arrows.Place(new Vector2(0, 0.5f), new Vector2(edge, 0), new Vector2(1, 0.5f), new Vector2(-edge, 0), s.iconButtonSize);
             screen._carousel.JumpTo(HomeSelection.IndexOf(games, ctx.Data.home.selectedGame));
             screen.RefreshChallenge();
             screen.Refit();
@@ -310,6 +319,14 @@ namespace ResolverMaster.Core.UI.Screens
             }
         }
 
+        /// <summary>ErNa-010: an arrow: the previous or the next card (the finger still scrolls).</summary>
+        void StepCard(int delta)
+        {
+            int target = Mathf.Clamp(_carousel.Target + delta, 0, _cards.Count - 1);
+            if (target != _carousel.Target) _carousel.MoveTo(target);
+            ApplyPositions();
+        }
+
         void Play()
         {
             var game = SelectedGame;
@@ -356,24 +373,19 @@ namespace ResolverMaster.Core.UI.Screens
                 c.Peek.enabled = d > 0.01f;
             }
             if (_cards.Count > 0) _cards[centered].Rect.SetAsLastSibling();
-            if (centered != _shownCentered) ShowSelection(centered);
+            if (centered != _shownCentered)
+            {
+                if (_shownCentered >= 0) GameAudio.Play(AudioEvents.UiSwipe);
+                ShowSelection(centered);
+            }
+            _arrows.Refresh(_carousel.Target, _cards.Count);
+            _background.SetColor(BackgroundColors.At(_backgroundColors, _carousel.Position));
         }
 
-        /// <summary>Dots and PLAY follow the centred card.</summary>
+        /// <summary>PLAY follows the centred card.</summary>
         void ShowSelection(int centered)
         {
-            var s = _ctx.Style;
             _shownCentered = centered;
-            float total = 0;
-            for (int i = 0; i < _dots.Count; i++) total += (i == centered ? s.homeDotSize * 2f : s.homeDotSize) + (i > 0 ? s.homeDotGap : 0);
-            float x = -total / 2f;
-            for (int i = 0; i < _dots.Count; i++)
-            {
-                float w = i == centered ? s.homeDotSize * 2f : s.homeDotSize;
-                UiFactory.Place(_dots[i].rectTransform, 0.5f, 0.5f, new Vector2(w, s.homeDotSize), new Vector2(x + w / 2f, 0));
-                _dots[i].color = i == centered ? s.primary : s.surface;
-                x += w + s.homeDotGap;
-            }
             bool available = _cards.Count > 0 && _cards[centered].Game.Availability == GameAvailability.Available;
             UiFactory.SetInteractable(_play, available);
         }
@@ -385,6 +397,8 @@ namespace ResolverMaster.Core.UI.Screens
             _ctx.Data.home.selectedGame = game.Id;
             _ctx.Save();
         }
+
+        public override string MusicGame => "";
 
         public override void OnShow()
         {

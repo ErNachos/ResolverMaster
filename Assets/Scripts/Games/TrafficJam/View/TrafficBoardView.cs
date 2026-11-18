@@ -1,3 +1,4 @@
+using ResolverMaster.Core.Audio;
 using System;
 using System.Collections.Generic;
 using ResolverMaster.Core.App;
@@ -47,7 +48,7 @@ namespace ResolverMaster.Games.TrafficJam.View
         int _dragPointer;
         Vector2 _dragStart;
         int _dragFrom, _dragLo, _dragHi;
-        bool _dragCanExit;
+        bool _dragCanExit, _dragAtEdge;
 
         // animations that block the input: a car driving out, the light bulb, the pause before the win panel
         TrafficVehicleView _exiting;
@@ -528,6 +529,8 @@ namespace ResolverMaster.Games.TrafficJam.View
             view.StopSlide();
             view.Shown = _puzzle.Pos(view.Index);
             _puzzle.Range(view.Index, out _dragLo, out _dragHi, out _dragCanExit);
+            GameAudio.Play(AudioEvents.TrafficGrab);
+            _dragAtEdge = false;
             RectTransformUtility.ScreenPointToLocalPointInRectangle(_board.Cells, e.position, e.pressEventCamera, out _dragStart);
             _drag = view;
             _dragPointer = e.pointerId;
@@ -547,6 +550,10 @@ namespace ResolverMaster.Games.TrafficJam.View
                 else max += v.Length;
             }
             view.Shown = Mathf.Clamp(_dragFrom + delta, min, max);
+            // ErNa-010: a soft bump when the vehicle reaches what stops it
+            bool atEdge = (_dragFrom + delta <= min - 0.05f) || (_dragFrom + delta >= max + 0.05f);
+            if (atEdge && !_dragAtEdge) GameAudio.Play(AudioEvents.TrafficBump);
+            _dragAtEdge = atEdge;
             PlaceVehicle(view);
         }
 
@@ -566,6 +573,7 @@ namespace ResolverMaster.Games.TrafficJam.View
             if (to != _dragFrom && _puzzle.ApplyMove(new TrafficMove(view.Index, _dragFrom, to)))
             {
                 view.SlideTo(to, _cfg.snapDuration);
+                GameAudio.Play(AudioEvents.TrafficSnap);
                 RaiseChanged();
                 return;
             }
@@ -581,6 +589,7 @@ namespace ResolverMaster.Games.TrafficJam.View
 
         void StartExit(TrafficVehicleView view, float duration)
         {
+            GameAudio.Play(AudioEvents.TrafficExit);
             view.SetLeaving(true);   // happy from the first frame of the way out
             _exiting = view;
             _exitFrom = view.Shown;

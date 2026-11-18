@@ -1,8 +1,8 @@
 namespace ResolverMaster.Games.Penguin
 {
     /// <summary>
-    /// Every Pingù text key used by code (Resources/Localization/&lt;code&gt;/penguin.txt). The Pingù validator checks that each constant
-    /// here exists in every language. The name "Pingù" is the same in every language, but it lives in the language files (one entry).
+    /// Every Pino text key used by code (Resources/Localization/&lt;code&gt;/penguin.txt). The Pino validator checks that each constant
+    /// here exists in every language. The name "Pino" is the same in every language, but it lives in the language files (one entry).
     /// </summary>
     public static class PenguinKeys
     {

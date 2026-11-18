@@ -27,6 +27,7 @@ namespace ResolverMaster.Games.Plumber
             Availability = GameAvailability.Available,
             Order = 10,
             CardImage = "card_plumber",
+            BackgroundColor = UiKitStyle.Hex(0xE6DCF5),   // ErNa-010: lilac
             CardColor = UiKitStyle.Hex(0x9B7BEA),
         };
 

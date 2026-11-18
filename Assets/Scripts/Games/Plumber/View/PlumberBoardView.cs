@@ -1,3 +1,4 @@
+using ResolverMaster.Core.Audio;
 using System;
 using System.Collections.Generic;
 using ResolverMaster.Core.App;
@@ -451,9 +452,14 @@ namespace ResolverMaster.Games.Plumber.View
             if (!_puzzle.ApplyMove(cell))
             {
                 // a cross, a bridge or a locked piece: a shake, not a move (ErNa-006)
-                if (_puzzle.Grid.Pieces[cell].IsPipe) _views[cell].StartShake();
+                if (_puzzle.Grid.Pieces[cell].IsPipe)
+                {
+                    _views[cell].StartShake();
+                    GameAudio.Play(AudioEvents.PlumberLocked);
+                }
                 return;
             }
+            GameAudio.Play(AudioEvents.PlumberRotate);
             _views[cell].AddSteps(1);
             RaiseChanged();
         }
@@ -463,6 +469,7 @@ namespace ResolverMaster.Games.Plumber.View
         {
             if (_phase != Phase.Playing || _puzzle.Grid == null) return;
             for (int c = 0; c < _views.Count; c++) _views[c].SnapRotation(ViewSteps(_puzzle.Grid, c));
+            GameAudio.Play(AudioEvents.PlumberOpen);
             OpenWater();
             RaiseChanged();
         }
@@ -628,6 +635,7 @@ namespace ResolverMaster.Games.Plumber.View
                 var v = _views[s];
                 float reach = _timing.NodeDistance(_timing.CenterNode(s));
                 bool wet = !float.IsInfinity(reach) && front >= reach;
+                if (wet && !v.Fill.gameObject.activeSelf) GameAudio.Play(AudioEvents.PlumberFountain);
                 v.Fill.gameObject.SetActive(wet);
                 if (!wet) continue;
                 float u = Mathf.Clamp01((seconds - _motion.TimeAt(reach)) / Mathf.Max(0.01f, _cfg.fountainFill));
@@ -703,6 +711,8 @@ namespace ResolverMaster.Games.Plumber.View
                 }
             if (p.Kind == WaterProblemKind.WrongColor) SetWinSplash(0.35f);   // the wrong water splashes out of the fountain
             RaiseMessage(PlumberKeys.ForProblem(p.Kind));
+            GameAudio.Play(AudioEvents.PlumberFail);
+            GameAudio.Vibrate();
         }
 
         void TickFailEffect(float t)

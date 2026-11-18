@@ -58,6 +58,15 @@ namespace ResolverMaster.Editor.Validation
                 foreach (var f in typeof(ResolverMaster.Core.UI.Themes.VisualTheme).GetFields(BindingFlags.Public | BindingFlags.Instance).Where(f => f.FieldType == typeof(Color)))
                     others.Add(($"theme '{t.id}'.{f.Name}", (Color)f.GetValue(t)));
             for (int i = 0; i < cfg.chapters.Count; i++) others.Add(($"chapter {i + 1} color", cfg.chapters[i].color));
+            // ErNa-010: the Home background of every game (base, gradient ends and pattern)
+            foreach (var g in ResolverMaster.Core.Games.GameRegistry.Discover().Games)
+            {
+                if (g.BackgroundColor.a <= 0f) continue;
+                others.Add(($"{g.Id} BackgroundColor", g.BackgroundColor));
+                others.Add(($"{g.Id} background top", ResolverMaster.Core.UI.BackgroundColors.Top(g.BackgroundColor)));
+                others.Add(($"{g.Id} background bottom", ResolverMaster.Core.UI.BackgroundColors.Bottom(g.BackgroundColor)));
+                others.Add(($"{g.Id} background pattern", ResolverMaster.Core.UI.BackgroundColors.Pattern(g.BackgroundColor)));
+            }
             others.Add(("pipeEmpty", cfg.pipeEmpty));
             others.Add(("hintGlowColor", cfg.hintGlowColor));
             foreach (var (what, color) in others)

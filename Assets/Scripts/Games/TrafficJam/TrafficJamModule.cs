@@ -31,6 +31,7 @@ namespace ResolverMaster.Games.TrafficJam
             Availability = GameAvailability.Available,
             Order = 20,
             CardImage = "card_trafficjam",
+            BackgroundColor = UiKitStyle.Hex(0xF5EDD0),   // ErNa-010: soft yellow
             CardColor = UiKitStyle.Hex(0xF7C948),
         };
 
