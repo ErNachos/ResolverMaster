@@ -1,7 +1,7 @@
 """Prepare the Pino drawings for the game (PG-002), with the shared cutter (sprite_cut.py, also used by Traffic jam).
 
 Input (read only, never modified): ArtSource/PG/1.png .. 6.png, white background, objects side by side (left to right):
-    1: orange penguin seen from the front: normal, happy, scared, dizzy
+    1: orange penguin seen from the front: normal, happy, scared, dizzy (ErNa-012: dizzy no longer used, see SKIP)
     2: purple striped penguin seen from the front: normal, happy, scared, dizzy
     3: seen from above, head up: orange still, orange sliding on its belly, purple still, purple sliding
     4: igloo: closed with orange flag, open orange, closed purple, open purple
@@ -11,7 +11,7 @@ Output: Assets/Art/Penguin/<Name>.png (names in SHEETS; the game reads them from
 
 For every object: the white background is removed from the borders (clean alpha, dark fringe: no white halo), the object is cut to
 its pixels. Never scaled. The sprites of one family get the SAME canvas, so the game draws them all at one scale and one anchor:
-    front penguins (8): feet on the bottom edge, the body centred (the centre of the feet), the canvas as big as the biggest one;
+    front penguins (6 written, 8 measured): feet on the bottom edge, the body centred (the centre of the feet), the canvas as big as the biggest one;
     top penguins (4):   the centre of the black body at the centre of the canvas (the game turns them around it);
     igloos (4):         the base on the bottom edge, the dome centred.
 Objects and tiles keep their own crop. Writes are safe (temporary file, then replace); the script can be run again at any time.
@@ -30,6 +30,9 @@ SRC = os.path.join(ROOT, "ArtSource", "PG")
 OUT = os.path.join(ROOT, "Assets", "Art", "Penguin")
 
 FACES = ["Normal", "Happy", "Scared", "Dizzy"]
+# ErNa-012: the game has no dizzy face any more. The drawing is still on the sheets: it still sets the shared canvas of the front
+# penguins (so the other faces keep exactly their size and anchor), but it is not written.
+SKIP = {"Penguin_Orange_Front_Dizzy", "Penguin_Purple_Front_Dizzy"}
 SHEETS = {
     "1": ("front", ["Penguin_Orange_Front_" + f for f in FACES]),
     "2": ("front", ["Penguin_Purple_Front_" + f for f in FACES]),
@@ -116,6 +119,9 @@ def main():
         placed, (W, H) = on_canvas(objs, anchors, kind)
         print(f"{kind}: {len(objs)} sprites on one canvas {W}x{H}")
         for obj, canvas, (ax, ay), name in zip(objs, placed, anchors, names):
+            if name in SKIP:
+                print(f"  {name}: not written (unused)")
+                continue
             save_safe(canvas, os.path.join(OUT, name + ".png"))
             written += 1
             print(f"  {name}: object {obj.shape[1]}x{obj.shape[0]}, anchor ({ax:.1f}, {ay:.1f})")

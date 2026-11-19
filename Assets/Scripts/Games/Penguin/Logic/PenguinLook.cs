@@ -9,7 +9,6 @@ namespace ResolverMaster.Games.Penguin
         Normal,
         Happy,
         Scared,
-        Dizzy,
     }
 
     /// <summary>
@@ -101,26 +100,19 @@ namespace ResolverMaster.Games.Penguin
             }
         }
 
-        /// <summary>A stop that makes a penguin dizzy: against something (rock, wall, block, the other penguin) after at least <paramref name="minCells"/> cells.</summary>
-        public static bool IsDizzyStop(PenguinTrackEnd end, int cells, int minCells) =>
-            (end == PenguinTrackEnd.Bump || end == PenguinTrackEnd.Push) && cells >= minCells;
     }
 
     /// <summary>
     /// PG-002, the pose of one penguin (pure logic, real time): seen from above while playing (still, or sliding, turned towards the
     /// last move), it "turns towards us" (a horizontal squash that swaps the drawing at half way) to show an expression: normal at the
-    /// start of a level until the first swipe, dizzy for a while after a hard stop (then back to the view from above), scared when it
-    /// falls in the water, happy in its igloo (until the end of the level). A swipe interrupts normal and dizzy at once: the expressions
-    /// never slow the game down.
+    /// start of a level until the first swipe, scared when it falls in the water, happy in its igloo (until the end of the level). A stop
+    /// against a rock, a wall, a block or the other penguin keeps the view from above (ErNa-012: no dizzy face). A swipe interrupts the
+    /// normal face at once: the expressions never slow the game down.
     /// </summary>
     public sealed class PenguinMood
     {
         /// <summary>The whole turn (squash and back), seconds.</summary>
         public float TurnTime = 0.16f;
-        /// <summary>How long the dizzy face stays (after the turn), seconds.</summary>
-        public float DizzyTime = 0.6f;
-        /// <summary>A stop against something after at least this many cells makes the penguin dizzy.</summary>
-        public int MinDizzyCells = 3;
 
         /// <summary>Seen from the front (true) or from above.</summary>
         public bool Front { get; private set; } = true;
@@ -132,9 +124,9 @@ namespace ResolverMaster.Games.Penguin
         /// <summary>Horizontal scale of the turn: 1, down to 0 at half way (the drawing changes), back to 1.</summary>
         public float SquashX { get; private set; } = 1f;
         /// <summary>A turn or a timed expression is running.</summary>
-        public bool Busy => _turn >= 0f || _hold >= 0f;
+        public bool Busy => _turn >= 0f;
 
-        float _turn = -1f, _hold = -1f;
+        float _turn = -1f;
         bool _toFront, _swapped;
         PenguinFace _toFace;
 
@@ -144,7 +136,7 @@ namespace ResolverMaster.Games.Penguin
         /// <summary>Shows a pose at once (start of a level, undo, the state after a jump).</summary>
         public void Show(bool front, PenguinFace face, int dir = -1)
         {
-            _turn = _hold = -1f;
+            _turn = -1f;
             Front = front;
             Face = face;
             Sliding = false;
@@ -159,10 +151,9 @@ namespace ResolverMaster.Games.Penguin
             Sliding = true;
         }
 
-        /// <summary>The swipe moved the others, not this penguin: a normal or dizzy face turns back to the view from above.</summary>
+        /// <summary>The swipe moved the others, not this penguin: a normal face turns back to the view from above.</summary>
         public void Interrupt()
         {
-            _hold = -1f;
             if (_turn >= 0f)
             {
                 if (_toFront && Passing(_toFace)) Show(false, Face);   // turning towards us: back to the view from above at once
@@ -172,10 +163,10 @@ namespace ResolverMaster.Games.Penguin
         }
 
         /// <summary>Expressions a swipe interrupts (happy and scared stay until the end of the level).</summary>
-        static bool Passing(PenguinFace face) => face == PenguinFace.Normal || face == PenguinFace.Dizzy;
+        static bool Passing(PenguinFace face) => face == PenguinFace.Normal;
 
-        /// <summary>The slide is over (<paramref name="cells"/> cells): the expression of the event, if any.</summary>
-        public void EndSlide(PenguinTrackEnd end, int cells)
+        /// <summary>The slide is over: the expression of the event, if any (a stop against something: none, still seen from above).</summary>
+        public void EndSlide(PenguinTrackEnd end)
         {
             Sliding = false;
             switch (end)
@@ -186,13 +177,6 @@ namespace ResolverMaster.Games.Penguin
                 case PenguinTrackEnd.Fall:
                 case PenguinTrackEnd.FallOff:
                     TurnTo(true, PenguinFace.Scared);
-                    break;
-                default:
-                    if (PenguinLook.IsDizzyStop(end, cells, MinDizzyCells))
-                    {
-                        TurnTo(true, PenguinFace.Dizzy);
-                        _hold = DizzyTime;
-                    }
                     break;
             }
         }
@@ -216,16 +200,6 @@ namespace ResolverMaster.Games.Penguin
                     SquashX = 1f;
                 }
                 else SquashX = u < 0.5f ? 1f - 2f * u : 2f * u - 1f;
-                return;
-            }
-            if (_hold >= 0f)
-            {
-                _hold -= dt;
-                if (_hold <= 0f)
-                {
-                    _hold = -1f;
-                    TurnTo(false, Face);
-                }
             }
         }
 

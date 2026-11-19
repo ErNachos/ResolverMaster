@@ -7,8 +7,9 @@ namespace ResolverMaster.Core.Audio
     /// <summary>
     /// ErNa-010: the sound of the app: two channels. Music: one piece at a time, looping, a fade of about 1 s when it changes, paused
     /// while the app is in the background. Effects: several at once (a pool of sources), the same one limited
-    /// (<see cref="VoiceLimiter"/>). Volumes and vibration read the saved settings every time (changes apply at once). Clips are loaded
-    /// from Resources by event name (<see cref="AudioCatalog"/>) the first time; a missing one is silence.
+    /// (<see cref="VoiceLimiter"/>). Volumes and vibration read the saved settings every time (changes apply at once). Effects: the
+    /// sound of an event (<see cref="AudioCatalog.Sounds"/>, file and pitch) from the <see cref="SfxLibrary"/> (ErNa-012); music from
+    /// Resources the first time. A missing clip is silence.
     /// </summary>
     public sealed class AudioManager : MonoBehaviour, IAudioPlayer
     {
@@ -20,6 +21,7 @@ namespace ResolverMaster.Core.Audio
         string _musicKey;
         float _fade = -1f;
         VoiceLimiter _limiter;
+        SfxLibrary _sfx;
 
         public static AudioManager Create(Transform parent, SettingsBlock settings, AudioConfig cfg)
         {
@@ -29,6 +31,7 @@ namespace ResolverMaster.Core.Audio
             m._settings = settings;
             m._cfg = cfg != null ? cfg : ScriptableObject.CreateInstance<AudioConfig>();
             m._limiter = new VoiceLimiter(m._cfg.maxSameEffect, m._cfg.sameEffectWindow);
+            m._sfx = Resources.Load<SfxLibrary>(SfxLibrary.ResourcesPath);
             m._musicA = m.Source(true);
             m._musicB = m.Source(true);
             for (int i = 0; i < Mathf.Max(1, m._cfg.effectVoices); i++) m._effects.Add(m.Source(false));
@@ -56,14 +59,14 @@ namespace ResolverMaster.Core.Audio
         public void Play(string evt, float pitch = 1f)
         {
             float volume = AudioVolumes.Effects(_settings, _cfg);
-            if (volume <= 0f || string.IsNullOrEmpty(evt)) return;
-            var clip = Clip(AudioCatalog.SfxResources + evt);
+            if (volume <= 0f || _sfx == null || !AudioCatalog.TryResolve(evt, pitch, out var file, out float finalPitch)) return;
+            var clip = _sfx.Get(file);
             if (clip == null || !_limiter.TryStart(evt, Time.unscaledTime)) return;
             AudioSource free = null;
             foreach (var s in _effects)
                 if (!s.isPlaying) { free = s; break; }
             if (free == null) return;   // every voice busy: this sound is skipped
-            free.pitch = pitch;
+            free.pitch = finalPitch;
             free.PlayOneShot(clip, volume);
         }
 

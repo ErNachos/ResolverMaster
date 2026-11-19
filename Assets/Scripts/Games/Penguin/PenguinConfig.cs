@@ -24,7 +24,7 @@ namespace ResolverMaster.Games.Penguin
         public List<Color> scarfColors = new List<Color> { new Color32(0xE4, 0x7D, 0x49, 0xFF), new Color32(0x8A, 0x35, 0x75, 0xFF) };
         /// <summary>Height of the drawings of the penguins seen from above (one canvas for still and sliding: the still body is ~80% of it).</summary>
         [Range(0.5f, 1.5f)] public float topPenguinHeight = 1.08f;
-        /// <summary>Height of the drawings of the penguins seen from the front (one canvas: the body is ~85% of it, the dizzy stars on top).</summary>
+        /// <summary>Height of the drawings of the penguins seen from the front (one canvas: the body is ~85% of it; the canvas is the one of PG-002, room on top included).</summary>
         [Range(0.5f, 2f)] public float frontPenguinHeight = 1.3f;
         /// <summary>The feet of a penguin seen from the front stand this far above the bottom of its cell (it may stick out upwards).</summary>
         [Range(0f, 0.5f)] public float frontPenguinFeet = 0.08f;
@@ -60,9 +60,6 @@ namespace ResolverMaster.Games.Penguin
         public float bumpDuration = 0.18f;
         /// <summary>A penguin "turns towards us" (from above to the front, or back): a horizontal squash that swaps the drawing.</summary>
         public float turnDuration = 0.16f;
-        /// <summary>The dizzy face after a stop against something after at least <see cref="dizzyMinCells"/> cells (then back to the view from above).</summary>
-        public float dizzyTime = 0.6f;
-        public int dizzyMinCells = 3;
         /// <summary>A fish taken: it jumps (<see cref="fishJump"/> cells) and vanishes; the igloo opening.</summary>
         public float fishPop = 0.4f;
         [Range(0f, 1.5f)] public float fishJump = 0.45f;

@@ -35,8 +35,6 @@ MonoBehaviour:
   slideSpeed: 7
   bumpDuration: 0.18
   turnDuration: 0.16
-  dizzyTime: 0.6
-  dizzyMinCells: 3
   fishPop: 0.4
   fishJump: 0.45
   iglooOpen: 0.35

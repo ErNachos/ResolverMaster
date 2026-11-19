@@ -1,0 +1,65 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d26224a66bd68354e9539a87596e188d, type: 3}
+  m_Name: SfxLibrary
+  m_EditorClassIdentifier: 
+  entries:
+  - name: bonk
+    clip: {fileID: 8300000, guid: be26e91cf712b0744aa3f18bbb5828fe, type: 3}
+  - name: car_grab
+    clip: {fileID: 8300000, guid: cf07890ef5f2af74393defda3ff9dbbb, type: 3}
+  - name: car_snap
+    clip: {fileID: 8300000, guid: 4e9f7f1abdac66346a8dac0c4e1698d4, type: 3}
+  - name: car_vroom
+    clip: {fileID: 8300000, guid: 0e0dc8f93bb3c9649854c871281151a4, type: 3}
+  - name: fish_pop
+    clip: {fileID: 8300000, guid: 03b27dec586174345a7d49bcdcac5f39, type: 3}
+  - name: happy_hop
+    clip: {fileID: 8300000, guid: 532eb48da6516b943837f6a6c7ba1af8, type: 3}
+  - name: hint
+    clip: {fileID: 8300000, guid: bfecca25f4a88514685598e78a12aac2, type: 3}
+  - name: ice_slide
+    clip: {fileID: 8300000, guid: c24e6ac0562e6234c9eff80a48d13041, type: 3}
+  - name: igloo_open
+    clip: {fileID: 8300000, guid: d9e85b4455bc0e042bb3ce32ca511232, type: 3}
+  - name: jingle_lose
+    clip: {fileID: 8300000, guid: d3c79f445380e4e468d2139e2228cd2d, type: 3}
+  - name: jingle_unlock
+    clip: {fileID: 8300000, guid: 8f3881605ce7dc443a9bf831793947ba, type: 3}
+  - name: jingle_win
+    clip: {fileID: 8300000, guid: 2341f9f202152224c9379e0dab50264b, type: 3}
+  - name: pipe_rotate
+    clip: {fileID: 8300000, guid: a8f530c299e2fc94cb7035f411a70dc0, type: 3}
+  - name: sink
+    clip: {fileID: 8300000, guid: 96e904d5fdecac3438ebcf9af66c76cd, type: 3}
+  - name: snow_stop
+    clip: {fileID: 8300000, guid: 3989773111050ee4c9c403248e826a69, type: 3}
+  - name: splash
+    clip: {fileID: 8300000, guid: fbae64c92ad962d489891a1f73b72b57, type: 3}
+  - name: star
+    clip: {fileID: 8300000, guid: f0ebfe8abbbac1a48a7357bfcb477dd6, type: 3}
+  - name: uh_oh
+    clip: {fileID: 8300000, guid: 608836b7b6cb9f8488f5050fd83db43b, type: 3}
+  - name: ui_click
+    clip: {fileID: 8300000, guid: 9079eec5c47dd144b96b71bf4fdbdc59, type: 3}
+  - name: ui_panel_close
+    clip: {fileID: 8300000, guid: a2d3facdaa7fa944b9b6329bfb0b924e, type: 3}
+  - name: ui_panel_open
+    clip: {fileID: 8300000, guid: 5dc042ac50dafac44bf89d5ca5a1d42f, type: 3}
+  - name: ui_swipe
+    clip: {fileID: 8300000, guid: 75cee9933bfd5be45a34f4e7a37145c6, type: 3}
+  - name: undo
+    clip: {fileID: 8300000, guid: 432c6e002d8af8a428c8201ae89ac120, type: 3}
+  - name: water_arrive
+    clip: {fileID: 8300000, guid: 752d28b3851b4124dba387ff39407d76, type: 3}
+  - name: water_flow
+    clip: {fileID: 8300000, guid: 52d69b4e1717ab44490dd071f7c6d78f, type: 3}

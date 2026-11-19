@@ -1,3 +1,4 @@
+using System.Linq;
 using NUnit.Framework;
 using ResolverMaster.Core.Audio;
 using ResolverMaster.Core.Save;
@@ -6,7 +7,7 @@ using UnityEngine;
 
 namespace ResolverMaster.Tests
 {
-    /// <summary>ErNa-010: the Home background and arrows, the audio table, music and volumes.</summary>
+    /// <summary>ErNa-010: the Home background and arrows, the audio table, music and volumes; ErNa-012: the table of the generated sounds.</summary>
     public sealed class HomeAndAudioTests
     {
         [Test]
@@ -34,13 +35,8 @@ namespace ResolverMaster.Tests
         [Test]
         public void Audio_EveryEventHasAFileOrIsSilentWithoutErrors_MusicOfEachScreen_VolumesFromTheSettings()
         {
-            // every event: its file, or silence (a missing file is no error)
-            foreach (var evt in AudioCatalog.Events)
-            {
-                Assert.IsFalse(string.IsNullOrEmpty(evt));
-                Assert.DoesNotThrow(() => Resources.Load<AudioClip>(AudioCatalog.SfxResources + evt), evt);
-            }
-            Assert.IsNull(Resources.Load<AudioClip>(AudioCatalog.SfxResources + "no_such_event"));
+            // an unknown event is silence, never an error
+            Assert.IsFalse(AudioCatalog.TryResolve("no_such_event", 1f, out _, out _));
             GameAudio.Player = null;
             Assert.DoesNotThrow(() => GameAudio.Play(AudioEvents.UiClick), "no player (tests, previews): nothing happens");
 
@@ -73,6 +69,35 @@ namespace ResolverMaster.Tests
             Assert.IsFalse(limiter.TryStart("a", 0.02f), "a third time at once: skipped");
             Assert.IsTrue(limiter.TryStart("b", 0.02f), "another sound plays");
             Assert.IsTrue(limiter.TryStart("a", 0.5f), "later again");
+        }
+
+        [Test]
+        public void SoundTable_EveryEventHasAGeneratedSound_SharedFilesChangePitchALittle()
+        {
+            // ErNa-012: every event declared in AudioEvents has its sound, and the table names no other event
+            var events = typeof(AudioEvents).GetFields().Where(f => f.IsLiteral).Select(f => (string)f.GetRawConstantValue()).ToList();
+            CollectionAssert.AreEquivalent(events, AudioCatalog.Events.ToList());
+
+            foreach (var kv in AudioCatalog.Sounds)
+            {
+                Assert.IsFalse(string.IsNullOrEmpty(kv.Value.File), kv.Key);
+                Assert.That(kv.Value.Pitch, Is.InRange(0.8f, 1.25f), kv.Key + ": only a small change of pitch");
+            }
+            // events sharing a file sound different: never the same file at the same pitch
+            foreach (var group in AudioCatalog.Sounds.GroupBy(kv => kv.Value.File))
+                Assert.AreEqual(group.Count(), group.Select(kv => kv.Value.Pitch).Distinct().Count(), group.Key + " is shared at the same pitch");
+            Assert.Less(AudioCatalog.Files().Count(), AudioCatalog.Sounds.Count, "similar events share their sound");
+            Assert.AreEqual(AudioCatalog.Files().Count(), AudioCatalog.Files().Distinct().Count());
+
+            // the caller's pitch (the rising stars) multiplies the pitch of the table
+            Assert.IsTrue(AudioCatalog.TryResolve(AudioEvents.Star, 1.24f, out var file, out float pitch));
+            Assert.AreEqual("star", file);
+            Assert.AreEqual(1.24f, pitch, 1e-5);
+            Assert.IsTrue(AudioCatalog.TryResolve(AudioEvents.PenguinPush, 1f, out file, out pitch));
+            Assert.AreEqual(AudioCatalog.Sounds[AudioEvents.PenguinSlide].File, file, "the block sliding uses the slide on ice, lower");
+            Assert.Less(pitch, 1f);
+            Assert.IsFalse(AudioCatalog.TryResolve("", 1f, out _, out _));
+            Assert.IsFalse(AudioCatalog.TryResolve(null, 1f, out _, out _));
         }
     }
 }

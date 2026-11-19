@@ -10,9 +10,9 @@ namespace ResolverMaster.Tests
     /// <summary>PG-002: which Pino drawing shows what (pose of a penguin, turn by direction, tiles turned and mirrored by position).</summary>
     public sealed class PenguinLookTests
     {
-        const float Turn = 0.16f, Dizzy = 0.6f;
+        const float Turn = 0.16f;
 
-        static PenguinMood NewMood() => new PenguinMood { TurnTime = Turn, DizzyTime = Dizzy, MinDizzyCells = 3 };
+        static PenguinMood NewMood() => new PenguinMood { TurnTime = Turn };
 
         /// <summary>Lets the time pass in small steps (as the frames do).</summary>
         static void Wait(PenguinMood m, float seconds)
@@ -30,36 +30,29 @@ namespace ResolverMaster.Tests
             m.BeginSlide(SquareTopology.Right);
             Assert.AreEqual("Penguin_Orange_Top_Slide", m.SpriteName(0), "the first swipe: from above at once, sliding");
             Assert.AreEqual(SquareTopology.Right, m.Dir);
-            m.EndSlide(PenguinTrackEnd.Bump, 2);
-            Wait(m, 1f);
-            Assert.AreEqual("Penguin_Orange_Top_Idle", m.SpriteName(0), "a stop after 2 cells: still, from above, no expression");
+            // ErNa-012: a stop against a rock, a wall, a block or the other penguin (pushing it): no expression, no turn
+            foreach (var end in new[] { PenguinTrackEnd.Bump, PenguinTrackEnd.Push })
+            {
+                m.BeginSlide(SquareTopology.Up);
+                m.EndSlide(end);
+                Assert.IsFalse(m.Busy, $"{end}: no turn");
+                Wait(m, Turn * 0.5f);
+                Assert.AreEqual("Penguin_Orange_Top_Idle", m.SpriteName(0), $"{end}: still, from above");
+                Assert.AreEqual(1f, m.SquashX);
+            }
+            Assert.AreEqual(SquareTopology.Up, m.Dir, "it keeps looking where it went");
 
-            m.BeginSlide(SquareTopology.Up);
-            m.EndSlide(PenguinTrackEnd.Bump, 3);
+            m.BeginSlide(SquareTopology.Down);
+            m.EndSlide(PenguinTrackEnd.Enter);
             Wait(m, Turn * 0.25f);
             Assert.IsFalse(m.Front, "the first half of the turn still shows the view from above");
             Assert.Less(m.SquashX, 1f, "squashed while it turns");
-            Wait(m, Turn);
-            Assert.AreEqual("Penguin_Orange_Front_Dizzy", m.SpriteName(0), "a stop after 3 cells: dizzy, from the front");
-            Assert.AreEqual(1f, m.SquashX);
-            Wait(m, Dizzy + Turn + 0.05f);
-            Assert.AreEqual("Penguin_Orange_Top_Idle", m.SpriteName(0), "the dizzy face lasts a little, then back to the view from above");
-
-            m.BeginSlide(SquareTopology.Left);
-            m.EndSlide(PenguinTrackEnd.Push, 4);
-            Wait(m, Turn + 0.05f);
-            Assert.AreEqual(PenguinFace.Dizzy, m.Face, "pushing a block after a long slide is a hard stop too");
-            m.BeginSlide(SquareTopology.Down);
-            Assert.AreEqual("Penguin_Orange_Top_Slide", m.SpriteName(0), "a swipe interrupts the dizzy face at once");
-            Assert.AreEqual(1f, m.SquashX);
-
-            m.EndSlide(PenguinTrackEnd.Enter, 2);
             Wait(m, 5f);
             Assert.AreEqual("Penguin_Orange_Front_Happy", m.SpriteName(0), "in the igloo: happy until the end of the level");
 
             var fall = NewMood();
             fall.BeginSlide(SquareTopology.Down);
-            fall.EndSlide(PenguinTrackEnd.FallOff, 1);
+            fall.EndSlide(PenguinTrackEnd.FallOff);
             Wait(fall, 5f);
             Assert.AreEqual("Penguin_Purple_Front_Scared", fall.SpriteName(1), "falling in the water: scared");
 
@@ -112,7 +105,7 @@ namespace ResolverMaster.Tests
         {
             var names = PenguinLook.AllNames().ToList();
             Assert.AreEqual(names.Count, names.Distinct().Count(), "unique names");
-            Assert.AreEqual(2 * (4 + 2 + 2) + 8, names.Count);
+            Assert.AreEqual(2 * (3 + 2 + 2) + 8, names.Count, "3 faces (ErNa-012: no dizzy), 2 seen from above, 2 igloos per penguin");
             foreach (var name in names)
                 Assert.IsTrue(File.Exists($"{ResolverMaster.Games.Penguin.View.PenguinArt.AssetDir}/{name}.png"), name + ".png missing (python Tools/Art/make_penguin_art.py)");
         }

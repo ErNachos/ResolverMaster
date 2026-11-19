@@ -25,8 +25,6 @@ MonoBehaviour:
     sprite: {fileID: 21300000, guid: 09aaa03caa5cc4846a1c3cd190fd6582, type: 3}
   - name: Igloo_Purple_Open
     sprite: {fileID: 21300000, guid: 8a715def89943664b941c0a96847f3f4, type: 3}
-  - name: Penguin_Orange_Front_Dizzy
-    sprite: {fileID: 21300000, guid: 3ed32cce55949764d8213b89e36b2761, type: 3}
   - name: Penguin_Orange_Front_Happy
     sprite: {fileID: 21300000, guid: 2866c20e9bb97ba4985b14fa09926690, type: 3}
   - name: Penguin_Orange_Front_Normal
@@ -37,8 +35,6 @@ MonoBehaviour:
     sprite: {fileID: 21300000, guid: ea8d5d5b0270ef044b139fbaed574a39, type: 3}
   - name: Penguin_Orange_Top_Slide
     sprite: {fileID: 21300000, guid: 7a46863fb7b131648b70a00b2471edb1, type: 3}
-  - name: Penguin_Purple_Front_Dizzy
-    sprite: {fileID: 21300000, guid: 87bcbf0847ab93c4584168372831ed6e, type: 3}
   - name: Penguin_Purple_Front_Happy
     sprite: {fileID: 21300000, guid: 85b83a44f89078d4babd3a38db2eae1e, type: 3}
   - name: Penguin_Purple_Front_Normal

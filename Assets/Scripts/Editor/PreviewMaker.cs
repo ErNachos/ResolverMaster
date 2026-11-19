@@ -35,7 +35,7 @@ namespace ResolverMaster.Editor
     /// TJ-001: Traffic jam too (mode, chapters, levels, two levels per chapter, light bulb, drag, win, Challenge with "Out of moves",
     /// daily challenge, Home with the record) and the short side of the vehicles.
     /// PG-001: Pino too (Home, mode, chapters, levels, two levels per chapter, a slide, a push, a fall, "You are stuck", light bulb,
-    /// win, Challenge also stuck, daily challenge, Home with the record) and the drawn size of the penguins; PG-002: scared, dizzy, igloo
+    /// win, Challenge also stuck, daily challenge, Home with the record) and the drawn size of the penguins; PG-002: scared, igloo
     /// open, and the pose of every penguin in the report.
     /// Report: Previews/previews_report.txt (also in the log). Batch: -executeMethod ResolverMaster.Editor.PreviewMaker.MakePreviewsBatch
     /// </summary>
@@ -367,9 +367,10 @@ namespace ResolverMaster.Editor
             PgGameShot("game_pg_slide", 12, after: b => ((ResolverMaster.Games.Penguin.View.PenguinBoardView)b).PreviewSlide(0.5f)),
             PgGameShot("game_pg_push", 36, after: b => ((ResolverMaster.Games.Penguin.View.PenguinBoardView)b).PreviewSlide(0.75f)),
             PgGameShot("game_pg_fall", 35, after: b => ((ResolverMaster.Games.Penguin.View.PenguinBoardView)b).PreviewFall()),
-            // PG-002: the expressions (scared before the fall, dizzy after a hard stop) and the igloo open before the last move
+            // PG-002: the expressions (scared before the fall), ErNa-012: a stop against something (no expression, seen from above),
+            // the igloo open before the last move
             PgGameShot("game_pg_scared", 35, after: b => ((ResolverMaster.Games.Penguin.View.PenguinBoardView)b).PreviewFall(scared: true)),
-            PgGameShot("game_pg_dizzy", -2, after: b => ((ResolverMaster.Games.Penguin.View.PenguinBoardView)b).PreviewDizzy()),
+            PgGameShot("game_pg_bump", -2, after: b => ((ResolverMaster.Games.Penguin.View.PenguinBoardView)b).PreviewBump()),
             PgGameShot("game_pg_open", 40, after: b => ((ResolverMaster.Games.Penguin.View.PenguinBoardView)b).PreviewBeforeLast()),
             PgGameShot("game_pg_open_2p", 50, after: b => ((ResolverMaster.Games.Penguin.View.PenguinBoardView)b).PreviewBeforeLast()),
             PgGameShot("game_pg_hint", 20, after: b => ((ResolverMaster.Games.Penguin.View.PenguinBoardView)b).PreviewHintArrow()),
@@ -418,7 +419,7 @@ namespace ResolverMaster.Editor
 
         /// <summary>
         /// A Pino level (<paramref name="levelIndex"/> -1: the first Story level from chapter 4 on with a way into "You are stuck"; -2: the
-        /// first Story level whose solution has a hard stop that makes a penguin dizzy).
+        /// first Story level whose solution has a penguin stopping against something).
         /// </summary>
         static Shot PgGameShot(string name, int levelIndex, BoardPreview state = BoardPreview.Start, bool win = false, Action<PuzzleBoard> after = null) => new Shot
         {
@@ -426,7 +427,7 @@ namespace ResolverMaster.Editor
             Setup = (ctx, m) =>
             {
                 var module = (PenguinModule)ctx.Games.FindModule(PenguinModule.Id);
-                int index = levelIndex >= 0 ? levelIndex : levelIndex == -2 ? PgDizzyLevel(module) : PgStuckLevel(module);
+                int index = levelIndex >= 0 ? levelIndex : levelIndex == -2 ? PgBumpLevel(module) : PgStuckLevel(module);
                 m.Get<GameScreen>(ScreenIds.Game).StartLevel(module, index);
                 m.PushImmediate(ScreenIds.Game);
             },
@@ -453,10 +454,9 @@ namespace ResolverMaster.Editor
             return 0;
         }
 
-        static int PgDizzyLevel(PenguinModule module)
+        static int PgBumpLevel(PenguinModule module)
         {
             var levels = module.StoryLevels;
-            var cfg = PenguinConfig.LoadOrDefault();
             var trace = new PenguinTrace();
             for (int i = 0; i < levels.Count; i++)
             {
@@ -465,7 +465,7 @@ namespace ResolverMaster.Editor
                 foreach (int d in p.Space.Solution(p.State))
                 {
                     if (!p.TryPlan(d, out var move, trace)) break;
-                    if (trace.Tracks.Exists(t => t.Actor < PenguinLayout.MaxPenguins && PenguinLook.IsDizzyStop(t.End, t.T1 - t.T0, cfg.dizzyMinCells))) return i;
+                    if (trace.Tracks.Exists(t => t.Actor < PenguinLayout.MaxPenguins && t.End == PenguinTrackEnd.Bump)) return i;
                     p.ApplyMove(move);
                 }
             }

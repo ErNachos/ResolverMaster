@@ -470,3 +470,40 @@
 
 **Problemi aperti / prossimi passi**
 - L'Editor era aperto: le Player Settings in memoria possono sovrascrivere `ProjectSettings.asset` se salvate; dopo il pull riaprire il progetto (o rilanciare *Setup > Apply Project Settings*).
+
+## Update ErNa-012 — Effetti sonori generati, musiche, Pino senza stordito (2026-11-19)
+
+**Fatto**
+- **Nota**: l'Editor di Unity era chiuso: batchmode direttamente sul progetto.
+- **A — Pino senza "stordito"**: uno stop contro roccia, muro, blocco o l'altro pinguino lascia il pinguino nella vista dall'alto (niente giro, niente stelline). Restano normale all'inizio, spaventato nella caduta, felice nell'igloo. Tolti `PenguinFace.Dizzy`, `IsDizzyStop`, `dizzyTime`/`dizzyMinCells`, i due sprite `Penguin_*_Front_Dizzy` (file e libreria `PenguinArt`; il controllo `PenguinArt` segue `PenguinLook.AllNames`). `make_penguin_art.py` non scrive più lo stordito ma lo usa ancora per misurare la tela comune: gli altri 22 sprite restano identici (verificato con git). Anteprima `game_pg_dizzy` → `game_pg_bump` (primo stop contro un ostacolo, vista dall'alto).
+- **B — Effetti generati**: `Tools/Audio/make_sfx.py` (numpy, scipy) genera 25 suoni in `Assets/Audio/Sfx/` (WAV 44,1 kHz mono 16 bit), deterministico (stessi byte a ogni esecuzione), con i parametri di ogni suono in `SOUNDS`. Stile: marimba, campanella morbida, seno, rumore filtrato, passa-basso a 6,5 kHz. Intensità uguale per tutti: loudness K-weighted attraverso un passa-alto da altoparlante di telefono (300 Hz), finestra di 100 ms più forte, −19 dB (click dell'interfaccia −3 dB, più leggero). Picchi tra −2,8 e −13 dBFS, effetti ≤ 0,84 s, jingle ≤ 1,6 s, dissolvenze ai capi. `AudioCatalog.KenneyFiles` → `AudioCatalog.Sounds` (evento → file + altezza); clip lette da `Resources/Audio/SfxLibrary` (`SfxLibrary`, ricostruita da *Audio > Importa suoni*). Nuova finestra *Resolver Master > Audio > Ascolta effetti*. Tolti i riferimenti a Kenney.
+- **C — Musiche**: `ArtSource/Audio/Music/` non esiste: le quattro musiche restano mancanti (silenzio, nessun errore né warning). *Importa suoni* non crea più una cartella vuota. Normalizzazione tra le musiche non fatta (servono i file); musica al 60% degli effetti (`AudioConfig`).
+- **Validatore**: nuovo controllo `Audio` (ogni evento ha il suo suono, altezza 0,8–1,25, file presente, PCM 16 bit, non vuoto né muto, non saturato, senza click, durata massima, libreria completa).
+- **Test**: 1 nuovo (`SoundTable_…`: ogni evento ha un suono, file condivisi con altezze diverse, l'altezza di chi chiama si moltiplica) + 2 adattati (espressioni di Pino senza stordito, numero dei disegni; tabella audio).
+
+**Evento → suono** (altezza se diversa da 1)
+| Evento | Suono |
+|---|---|
+| ui_click / ui_swipe / ui_panel_open / ui_panel_close | ui_click / ui_swipe / ui_panel_open / ui_panel_close |
+| ui_star | star (le stelle salgono: +0,12 per stella) |
+| ui_chapter_unlocked / ui_new_record | jingle_unlock / jingle_unlock ×1,12 |
+| plumber_rotate / plumber_locked | pipe_rotate / bonk ×1,2 |
+| plumber_open / plumber_fountain | water_flow / water_arrive |
+| plumber_win / plumber_fail | jingle_win / uh_oh |
+| trafficjam_grab / snap / bump / exit / win | car_grab / car_snap / bonk / car_vroom / jingle_win ×1,06 |
+| penguin_slide / push | ice_slide / ice_slide ×0,8 |
+| penguin_bump / snow / fish | bonk ×0,85 / snow_stop / fish_pop |
+| penguin_igloo_open / enter | igloo_open / happy_hop |
+| penguin_splash / sink / win | splash / sink / jingle_win ×0,944 |
+| common_hint / undo / blocked | hint / undo / uh_oh ×0,89 |
+| common_challenge_lost / continue | jingle_lose / happy_hop ×0,89 |
+
+**Risultati**
+- Compilazione: 0 errori, 0 warning. Test: 66/66 verdi. Validatore: OK (16 controlli, 0 errori, 0 warning).
+- Anteprime: 516 schermate, nessun problema misurato; in `game_pg_bump` il pinguino è `Top_Idle`.
+
+**Da provare a mano sul telefono**
+- Ascolto di tutti gli effetti (volume relativo, nessuno fastidioso), stelle che salgono, "vroom" dell'auto obiettivo, Pino: scivolata, stop, spinta del blocco, caduta. Pino che sbatte contro un ostacolo: resta visto dall'alto.
+
+**Problemi aperti / prossimi passi**
+- Gli eventi sono 33, non 34 come scritto in ErNa-010/012 (contati in `AudioEvents`). La finestra *Ascolta effetti* usa un AudioSource nascosto: non verificata a orecchio. Musiche ancora da aggiungere in `ArtSource/Audio/Music/`.

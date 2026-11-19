@@ -17,8 +17,8 @@ namespace ResolverMaster.Games.Penguin.View
     /// (same speed at 30 and 60 fps).
     /// PG-002, the drawings (<see cref="PenguinArt"/>): tiles of ice, snow and water turned and mirrored by position
     /// (<see cref="PenguinLook.TileLook"/>), the sunken block where a hole was filled; the penguins seen from above while they play (still or
-    /// sliding, turned towards the move) and "turning towards us" for an expression (<see cref="PenguinMood"/>): normal at the start, dizzy
-    /// after a hard stop, scared when they fall, happy in the igloo; igloos closed/open with a little bounce, the fish jumping away. Rows
+    /// sliding, turned towards the move) and "turning towards us" for an expression (<see cref="PenguinMood"/>): normal at the start, scared
+    /// when they fall (a stop against something keeps the view from above, ErNa-012), happy in the igloo; igloos closed/open with a little bounce, the fish jumping away. Rows
     /// lower on the screen are drawn over the rows above (penguins seen from the front and igloos stick out upwards).
     /// </summary>
     public sealed class PenguinBoardView : PuzzleBoard
@@ -237,8 +237,6 @@ namespace ResolverMaster.Games.Penguin.View
             v.Top = Drawing("Top", v.Turn, new Vector2(0.5f, 0.5f));      // the body centred: it turns around the centre of the cell
             v.Front = Drawing("Front", v.Turn, new Vector2(0.5f, 0f));    // the feet near the bottom of the cell
             v.Mood.TurnTime = Mathf.Max(0.01f, _cfg.turnDuration);
-            v.Mood.DizzyTime = Mathf.Max(0f, _cfg.dizzyTime);
-            v.Mood.MinDizzyCells = Mathf.Max(1, _cfg.dizzyMinCells);
             root.gameObject.SetActive(false);
             return v;
         }
@@ -766,10 +764,10 @@ namespace ResolverMaster.Games.Penguin.View
         }
 
         /// <summary>
-        /// Previews: along the solution, the first swipe where a penguin stops against something after at least
-        /// <see cref="PenguinConfig.dizzyMinCells"/> cells, frozen while it is dizzy. False if the solution has none.
+        /// Previews (ErNa-012): along the solution, the first swipe where a penguin stops against something, frozen just after the stop
+        /// (still seen from above: no expression). False if the solution has none.
         /// </summary>
-        public bool PreviewDizzy()
+        public bool PreviewBump()
         {
             var dirs = _puzzle.Space.Solution(_puzzle.State);
             foreach (int dir in dirs)
@@ -778,8 +776,8 @@ namespace ResolverMaster.Games.Penguin.View
                 if (!StartSwipe(dir)) return false;
                 foreach (var t in _play.Trace.Tracks)
                 {
-                    if (t.Actor >= FirstBlock || !PenguinLook.IsDizzyStop(t.End, Cells(t), Mathf.Max(1, _cfg.dizzyMinCells))) continue;
-                    Seek(t.T1 / _play.CellsPerSecond + _cfg.turnDuration + Mathf.Min(0.1f, _cfg.dizzyTime * 0.5f));
+                    if (t.Actor >= FirstBlock || t.End != PenguinTrackEnd.Bump) continue;
+                    Seek(t.T1 / _play.CellsPerSecond + _cfg.turnDuration + 0.05f);
                     return true;
                 }
                 Seek(_play.Seconds + 0.05f);
@@ -844,14 +842,12 @@ namespace ResolverMaster.Games.Penguin.View
             return true;
         }
 
-        static int Cells(PenguinTrace.Track t) => Mathf.Max(0, t.T1 - t.T0);
-
         /// <summary>A fall: the penguin turns and stays scared for a moment, then the fall effect.</summary>
         float FallDelay => _cfg.turnDuration + _cfg.scaredHold;
 
         /// <summary>
         /// The swipe was accepted: the start cells, the view of each block actor, the extra time of the end effects; the penguins that
-        /// slide are seen from above at once, the others drop a normal or dizzy face (an expression never slows the game down).
+        /// slide are seen from above at once, the others drop a normal face (an expression never slows the game down).
         /// </summary>
         void BeginMove()
         {
@@ -1010,7 +1006,7 @@ namespace ResolverMaster.Games.Penguin.View
             int a = tr.Actor;
             if (a < FirstBlock)
             {
-                _penguins[a].Mood.EndSlide(tr.End, Cells(tr));
+                _penguins[a].Mood.EndSlide(tr.End);
                 ApplyPose(a);
             }
             switch (tr.End)
