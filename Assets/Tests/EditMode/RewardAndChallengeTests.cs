@@ -55,22 +55,38 @@ namespace ResolverMaster.Tests
             presenter.Close();
             Assert.AreEqual(1, rewards, "Editor option: no reward");
             Assert.AreEqual(1, closes);
-            Assert.IsTrue(((TestRewardedAdService)RewardedAds.Create(BuildKind.TestApk, cfg, presenter)).RewardOnClose, "the option never reaches the phone");
+            Assert.IsTrue(RewardedAds.RewardOnClose(BuildKind.TestApk, cfg), "the option never reaches the phone");
             test.Enabled = false;
             Assert.IsFalse(RewardedAds.CanOffer(test, true));
             UnityEngine.Object.DestroyImmediate(cfg);
         }
 
         [Test]
-        public void Ads_TestApkHasTheTestAd_ReleaseAabHasNone()
+        public void Ads_TestPanelOnlyInTheEditor_PhoneBuildsUseAdMob_RealIdsOnlyInTheReleaseAab()
         {
             var cfg = UnityEngine.ScriptableObject.CreateInstance<AdConfig>();
-            Assert.IsInstanceOf<TestRewardedAdService>(RewardedAds.Create(BuildKind.TestApk, cfg, null), "test APK");
-            Assert.IsInstanceOf<TestRewardedAdService>(RewardedAds.Create(BuildKind.Editor, cfg, null));
-            Assert.IsInstanceOf<TestRewardedAdService>(RewardedAds.Create(BuildKind.Development, cfg, null));
-            Assert.IsInstanceOf<UnavailableRewardedAdService>(RewardedAds.Create(BuildKind.Release, cfg, null), "release AAB: no ad until AdMob");
-            // the build decides, not a manual switch: the APK gets the symbol, the AAB never
+            Assert.IsInstanceOf<TestRewardedAdService>(RewardedAds.Create(BuildKind.Editor, cfg, null), "Editor: the test panel");
+            // ErNa-013: every phone build uses the real network (AdMob, given by the app), never the test panel
+            var asked = new System.Collections.Generic.List<BuildKind>();
+            foreach (var kind in new[] { BuildKind.TestApk, BuildKind.Development, BuildKind.Release })
+            {
+                var device = new UnavailableRewardedAdService();
+                Assert.AreSame(device, RewardedAds.Create(kind, cfg, null, k => { asked.Add(k); return device; }), kind.ToString());
+                Assert.IsInstanceOf<UnavailableRewardedAdService>(RewardedAds.Create(kind, cfg, null), "no plugin: no ads");
+            }
+            CollectionAssert.AreEqual(new[] { BuildKind.TestApk, BuildKind.Development, BuildKind.Release }, asked);
+            // the ids: real only in the release AAB, Google's test ids everywhere else
+            Assert.AreEqual(AdMobIds.RealAppId, AdMobIds.AppId(BuildKind.Release));
+            Assert.AreEqual(AdMobIds.RealRewardedUnitId, AdMobIds.RewardedUnitId(BuildKind.Release));
+            foreach (var kind in new[] { BuildKind.Editor, BuildKind.TestApk, BuildKind.Development })
+            {
+                Assert.AreEqual(AdMobIds.TestAppId, AdMobIds.AppId(kind));
+                Assert.AreEqual(AdMobIds.TestRewardedUnitId, AdMobIds.RewardedUnitId(kind));
+            }
+            // the build decides, not a manual switch: the APK is a test build, the AAB the only release build
             CollectionAssert.Contains(ResolverMaster.Editor.ReleaseBuild.ExtraDefines(appBundle: false), RewardedAds.TestBuildDefine);
+            CollectionAssert.DoesNotContain(ResolverMaster.Editor.ReleaseBuild.ExtraDefines(appBundle: false), RewardedAds.ReleaseBuildDefine);
+            CollectionAssert.Contains(ResolverMaster.Editor.ReleaseBuild.ExtraDefines(appBundle: true), RewardedAds.ReleaseBuildDefine);
             CollectionAssert.DoesNotContain(ResolverMaster.Editor.ReleaseBuild.ExtraDefines(appBundle: true), RewardedAds.TestBuildDefine);
             Assert.AreEqual(BuildKind.Editor, RewardedAds.CurrentKind);
             UnityEngine.Object.DestroyImmediate(cfg);

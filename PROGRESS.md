@@ -507,3 +507,24 @@
 
 **Problemi aperti / prossimi passi**
 - Gli eventi sono 33, non 34 come scritto in ErNa-010/012 (contati in `AudioEvents`). La finestra *Ascolta effetti* usa un AudioSource nascosto: non verificata a orecchio. Musiche ancora da aggiungere in `ArtSource/Audio/Music/`.
+
+## Update ErNa-013 — AdMob: annunci con premio e consenso UMP (2026-11-19)
+
+**Fatto**
+- **Nota**: l'Editor di Unity era chiuso: batchmode direttamente sul progetto.
+- **A — Plugin**: Google Mobile Ads per Unity **11.7.0** (ultima versione) dal registro OpenUPM (`Packages/manifest.json`), con External Dependency Manager 2.1.1; dipendenze Android (play-services-ads 25.5.0, UMP 4.0.0) scritte da EDM in `Assets/Plugins/Android/mainTemplate.gradle` (creati dal plugin anche `gradleTemplate.properties` e `settingsTemplate.gradle`). IL2CPP, ARM64, min API 26 e target API 36 invariati.
+- **B — ID**: solo in `AdMobIds` (Core). Tipo di build: `ReleaseBuild` aggiunge `RESOLVERMASTER_RELEASE_BUILD` solo all'AAB (ID veri) e `RESOLVERMASTER_TEST_BUILD` all'APK; ogni altro build è "sviluppo" con gli ID di test di Google. L'ID app del manifest: `AdMobPreBuild` lo mette nelle impostazioni del plugin prima del suo ManifestProcessor (in memoria; a riposo sempre l'ID di test), `AdMobGradleCheck` ferma il build se il progetto Gradle non ha l'ID giusto o `AD_ID`. `AD_ID` dichiarato anche da `Assets/Plugins/Android/ResolverMasterAds.androidlib`.
+- **C — Consenso (UMP)**: all'avvio aggiornamento del consenso e modulo se richiesto; SDK inizializzato solo con `CanRequestAds`; errore o niente rete = niente annunci (gioco libero), nuovo tentativo al prossimo avvio. "Opzioni privacy" nelle Impostazioni solo quando l'SDK lo richiede. Geografia di debug SEE nei build di test, applicata da Google solo ai telefoni in `AdConfig.consentTestDeviceIds` (vuota: va aggiunto l'ID del telefono letto in logcat).
+- **D — Annunci con premio (Core)**: `RewardedAdController` (C# puro) dietro la stessa `IRewardedAdService` (Continua, Cambia livello, Lampadina e i tre giochi invariati): precarica, ricarica dopo ogni annuncio, riprova dopo 30 s un caricamento fallito; premio solo con la ricompensa segnalata dall'SDK; chiuso prima / errore / non pronto = nessun premio, messaggio "Annuncio non disponibile…" e nuovo caricamento. `AdOverlay`: input bloccato e audio in pausa durante l'annuncio; Indietro ignorato; un annuncio senza chiusura finisce dopo 8 s con l'app di nuovo in primo piano. Pannello di prova solo nell'Editor. `MobileAds.RaiseAdEventsOnUnityMainThread = true` (obsoleto nella 11.x, impostato lo stesso) e in più ogni callback passa per il thread principale.
+- **Validatore**: nuovo controllo `AdMob`. **Anteprime** nuove: `settings_privacy`, `ad_not_available`.
+- **Test**: 4 nuovi (`AdMobRewardTests`: premio solo se guadagnato, anche se arriva subito dopo la chiusura; non pronto o senza consenso; errore in visualizzazione; ricarico, nuovo tentativo e watchdog) + 2 adattati (pannello solo nell'Editor, ID per tipo di build).
+
+**Risultati**
+- Compilazione: 0 errori, 0 warning. Test: 70/70 verdi. Validatore: OK (17 controlli, 0 errori, 0 warning).
+- Build: APK di test e AAB 1.0.0 (1) firmati (version code invariato). Manifest verificati: APK con l'ID app di test e `AD_ID` (aapt2), AAB con l'ID app vero e `AD_ID`, senza ID di test (bundletool). Ogni build riporta 1 warning di Unity sull'xcframework iOS dentro il pacchetto del plugin (sola lettura, innocuo).
+
+**Da provare a mano sul telefono (APK di test)**
+- Annuncio di test da Continua, Cambia livello e Lampadina; premio solo a fine annuncio (chiuso prima = niente); musica che riparte dopo; senza rete il messaggio "Annuncio non disponibile". Modulo di consenso (in Italia compare davvero solo dopo aver aggiunto l'ID del telefono in `AdConfig.consentTestDeviceIds`) e pulsante "Opzioni privacy".
+
+**Problemi aperti / prossimi passi**
+- Il build ha bisogno di rete (Gradle scarica le librerie di Google). Account AdMob: collegare l'app al Play Store e preparare il messaggio GDPR nella console AdMob (senza, il modulo UMP non compare).

@@ -687,7 +687,7 @@ namespace ResolverMaster.Core.UI.Screens
         /// <summary>Challenge: Back opens (or closes) the pause; after the end of the run it goes Home.</summary>
         public override bool HandleBack()
         {
-            if (_ctx.TestAds != null && _ctx.TestAds.Showing) return true;   // the ad answers with its own buttons
+            if (_ctx.AdShowing) return true;   // the ad answers with its own buttons (ErNa-013: and the real ad its own Back)
             if (_mode != GameMode.Challenge) return false;
             if (_end.Visible || _dailyEnd.Visible) GoHome();
             else if (_pause.Visible) _pause.Hide();

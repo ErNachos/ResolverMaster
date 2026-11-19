@@ -6,6 +6,8 @@
 | TMP Essential Resources | Shader, impostazioni, font di riserva | `Assets/TextMesh Pro/` | Unity (pacchetto `com.unity.ugui`) | Unity Companion License |
 | Liberation Sans (dentro TMP Essential Resources) | Font di riserva di TextMesh Pro | `Assets/TextMesh Pro/Fonts/` | Red Hat / Google | SIL Open Font License 1.1 (`LiberationSans - OFL.txt`) |
 | EmojiOne (dentro TMP Essential Resources) | Sprite di esempio di TextMesh Pro (non usati dal gioco) | `Assets/TextMesh Pro/Sprites/` | EmojiOne | CC BY 4.0 (`EmojiOne Attribution.txt`) |
+| Google Mobile Ads Unity Plugin 11.7.0 (ErNa-013) | Plugin annunci con premio e consenso UMP | pacchetto `com.google.ads.mobile` (registro OpenUPM, `Packages/manifest.json`), impostazioni in `Assets/GoogleMobileAds/` | Google — https://github.com/googleads/googleads-mobile-unity | Apache License 2.0 |
+| External Dependency Manager 2.1.1 | Risolve le librerie Android del plugin (Gradle) | pacchetto `com.unity.external-dependency-manager` (dipendenza del plugin) | Unity / Google | Apache License 2.0 |
 | Material Symbols Rounded | Icone segnaposto | `Assets/Art/Icons/*.png` (generate da `Tools/Art/make_icons.py`) | Google — https://github.com/google/material-design-icons | Apache License 2.0, uso commerciale consentito |
 
 Icone Material ancora usate (nome asset ← simbolo), finché arrivano i disegni: story ← menu_book, game_plumber ← plumbing, game_trafficjam ← directions_car, water_drop ← water_drop, fork ← call_split, palette ← palette.

@@ -27,8 +27,15 @@ namespace ResolverMaster.Core.App
         public ScreenManager Screens;
         /// <summary>Rewarded ads (ErNa-007): chosen by <see cref="RewardedAds.Create"/> when the UI is built, unless already set (tests, previews).</summary>
         public IRewardedAdService Ads;
-        /// <summary>The panel of the test ad (null when the app uses no test ads).</summary>
+        /// <summary>The panel of the test ad (Editor only, ErNa-013).</summary>
         public TestAdPanel TestAds;
+        /// <summary>ErNa-013: input shield, sound pause and "not available" message around a real ad.</summary>
+        public AdOverlay AdOverlay;
+        /// <summary>ErNa-013: the privacy consent (UMP); null in the Editor and in the previews ("Privacy options" hidden).</summary>
+        public IConsentService Consent;
+
+        /// <summary>An ad (test panel or real) is on screen: Back and taps are for the ad.</summary>
+        public bool AdShowing => (Ads != null && Ads.IsShowing) || (TestAds != null && TestAds.Showing);
         /// <summary>ErNa-008: the phone's local date and time (the daily challenge); previews set a fixed date.</summary>
         public System.Func<System.DateTime> Clock = () => System.DateTime.Now;
 

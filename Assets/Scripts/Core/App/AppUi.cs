@@ -37,12 +37,26 @@ namespace ResolverMaster.Core.App
             manager.Register(ChapterSelectScreen.Create(ctx, root));
             manager.Register(LevelSelectScreen.Create(ctx, root));
             manager.Register(GameScreen.Create(ctx, root));
-            // rewarded ads (ErNa-007): the test panel above every screen, the service chosen in one place
+            // rewarded ads (ErNa-007): the test panel above every screen (Editor), AdMob on the phone (ErNa-013), chosen in one place
             var adConfig = AdConfig.LoadOrDefault();
             ctx.TestAds = TestAdPanel.Create(ctx, root, adConfig.testAdSeconds);
-            ctx.Ads ??= RewardedAds.Create(adConfig, ctx.TestAds);
+            ctx.AdOverlay = AdOverlay.Create(ctx, root, adConfig.notAvailableSeconds);
+            ctx.Ads ??= RewardedAds.Create(RewardedAds.CurrentKind, adConfig, ctx.TestAds, kind => DeviceAds(ctx, root, kind, adConfig));
             manager.ShowRoot(ScreenIds.Home);
             return manager;
+        }
+
+        /// <summary>ErNa-013: AdMob with the UMP consent (phone builds only); null without the plugin (no ads).</summary>
+        static IRewardedAdService DeviceAds(AppServices ctx, RectTransform root, BuildKind kind, AdConfig config)
+        {
+#if RESOLVERMASTER_ADMOB
+            var runtime = AdMobRuntime.Create(root.parent != null ? root.parent : root, kind, config, ctx.AdOverlay);
+            ctx.Consent = runtime;
+            return runtime.Controller;
+#else
+            Debug.LogWarning("AppUi: Google Mobile Ads plugin missing: no rewarded ads.");
+            return null;
+#endif
         }
     }
 }

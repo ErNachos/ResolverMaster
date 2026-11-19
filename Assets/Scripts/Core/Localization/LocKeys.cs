@@ -24,6 +24,8 @@ namespace ResolverMaster.Core.Localization
         public const string SettingsSound = "settings.sound";
         public const string SettingsMusic = "settings.music";
         public const string SettingsVibration = "settings.vibration";
+        /// <summary>ErNa-013: "Privacy options" (only when the consent SDK requires it).</summary>
+        public const string SettingsPrivacy = "settings.privacy";
         public const string CommonOn = "common.on";
         public const string CommonOff = "common.off";
 
@@ -52,6 +54,8 @@ namespace ResolverMaster.Core.Localization
         public const string AdTestWait = "ad.test.wait";
         public const string AdTestReady = "ad.test.ready";
         public const string AdTestClosed = "ad.test.closed";
+        /// <summary>ErNa-013: a real ad is not ready or could not be shown.</summary>
+        public const string AdNotAvailable = "ad.not_available";
 
         // ErNa-007: Challenge
         /// <summary>"Challenge · Level {0}".</summary>

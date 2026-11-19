@@ -15,6 +15,7 @@ settings.language = Language
 settings.sound = Effects
 settings.music = Music
 settings.vibration = Vibration
+settings.privacy = Privacy options
 common.on = On
 common.off = Off
 
@@ -55,6 +56,7 @@ ad.test.title = Test ad
 ad.test.wait = Wait {0} s…
 ad.test.ready = End of the ad
 ad.test.closed = Close
+ad.not_available = Ad not available. Try again shortly.
 
 # Challenge (ErNa-007)
 challenge.level = Challenge · Level {0}

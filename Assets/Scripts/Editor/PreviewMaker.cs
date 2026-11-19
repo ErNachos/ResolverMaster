@@ -94,6 +94,17 @@ namespace ResolverMaster.Editor
             new Shot { Name = ScreenIds.Settings, Setup = (ctx, m) => m.PushImmediate(ScreenIds.Settings) },
             new Shot
             {
+                // ErNa-013: "Privacy options" as on a phone in the EEA (in the Editor there is no consent: hidden)
+                Name = "settings_privacy",
+                Setup = (ctx, m) =>
+                {
+                    SettingsScreen.ForcePrivacyButton = true;
+                    try { m.PushImmediate(ScreenIds.Settings); }
+                    finally { SettingsScreen.ForcePrivacyButton = false; }
+                },
+            },
+            new Shot
+            {
                 Name = "chapters",
                 Setup = (ctx, m) =>
                 {
@@ -233,6 +244,17 @@ namespace ResolverMaster.Editor
                     m.PushImmediate(ScreenIds.Game);
                 },
                 AfterLayout = (ctx, m) => ctx.TestAds.ShowForPreview(),
+            },
+            new Shot
+            {
+                // ErNa-013: a real ad not ready: the message above everything
+                Name = "ad_not_available",
+                Setup = (ctx, m) =>
+                {
+                    m.Get<GameScreen>(ScreenIds.Game).StartLevel(ctx.Games.FindModule(PlumberModule.Id), 20);
+                    m.PushImmediate(ScreenIds.Game);
+                },
+                AfterLayout = (ctx, m) => ctx.AdOverlay.ShowNotAvailable(),
             },
             // ErNa-006: chapters 4-9 (bridges, locked pieces, 3 and 4 colors, 7x9), two levels each from chapter 6 on (also color-blind)
             GameShot("game_c4_33", 32, BoardPreview.Start, win: false),

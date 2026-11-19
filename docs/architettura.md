@@ -8,7 +8,9 @@ Assets/
       App/                     AppBootstrap (avvio), AppServices (servizi), AppUi (costruzione UI)
       Games/                   GameInfo (+ immagine e colore della scheda, HomeSelection), MinigameModule (hook Storia + board), GameRegistry (moduli)
       Audio/                   GameAudio (eventi, tabella evento → suono generato + altezza, volumi, limite delle voci), AudioManager (musica + effetti), AudioConfig (ErNa-010), SfxLibrary (clip degli effetti, ErNa-012)
-      Ads/                     IRewardedAdService, TestRewardedAdService, UnavailableRewardedAdService, RewardedAds (scelta), AdConfig (ErNa-007)
+      Ads/                     IRewardedAdService, TestRewardedAdService (Editor), RewardedAds (scelta), AdConfig (ErNa-007);
+                               ErNa-013: AdMobIds (unico punto degli ID), RewardedAdController (regole dei premi, C# puro),
+                               IConsentService, AdMobRuntime (UMP + AdMob, solo sul telefono)
       Challenge/               ChallengeGeneration (IChallengeSource, ChallengeRules, ChallengeQueue), ChallengeRun (stato, record, blocco del salvataggio) (ErNa-007)
                                DailyChallenge (Sfida del giorno: regole pure, serie, DailyStats) (ErNa-008)
       Puzzle/                  basi comuni dei rompicapi (C# puro): Grid/ (IGridTopology, SquareTopology, DirectionMask),

@@ -5,8 +5,8 @@ namespace ResolverMaster.Core.Ads
 {
     /// <summary>
     /// A rewarded ad (ErNa-007): the player watches it and gets something (e.g. a hint). The game never knows which network is
-    /// behind it: the test version today (<see cref="TestRewardedAdService"/>), AdMob later, chosen in one place
-    /// (<see cref="RewardedAds.Create"/>).
+    /// behind it: the test panel in the Editor (<see cref="TestRewardedAdService"/>), AdMob on the phone (ErNa-013,
+    /// <see cref="RewardedAdController"/>), chosen in one place (<see cref="RewardedAds.Create"/>).
     /// </summary>
     public interface IRewardedAdService
     {
@@ -15,12 +15,17 @@ namespace ResolverMaster.Core.Ads
 
         /// <summary>Shows the ad. Exactly one of the callbacks is called: watched to the end, or failed / closed early.</summary>
         void Show(Action onRewarded, Action onFailedOrClosed);
+
+        /// <summary>ErNa-013: an ad is on screen (the game ignores Back and taps until it ends).</summary>
+        bool IsShowing { get; }
     }
 
-    /// <summary>No ads at all (release builds until AdMob arrives, or no network): every ad button stays disabled.</summary>
+    /// <summary>No ads at all (a phone build without the AdMob plugin): every ad button stays disabled.</summary>
     public sealed class UnavailableRewardedAdService : IRewardedAdService
     {
         public bool IsAvailable => false;
+
+        public bool IsShowing => false;
 
         public void Show(Action onRewarded, Action onFailedOrClosed) => onFailedOrClosed?.Invoke();
     }
@@ -28,7 +33,7 @@ namespace ResolverMaster.Core.Ads
     /// <summary>
     /// The test ad: a "Test ad" panel with a short wait and one "Close" button. ErNa-010: closing it always gives the reward (the
     /// player sees the hint, Continue or Change level at once); only in the Editor an option of AdConfig simulates an ad not watched
-    /// (<see cref="RewardOnClose"/> false). Active in the Editor and in the test APK. The panel is UI, given by the app
+    /// (<see cref="RewardOnClose"/> false). ErNa-013: only in the Editor (and the automatic tests); the phone always uses AdMob. The panel is UI, given by the app
     /// (<see cref="ITestAdPresenter"/>), so this class stays pure and testable.
     /// </summary>
     public sealed class TestRewardedAdService : IRewardedAdService
@@ -44,6 +49,8 @@ namespace ResolverMaster.Core.Ads
         public TestRewardedAdService(ITestAdPresenter presenter) => _presenter = presenter;
 
         public bool IsAvailable => Enabled && (_presenter == null || !_presenter.Showing);
+
+        public bool IsShowing => _presenter != null && _presenter.Showing;
 
         public void Show(Action onRewarded, Action onFailedOrClosed)
         {
@@ -78,15 +85,21 @@ namespace ResolverMaster.Core.Ads
         TestApk,
         /// <summary>A development build (Unity's "Development Build").</summary>
         Development,
-        /// <summary>The AAB for Google Play: no test ads (AdMob later).</summary>
+        /// <summary>The AAB for Google Play (built with <see cref="RewardedAds.ReleaseBuildDefine"/>): the only kind with the real AdMob ids.</summary>
         Release,
     }
 
-    /// <summary>The only place that decides which rewarded ads the app uses (AdMob will be added here, nothing else changes).</summary>
+    /// <summary>The only place that decides which rewarded ads the app uses.</summary>
     public static class RewardedAds
     {
         /// <summary>ErNa-010: scripting symbol added by ReleaseBuild only to the test APK (never to the AAB).</summary>
         public const string TestBuildDefine = "RESOLVERMASTER_TEST_BUILD";
+
+        /// <summary>
+        /// ErNa-013: scripting symbol added by ReleaseBuild only to the release AAB. Without it a phone build is never
+        /// <see cref="BuildKind.Release"/> (a build made by hand gets the test ids, never the real ones).
+        /// </summary>
+        public const string ReleaseBuildDefine = "RESOLVERMASTER_RELEASE_BUILD";
 
         /// <summary>The kind of the running app.</summary>
         public static BuildKind CurrentKind
@@ -96,25 +109,29 @@ namespace ResolverMaster.Core.Ads
                 if (Application.isEditor) return BuildKind.Editor;
 #if RESOLVERMASTER_TEST_BUILD
                 return BuildKind.TestApk;
-#else
+#elif RESOLVERMASTER_RELEASE_BUILD
                 return Debug.isDebugBuild ? BuildKind.Development : BuildKind.Release;
+#else
+                return BuildKind.Development;
 #endif
             }
         }
 
-        /// <summary>Test ads everywhere but in the release AAB (when the config allows them).</summary>
-        public static bool UsesTestAds(BuildKind kind, AdConfig config) => kind != BuildKind.Release && (config == null || config.testAdsInTestBuilds);
+        /// <summary>ErNa-013: the test panel only in the Editor (and the tests); every phone build uses AdMob.</summary>
+        public static bool UsesTestPanel(BuildKind kind) => kind == BuildKind.Editor;
 
         /// <summary>Closing the test ad gives the reward, except in the Editor with the "not watched" option.</summary>
         public static bool RewardOnClose(BuildKind kind, AdConfig config) => !(kind == BuildKind.Editor && config != null && config.editorAdNotWatched);
 
-        /// <summary>The ads of this app: the test ad (Editor, test APK, development builds) or none (release, until AdMob).</summary>
-        public static IRewardedAdService Create(AdConfig config, ITestAdPresenter testPresenter) => Create(CurrentKind, config, testPresenter);
-
-        public static IRewardedAdService Create(BuildKind kind, AdConfig config, ITestAdPresenter testPresenter)
+        /// <summary>
+        /// The ads of this app: the test panel in the Editor, AdMob on the phone (<paramref name="deviceAds"/>, given by the app:
+        /// null when the plugin is missing = no ads).
+        /// </summary>
+        public static IRewardedAdService Create(BuildKind kind, AdConfig config, ITestAdPresenter testPresenter,
+            Func<BuildKind, IRewardedAdService> deviceAds = null)
         {
-            if (!UsesTestAds(kind, config)) return new UnavailableRewardedAdService();
-            return new TestRewardedAdService(testPresenter) { RewardOnClose = RewardOnClose(kind, config) };
+            if (UsesTestPanel(kind)) return new TestRewardedAdService(testPresenter) { RewardOnClose = RewardOnClose(kind, config) };
+            return deviceAds?.Invoke(kind) ?? new UnavailableRewardedAdService();
         }
 
         /// <summary>A button that needs an ad: enabled only if the ad can be shown and the action itself makes sense.</summary>

@@ -10,7 +10,8 @@ namespace ResolverMaster.Core.UI.Screens
     /// <summary>
     /// Settings, in one cream Gemini window: language (globe, Italiano / English pills: the selected one green), sound (round button
     /// with the "sound on" or "sound off" icon) and vibration (round button with its icon, faded and crossed by a small X drawn by
-    /// code when off). Every change is saved at once.
+    /// code when off). Every change is saved at once. ErNa-013: under the window "Privacy options" (opens the consent choices),
+    /// visible only when the consent SDK says it is required.
     /// </summary>
     public sealed class SettingsScreen : UiScreen
     {
@@ -19,6 +20,7 @@ namespace ResolverMaster.Core.UI.Screens
         AppServices _ctx;
         readonly (Language lang, Button button, TextMeshProUGUI label)[] _languages = new (Language, Button, TextMeshProUGUI)[LanguageCodes.All.Length];
         Action _refreshToggles;
+        Button _privacy;
 
         public static SettingsScreen Create(AppServices ctx, Transform parent)
         {
@@ -60,6 +62,13 @@ namespace ResolverMaster.Core.UI.Screens
             var vibration = CreateToggleRow(ctx, card.transform, "Vibration", LocKeys.SettingsVibration,
                 () => ctx.Data.settings.vibration, v => ctx.Data.settings.vibration = v, "icon_vibration", "icon_vibration", true);
             screen._refreshToggles = () => { music(); sound(); vibration(); };
+
+            // ---- ErNa-013: privacy options (UMP), below the window ----
+            screen._privacy = ui.SecondaryButton("PrivacyOptions", layout.Body, LocKeys.SettingsPrivacy, out _);
+            UiFactory.Layout((RectTransform)screen._privacy.transform, preferredHeight: s.buttonHeight);
+            screen._privacy.onClick.AddListener(screen.OpenPrivacyOptions);
+            if (ctx.Consent != null) ctx.Consent.Changed += () => { if (screen != null) screen.RefreshPrivacy(); };
+            screen.RefreshPrivacy();
             return screen;
         }
 
@@ -139,10 +148,29 @@ namespace ResolverMaster.Core.UI.Screens
             foreach (var (lang, button, label) in _languages) _ctx.Ui.SetGreen(button, label, lang == _ctx.Loc.Current);
         }
 
+        void OpenPrivacyOptions()
+        {
+            if (_ctx.Consent == null || !_ctx.Consent.PrivacyOptionsRequired) return;
+            UiFactory.SetInteractable(_privacy, false);
+            _ctx.Consent.ShowPrivacyOptions(() =>
+            {
+                if (this == null) return;
+                UiFactory.SetInteractable(_privacy, true);
+                RefreshPrivacy();
+            });
+        }
+
+        /// <summary>The button exists only when the SDK requires it (never in the Editor: no consent service).</summary>
+        void RefreshPrivacy() => _privacy.gameObject.SetActive(ForcePrivacyButton || (_ctx.Consent != null && _ctx.Consent.PrivacyOptionsRequired));
+
+        /// <summary>Previews: the button visible as on a phone in the EEA.</summary>
+        public static bool ForcePrivacyButton;
+
         public override void OnShow()
         {
             RefreshLanguages();
             _refreshToggles?.Invoke();
+            RefreshPrivacy();
         }
     }
 }

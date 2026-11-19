@@ -1,4 +1,13 @@
 <linker>
   <!-- Minigames are discovered by reflection (GameRegistry): keep every module type in the build. -->
   <assembly fullname="ResolverMaster.Games" preserve="all" />
+  <!-- ErNa-013: the Google Mobile Ads plugin picks its Android clients by reflection (same entries as the plugin's own link.xml). -->
+  <assembly fullname="GoogleMobileAds.Android" ignoreIfMissing="1">
+    <namespace fullname="GoogleMobileAds" preserve="all" />
+    <namespace fullname="GoogleMobileAds.Android" preserve="all" />
+  </assembly>
+  <assembly fullname="GoogleMobileAds.Ump.Android" ignoreIfMissing="1">
+    <namespace fullname="GoogleMobileAds" preserve="all" />
+    <namespace fullname="GoogleMobileAds.Ump.Android" preserve="all" />
+  </assembly>
 </linker>

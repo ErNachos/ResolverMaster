@@ -5,6 +5,7 @@ using System.Linq;
 using UnityEditor;
 using UnityEditor.Build;
 using UnityEditor.Build.Reporting;
+using ResolverMaster.Core.Ads;
 using UnityEngine;
 using Debug = UnityEngine.Debug;
 
@@ -38,8 +39,14 @@ namespace ResolverMaster.Editor
 
         public static void BuildApkBatch() => EditorApplication.Exit(BuildSigned(appBundle: false) ? 0 : 6);
 
-        /// <summary>ErNa-010: scripting symbols added to one build only: the test APK gets the test ads, the release AAB nothing.</summary>
-        public static string[] ExtraDefines(bool appBundle) => appBundle ? Array.Empty<string>() : new[] { ResolverMaster.Core.Ads.RewardedAds.TestBuildDefine };
+        /// <summary>
+        /// ErNa-010/013: scripting symbols added to one build only: the test APK is a test build (AdMob test ids), the AAB the only
+        /// release build (real ids).
+        /// </summary>
+        public static string[] ExtraDefines(bool appBundle) => new[] { appBundle ? RewardedAds.ReleaseBuildDefine : RewardedAds.TestBuildDefine };
+
+        /// <summary>ErNa-013: the kind of build each menu makes (decides the AdMob ids).</summary>
+        public static BuildKind KindOf(bool appBundle) => appBundle ? BuildKind.Release : BuildKind.TestApk;
 
         /// <summary>Names of the signing variables that are not set (empty = all present).</summary>
         public static string[] MissingSigningVariables() =>
@@ -85,6 +92,7 @@ namespace ResolverMaster.Editor
                 PlayerSettings.Android.keystorePass = Environment.GetEnvironmentVariable(EnvKeystorePass);
                 PlayerSettings.Android.keyaliasName = Environment.GetEnvironmentVariable(EnvKeyAlias);
                 PlayerSettings.Android.keyaliasPass = Environment.GetEnvironmentVariable(EnvKeyPass);
+                AdMobBuild.BeginReleaseBuild(KindOf(appBundle));   // ErNa-013: real AdMob ids only in the AAB
 
                 var report = BuildPipeline.BuildPlayer(new BuildPlayerOptions
                 {
@@ -93,7 +101,7 @@ namespace ResolverMaster.Editor
                     targetGroup = BuildTargetGroup.Android,
                     locationPathName = path,
                     options = BuildOptions.None,
-                    extraScriptingDefines = ExtraDefines(appBundle),   // ErNa-010: the test APK shows the test ad, the AAB no ad
+                    extraScriptingDefines = ExtraDefines(appBundle),   // ErNa-013: test APK = AdMob test ids, AAB = real ids
                 });
                 bool ok = report.summary.result == BuildResult.Succeeded;
                 long bytes = ok && File.Exists(path) ? new FileInfo(path).Length : 0;
@@ -103,6 +111,7 @@ namespace ResolverMaster.Editor
             }
             finally
             {
+                AdMobBuild.EndBuild();
                 PlayerSettings.Android.keystorePass = "";
                 PlayerSettings.Android.keyaliasPass = "";
                 PlayerSettings.Android.useCustomKeystore = false;

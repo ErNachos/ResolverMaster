@@ -66,6 +66,10 @@ namespace ResolverMaster.Editor
             // ErNa-011: app icons (every Android slot), no Unity splash screen, Android 12+ splash colour
             AppIconSetup.Apply(log);
 
+            // ErNa-013: AdMob plugin settings (test app id at rest; the build picks the id of its kind) and the AD_ID library
+            AdMobBuild.EnsureSettings();
+            log.Append("\n  AdMob: plugin settings with the test app id, AD_ID library");
+
             if (EditorUserBuildSettings.activeBuildTarget != BuildTarget.Android && !Application.isBatchMode)
                 log.Append("\n  (active build target is not Android: switch it from Build Profiles when you want)");
 

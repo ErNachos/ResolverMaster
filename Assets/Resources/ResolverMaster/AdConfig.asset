@@ -12,5 +12,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: da8c464acde3bfa47b8a97df16b02271, type: 3}
   m_Name: AdConfig
   m_EditorClassIdentifier: 
-  testAdsInTestBuilds: 1
   testAdSeconds: 1.5
+  editorAdNotWatched: 0
+  adWatchdogSeconds: 8
+  loadRetrySeconds: 30
+  notAvailableSeconds: 2.5
+  consentDebugEea: 1
+  consentTestDeviceIds: []
