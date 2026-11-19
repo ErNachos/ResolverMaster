@@ -79,6 +79,7 @@ namespace ResolverMaster.Editor
             }
 
             bool prevBundle = EditorUserBuildSettings.buildAppBundle, prevDev = EditorUserBuildSettings.development;
+            bool prevExport = EditorUserBuildSettings.exportAsGoogleAndroidProject;
             string ext = appBundle ? ".aab" : ".apk";
             string path = $"{OutDir}/ResolverMaster-{PlayerSettings.bundleVersion}-{PlayerSettings.Android.bundleVersionCode}{(appBundle ? "" : "-test")}{ext}";
             Directory.CreateDirectory(OutDir);
@@ -87,6 +88,7 @@ namespace ResolverMaster.Editor
             {
                 EditorUserBuildSettings.buildAppBundle = appBundle;
                 EditorUserBuildSettings.development = false;
+                EditorUserBuildSettings.exportAsGoogleAndroidProject = false;   // ErNa-014: always a real .aab/.apk, never a Gradle folder
                 PlayerSettings.Android.useCustomKeystore = true;
                 PlayerSettings.Android.keystoreName = keystore;
                 PlayerSettings.Android.keystorePass = Environment.GetEnvironmentVariable(EnvKeystorePass);
@@ -118,6 +120,7 @@ namespace ResolverMaster.Editor
                 RestoreSigningNames("", "");
                 EditorUserBuildSettings.buildAppBundle = prevBundle;
                 EditorUserBuildSettings.development = prevDev;
+                EditorUserBuildSettings.exportAsGoogleAndroidProject = prevExport;
                 AssetDatabase.SaveAssets();
             }
         }

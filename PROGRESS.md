@@ -528,3 +528,20 @@
 
 **Problemi aperti / prossimi passi**
 - Il build ha bisogno di rete (Gradle scarica le librerie di Google). Account AdMob: collegare l'app al Play Store e preparare il messaggio GDPR nella console AdMob (senza, il modulo UMP non compare).
+
+## Update ErNa-014 — Manifest: funzionalità hardware facoltative (2026-11-19)
+
+**Fatto**
+- **Nota**: l'Editor di Unity era aperto sul progetto: test, validatore e build in batchmode sulla copia `Logs/BatchCopy/`; nel progetto riportati i build in `Builds/Release/` (i `.meta` nuovi sono quelli creati dall'Editor aperto).
+- **Problema**: Play Console bloccava la revisione perché Google Play **deduce** `android.hardware.screen.portrait` come obbligatoria dall'activity solo verticale (`screenOrientation="1"`): nel manifest non c'era alcuna dichiarazione esplicita.
+- **Funzionalità nel manifest prima dell'Update**: `glEsVersion 0x00030000` (obbligatoria), `vulkan.version`, `touchscreen`, `touchscreen.multitouch`, `touchscreen.multitouch.distinct` (già facoltative, da Unity), più `screen.portrait` dedotta come obbligatoria. Nessuna `uses-feature` dalle librerie di Google (annunci, UMP).
+- **Soluzione**: `AndroidFeaturesWriter` (post-elaborazione del progetto Gradle, quindi a ogni build) scrive nel manifest del modulo `launcher` `screen.portrait` e le tre touchscreen con `required="false"` e `tools:node="replace"`; `AndroidFeaturesGradleCheck` ferma il build se resta una `uses-feature` obbligatoria diversa da OpenGL ES 3.0. Touchscreen facoltativo: l'app si usa anche con mouse/puntatore (PC, XR). Resta obbligatoria solo OpenGL ES 3.0 (essenziale). Orientamento invariato: solo verticale.
+- `ReleaseBuild`: disattiva sempre *Export Project* durante il build (nella copia era rimasto attivo e il primo AAB è uscito come cartella Gradle).
+- **Validatore**: nuovo controllo `AndroidFeatures`. **Test**: 3 nuovi (`AndroidFeaturesTests`: patch del manifest, patch idempotente, controllo del manifest finale).
+
+**Risultati**
+- Compilazione: 0 errori, 0 warning. Test: 73/73 verdi. Validatore: OK (18 controlli, 0 errori, 0 warning), anche sui manifest uniti del build.
+- Build: AAB e APK di test 1.0.0 (2) firmati (version code già impostato dall'utente, non cambiato). Manifest verificati: AAB con bundletool 1.17.2 (`screen.portrait` `required="false"`, touchscreen facoltative, `screenOrientation="1"`), APK con aapt2 (`uses-feature-not-required: android.hardware.screen.portrait`, nessuna funzionalità dedotta). Ogni build riporta ancora 1 warning di Unity sull'xcframework iOS del plugin (noto da ErNa-013).
+
+**Da provare a mano**
+- Caricare l'AAB 1.0.0 (2) su Play Console e controllare in *Esplora app bundle* che i dispositivi supportati includano tablet e Chromebook/PC.
