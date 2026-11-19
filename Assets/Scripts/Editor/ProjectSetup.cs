@@ -63,6 +63,9 @@ namespace ResolverMaster.Editor
             PlayerSettings.Android.keyaliasPass = "";
             ReleaseBuild.RestoreSigningNames("", "");
 
+            // ErNa-011: app icons (every Android slot), no Unity splash screen, Android 12+ splash colour
+            AppIconSetup.Apply(log);
+
             if (EditorUserBuildSettings.activeBuildTarget != BuildTarget.Android && !Application.isBatchMode)
                 log.Append("\n  (active build target is not Android: switch it from Build Profiles when you want)");
 

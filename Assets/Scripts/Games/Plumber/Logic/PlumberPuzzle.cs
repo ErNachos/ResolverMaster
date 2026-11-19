@@ -24,9 +24,6 @@ namespace ResolverMaster.Games.Plumber
         /// <summary>Cells the player cannot turn (Core, ErNa-006): the locked pieces of the level, and (ErNa-007) the pieces fixed by a hint.</summary>
         public CellLockSet Locks { get; } = new CellLockSet();
 
-        /// <summary>A hint was used since the level was loaded (at most 2 stars).</summary>
-        public bool HintUsed { get; private set; }
-
         /// <summary>
         /// The next hint (ErNa-007): the solver looks for the fewest taps from the current state (locked and fixed pieces stay as they
         /// are); among the pieces it still has to turn, the one the water reaches first (the closest to a source). False when every
@@ -60,13 +57,17 @@ namespace ResolverMaster.Games.Plumber
             return cell >= 0;
         }
 
-        /// <summary>Turns the hinted piece into place and fixes it (not a move, cannot be undone). False if there is no hint.</summary>
+        /// <summary>
+        /// Turns the hinted piece into place and fixes it (cannot be undone). ErNa-011: it counts as many moves as the 90-degree turns it
+        /// made (1 to 3), and those stay counted after a restart, like the fixed piece. False if there is no hint (or no room under the
+        /// move limit).
+        /// </summary>
         public bool ApplyHint(out int cell, out int taps)
         {
-            if (!TryFindHint(out cell, out taps)) return false;
+            if (!TryFindHint(out cell, out taps) || !Fits(taps)) return false;
             Grid.Rotate(cell, taps);
             Pin(cell, Grid.Pieces[cell].Rotation);
-            HintUsed = true;
+            CountHintMoves(taps);
             _version++;
             return true;
         }
@@ -110,11 +111,7 @@ namespace ResolverMaster.Games.Plumber
             _version++;
         }
 
-        protected override void OnFreshLoad()
-        {
-            _pins.Clear();
-            HintUsed = false;
-        }
+        protected override void OnFreshLoad() => _pins.Clear();
 
         protected override bool TryApply(int cell)
         {

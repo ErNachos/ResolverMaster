@@ -103,26 +103,27 @@ namespace ResolverMaster.Tests
         }
 
         [Test]
-        public void Hint_EachUseIsOneMoveCloser_NotCounted_TwoStarsAtMost()
+        public void Hint_EachUseIsOneMoveCloser_CountsOneMove_TwoStarsAtMost()
         {
             var p = Load("4x6 R1.4vU C1.2h C3.1v", 3);
             Assert.AreEqual(3, p.MovesLeft);
             Assert.IsTrue(p.ApplyMove(new TrafficMove(1, 1, 0)), "a useless move: the car left");
             Assert.AreEqual(3, p.MovesLeft);
-            int left = p.MovesLeft;
+            int left = p.MovesLeft, made = p.MovesMade;
             while (!p.IsSolved)
             {
                 Assert.IsTrue(p.TryFindHint(out var first) && p.TryFindHint(out var again) && first.Equals(again), "always the same move");
                 Assert.IsTrue(p.ApplyHint(out _));
                 Assert.AreEqual(left - 1, p.IsSolved ? 0 : p.MovesLeft, "one move closer");
                 left--;
-                Assert.AreEqual(1, p.MovesMade, "the light bulb's moves do not count");
+                Assert.AreEqual(++made, p.MovesMade, "ErNa-011: each light bulb move counts 1");
             }
             Assert.IsTrue(p.HintUsed);
             Assert.IsFalse(p.TryFindHint(out _), "nothing to do on a solved level");
             var rules = new StarRules();
-            Assert.AreEqual(2, StarRating.Compute(p.MovesMade, 3, rules, p.HintUsed), "fewer moves than the minimum, but a hint: 2 stars");
-            Assert.IsTrue(p.Undo(out _) && p.MovesMade == 1, "a hint move can be undone, the counter stays");
+            Assert.AreEqual(4, p.MovesMade);
+            Assert.AreEqual(2, StarRating.Compute(p.MovesMade, 3, rules, p.HintUsed), "a hint: 2 stars at most");
+            Assert.IsTrue(p.Undo(out _) && p.MovesMade == 3, "a hint move can be undone, its move goes away");
             p.Restart();
             Assert.IsTrue(p.HintUsed, "a restart keeps the hint used");
         }

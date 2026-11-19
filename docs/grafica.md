@@ -23,6 +23,7 @@
 | `Assets/Art/Plumber/Sources/`, `Targets/` | fonti (`fonte_N` + `fonte_N_mask`) e arrivi (`arrivo_N`) | `Tools/Art/make_plumber_art.py` |
 | `Assets/Art/TrafficJam/` | auto obiettivo (`Target_<Red|Blue>_<Worried|Happy>`), auto (`Car_*`), camion (`Truck_*`), ostacoli (`Obstacle_*`), tutti col muso in alto | `Tools/Art/make_trafficjam_art.py` |
 | `Assets/Art/Penguin/` | Pino (PG-002): pinguini di fronte `Penguin_<Orange|Purple>_Front_<Normal|Happy|Scared|Dizzy>` (una tela comune, piedi sul bordo basso), dall'alto `Penguin_<colore>_Top_<Idle|Slide>` (una tela, corpo al centro, testa in alto), igloo `Igloo_<colore>_<Closed|Open>` (una tela, base in basso), `Fish`, `IceBlock`, `Rock`, tessere `Tile_<Ice|Snow|Water|SunkenBlock|SnowWall>`; importati **senza compressione** (`ArtImportRules.CrispIllustrationDirs`) | `Tools/Art/make_penguin_art.py` |
+| `Assets/Art/AppIcon/` | icone Android (ErNa-011): `AppIcon_Foreground_N` / `AppIcon_Background_N` (adattive, 81–432 px), `AppIcon_Round_N` e `AppIcon_Legacy_N` (36–192 px), una per densità; importate senza compressione né ridimensionamento; da `ArtSource/Icon/Icon.png`, che dà anche `ArtSource/Icon/Icon_PlayStore_512.png` | `Tools/Art/make_app_icon.py` |
 | `Assets/Art/Fonts/` | Fredoka TTF + font asset SDF e materiale con contorno | `UiArtSetup` (Setup > Apply All) |
 | `Assets/Art/Shaders/` | shader e materiale dei pulsanti disattivati | a mano / `UiArtSetup` |
 | `Assets/TextMesh Pro/` | TMP Essential Resources | importate una volta (vedi sotto) |
@@ -70,6 +71,7 @@ Dopo lo script: *Resolver Master > Setup > Apply All* (o `ConfigAssets.ResetVisu
 - **Fonte o arrivo**: originale in `ArtSource/Plumber/`, `python Tools/Art/make_plumber_art.py`, *UI Kit > Rebuild Sprite Libraries*; se cambia il numero di disegni, `PlumberConfig.artVariants`.
 - **Veicolo o ostacolo di Traffic jam**: originale in `ArtSource/TJ/` (stesso ordine), `python Tools/Art/make_trafficjam_art.py`, *Rebuild Sprite Libraries*; un disegno nuovo: un nome in `NAMES` dello script e in `TrafficLook`.
 - **Scheda della Home**: originale in `ArtSource/Cards/`, una riga in `CARDS` di `make_ui_art.py`, lo script, *Rebuild Sprite Libraries*; il gioco dichiara `GameInfo.CardImage` e `CardColor` (non blu né arancione).
+- **Icona dell'app** (ErNa-011): sostituisci `ArtSource/Icon/Icon.png` (disegno su bianco), `python Tools/Art/make_app_icon.py`, poi *Setup > Apply Project Settings* (imposta tutte le icone Android e il colore dello splash). Lo script toglie il bianco fuori dal disegno (anche le sacche bianche fuori dal disco) senza alone, prende il blu notte dal bordo del disco e mette il disegno, carte comprese, entro la zona sicura dell'icona adattiva (0,285 del lato contro 0,306).
 - Poi sempre *Validate* e *Make Previews*.
 
 ## Cambiare lo stile

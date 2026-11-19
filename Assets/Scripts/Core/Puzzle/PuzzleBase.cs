@@ -20,32 +20,48 @@ namespace ResolverMaster.Core.Puzzle
     }
 
     /// <summary>
-    /// Shared bookkeeping of <see cref="IPuzzle{TLevel,TMove}"/>: undo stack, moves counter (= moves on the stack), solved flag.
+    /// Shared bookkeeping of <see cref="IPuzzle{TLevel,TMove}"/>: undo stack, moves counter (= what the moves on the stack are worth,
+    /// light bulb included, ErNa-011), solved flag, hint used.
     /// A game only implements how to load, apply, revert and check its own rules.
     /// </summary>
     public abstract class PuzzleBase<TLevel, TMove> : IPuzzle<TLevel, TMove>
     {
         readonly UndoStack<TMove> _undo = new UndoStack<TMove>();
-        /// <summary>TJ-001: one flag per move on the undo stack, true = a free move (made by a hint: it does not count).</summary>
-        readonly UndoStack<bool> _free = new UndoStack<bool>();
-        int _freeCount;
+        /// <summary>ErNa-011: what each move on the undo stack counts (1 for a player move, the hint's value for a light bulb move).</summary>
+        readonly UndoStack<int> _cost = new UndoStack<int>();
+        int _stackMoves;
+        /// <summary>ErNa-011: moves of hints that are not on the undo stack (e.g. a pipe fixed in place); they survive restarts.</summary>
+        int _keptHintMoves;
 
         public TLevel Level { get; private set; }
         public bool IsLoaded { get; private set; }
-        /// <summary>Moves on the undo stack, without the free ones (TJ-001: a move made by the light bulb does not count).</summary>
-        public int MovesMade => _undo.Count - _freeCount;
+
+        /// <summary>
+        /// ErNa-011: every move counts, the light bulb's too (as many as the hint really did). Once solved with a hint the total is
+        /// never below the minimum (e.g. a fixed pipe kept after a restart).
+        /// </summary>
+        public int MovesMade => IsSolved && HintUsed ? System.Math.Max(CountedMoves, MinMoves) : CountedMoves;
+        /// <summary>The moves counted so far, without the floor of <see cref="MovesMade"/>.</summary>
+        public int CountedMoves => _stackMoves + _keptHintMoves;
         public abstract int MinMoves { get; }
         public bool IsSolved { get; private set; }
         public bool CanUndo => _undo.Count > 0;
+        /// <summary>The light bulb was used since the level was loaded (at most <see cref="StarRules.maxStarsWithHint"/> stars; survives restarts).</summary>
+        public bool HintUsed { get; private set; }
 
         /// <summary>ErNa-007, Challenge: moves are refused once this many are made (0 = no limit). Undo still works.</summary>
         public int MoveLimit { get; set; }
+
+        /// <summary>A move worth <paramref name="moves"/> still fits under <see cref="MoveLimit"/>.</summary>
+        public bool Fits(int moves) => MoveLimit <= 0 || CountedMoves + moves <= MoveLimit;
 
         public void Load(TLevel level)
         {
             Level = level;
             IsLoaded = true;
             ClearUndo();
+            _keptHintMoves = 0;
+            HintUsed = false;
             OnFreshLoad();
             OnLoad(level);
             IsSolved = CheckSolved();
@@ -54,41 +70,56 @@ namespace ResolverMaster.Core.Puzzle
         /// <summary>Moves are refused once the puzzle is solved (the win panel takes over).</summary>
         public bool ApplyMove(TMove move)
         {
-            if (!IsLoaded || IsSolved || (MoveLimit > 0 && MovesMade >= MoveLimit) || !TryApply(move)) return false;
-            _undo.Push(move);
-            _free.Push(false);
-            IsSolved = CheckSolved();
+            if (!IsLoaded || IsSolved || !Fits(1) || !TryApply(move)) return false;
+            Push(move, 1);
             return true;
         }
 
         /// <summary>
-        /// TJ-001: a move that does not count (e.g. made by the light bulb): it goes on the undo stack, so undo stays consistent, but not
-        /// in <see cref="MovesMade"/>; the move limit does not apply.
+        /// ErNa-011: a move made by the light bulb. It counts like the player's moves (<paramref name="moves"/> of them, at least 1), goes
+        /// on the undo stack (undoing it takes its moves back) and respects the move limit. Marks the hint used.
         /// </summary>
-        protected bool ApplyFreeMove(TMove move)
+        protected bool ApplyHintMove(TMove move, int moves = 1)
         {
-            if (!IsLoaded || IsSolved || !TryApply(move)) return false;
-            _undo.Push(move);
-            _free.Push(true);
-            _freeCount++;
-            IsSolved = CheckSolved();
+            moves = System.Math.Max(1, moves);
+            if (!IsLoaded || IsSolved || !Fits(moves) || !TryApply(move)) return false;
+            HintUsed = true;
+            Push(move, moves);
             return true;
         }
 
-        /// <summary>The move on top of the undo stack is a free one (<see cref="ApplyFreeMove"/>).</summary>
-        public bool LastMoveIsFree => _free.TryPeek(out bool f) && f;
+        /// <summary>
+        /// ErNa-011: a light bulb change that is not on the undo stack (e.g. a pipe turned into place and fixed): its
+        /// <paramref name="moves"/> count and stay counted after a restart (the change stays too). Marks the hint used.
+        /// </summary>
+        protected void CountHintMoves(int moves)
+        {
+            _keptHintMoves += System.Math.Max(0, moves);
+            HintUsed = true;
+        }
+
+        /// <summary>A light bulb that only undoes (PG-001: back to a position with a solution): the undos work as usual.</summary>
+        protected void MarkHintUsed() => HintUsed = true;
+
+        void Push(TMove move, int moves)
+        {
+            _undo.Push(move);
+            _cost.Push(moves);
+            _stackMoves += moves;
+            IsSolved = CheckSolved();
+        }
 
         void ClearUndo()
         {
             _undo.Clear();
-            _free.Clear();
-            _freeCount = 0;
+            _cost.Clear();
+            _stackMoves = 0;
         }
 
         public bool Undo(out TMove move)
         {
             if (!_undo.TryPop(out move)) return false;
-            if (_free.TryPop(out bool free) && free) _freeCount--;
+            if (_cost.TryPop(out int moves)) _stackMoves -= moves;
             Revert(move);
             IsSolved = CheckSolved();
             return true;
@@ -120,7 +151,7 @@ namespace ResolverMaster.Core.Puzzle
         /// <summary>Resets the state to the level start (also used by <see cref="Restart"/>).</summary>
         protected abstract void OnLoad(TLevel level);
 
-        /// <summary>Only on <see cref="Load"/>, not on <see cref="Restart"/>: forget what must survive restarts (e.g. hints, ErNa-007).</summary>
+        /// <summary>Only on <see cref="Load"/>, not on <see cref="Restart"/>: forget what must survive restarts (e.g. pieces fixed by hints).</summary>
         protected virtual void OnFreshLoad() { }
         protected abstract bool TryApply(TMove move);
         protected abstract void Revert(TMove move);

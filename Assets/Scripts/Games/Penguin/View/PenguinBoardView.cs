@@ -431,7 +431,7 @@ namespace ResolverMaster.Games.Penguin.View
 
         /// <summary>
         /// The light bulb (after the ad): stuck = back to the last state with a solution at once; otherwise an arrow on the penguins,
-        /// then the next right swipe (a free move).
+        /// then the next right swipe (it counts 1 move, ErNa-011).
         /// </summary>
         public override void ApplyHint()
         {

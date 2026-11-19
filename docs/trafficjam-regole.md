@@ -26,7 +26,7 @@
   Gli scorrimenti si possono sempre disfare; un'uscita si disfa rimettendo l'auto su una casella della sua linea con la strada libera.
 - Tetto: `TrafficJamConfig.maxStates` (2 milioni) posizioni; oltre, il livello è scartato.
 - Lampadina: dalla posizione attuale la prima mossa (ordine fisso: veicoli in ordine, posizioni crescenti, uscita per ultima) che porta a
-  "una mossa in meno". È una mossa gratuita (non conta, si può annullare).
+  "una mossa in meno". ErNa-011: conta 1 mossa come quelle del giocatore e si può annullare.
 
 ## Generatore (deterministico, `SeededRandom` del Core)
 1. Disposizione casuale del gradino: auto obiettivo sulle loro linee, poi barriere, camion e auto in posti liberi.

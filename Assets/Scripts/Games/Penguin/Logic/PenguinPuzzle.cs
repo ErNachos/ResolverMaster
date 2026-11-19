@@ -7,7 +7,7 @@ namespace ResolverMaster.Games.Penguin
     public enum PenguinHint
     {
         None,
-        /// <summary>The next right swipe was made (a free move: it does not count).</summary>
+        /// <summary>The next right swipe was made (ErNa-011: it counts 1 move).</summary>
         Moved,
         /// <summary>The player was stuck: the moves were undone back to the last state with a solution.</summary>
         Undone,
@@ -32,8 +32,6 @@ namespace ResolverMaster.Games.Penguin
         /// <summary>The last swipe made a penguin fall: no more moves until restart or undo.</summary>
         public bool Fell { get; private set; }
         public override int MinMoves => Level?.minMoves ?? 0;
-        /// <summary>The light bulb was used since the level was loaded (at most 2 stars).</summary>
-        public bool HintUsed { get; private set; }
         /// <summary>Cap of the table of states.</summary>
         public int MaxStates { get; set; } = PenguinSpace.DefaultMaxStates;
 
@@ -69,7 +67,7 @@ namespace ResolverMaster.Games.Penguin
 
         /// <summary>
         /// The light bulb (after the rewarded ad): when stuck, undoes back to the last state with a solution (no undo of the Challenge is
-        /// spent: the light bulb is Story only); otherwise makes the next right swipe as a free move. Either way the level gives at most 2 stars.
+        /// spent: the light bulb is Story only); otherwise makes the next right swipe, which counts 1 move (ErNa-011). Either way the level gives at most 2 stars.
         /// </summary>
         public PenguinHint ApplyHint(out PenguinMove move, PenguinTrace trace = null)
         {
@@ -80,15 +78,12 @@ namespace ResolverMaster.Games.Penguin
                 bool any = false;
                 while (IsStuck && Undo(out _)) any = true;
                 if (!any) return PenguinHint.None;
-                HintUsed = true;
+                MarkHintUsed();
                 return PenguinHint.Undone;
             }
-            if (!Space.TryNextMove(State, out int dir) || !TryPlan(dir, out move, trace) || !ApplyFreeMove(move)) return PenguinHint.None;
-            HintUsed = true;
+            if (!Space.TryNextMove(State, out int dir) || !TryPlan(dir, out move, trace) || !ApplyHintMove(move, 1)) return PenguinHint.None;
             return PenguinHint.Moved;
         }
-
-        protected override void OnFreshLoad() => HintUsed = false;
 
         protected override void OnLoad(PenguinLevel level)
         {

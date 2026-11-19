@@ -449,3 +449,24 @@
 
 **Problemi aperti / prossimi passi**
 - Ghiaccio e neve hanno colori vicini (differenza affidata alla trama). Il pinguino felice copre gran parte del suo igloo. Icone dei capitoli ancora segnaposto.
+
+## Update ErNa-011 — Lampadina come mossa, icona dell'app, niente intro di Unity (2026-11-19)
+
+**Fatto**
+- **Nota**: l'Editor di Unity era aperto: test, validatore, setup, anteprime ed esportazione Gradle in batchmode sulla copia `Logs/BatchCopy/`; nel progetto riportati i `.meta` nuovi e `ProjectSettings.asset`.
+- **A — La lampadina conta come mossa (Core)**: `PuzzleBase` conta ogni mossa per quanto vale (pila dei costi al posto delle mosse gratuite); `ApplyHintMove(mossa, n)` (sulla pila, annullabile, rispetta `MoveLimit`), `CountHintMoves(n)` (aiuti fuori dalla pila: restano contati dopo Ricomincia, come il pezzo fissato), `MarkHintUsed()`; `HintUsed` ora è del Core. A livello risolto con la lampadina `MovesMade` non scende mai sotto il minimo. Idraulico: le rotazioni di 90° fatte (1–3); Traffic jam e Pino: 1; Pino bloccato: annullamenti normali (il contatore scende). Restano: al massimo 2 stelle, lampadina nascosta in Challenge e sfida del giorno. "Mosse finite" funziona anche se l'ultima mossa è della lampadina (un aiuto non supera mai il massimo). Nessun testo IT/EN diceva che la lampadina non conta: testi invariati; aggiornati i documenti delle regole.
+- **B — Icona dell'app**: `Tools/Art/make_app_icon.py` da `ArtSource/Icon/Icon.png`: bianco esterno trasparente (anche le sacche bianche fuori dal disco) con bordo senza alone (colore del disegno vicino, alfa parziale); disco trovato con un cerchio sui bordi (centro 511,5/511,4, raggio 457); blu notte del bordo `#021D64`. Primo piano adattivo con tutto il disegno entro 0,285 del lato (zona sicura 0,306), sfondo a tinta unita, icone legacy (quadrate) e round (disco) sul blu notte, una per densità (adattive 81–432 px, legacy/round 36–192 px) in `Assets/Art/AppIcon/` (import senza compressione né ridimensionamento). `ArtSource/Icon/Icon_PlayStore_512.png`: 512x512 RGBA opaca, 277 KB. `AppIconSetup` (dentro *Apply Project Settings*) imposta i 18 slot Android (adaptive, round, legacy).
+- **C — Niente intro di Unity**: splash e logo di Unity disattivati. Splash di sistema di Android 12+: il tema di Unity mette icona e sfondo trasparenti; `AndroidSplashThemeWriter` scrive nel modulo `launcher` un `values-v31` che ridefinisce i due temi base con l'icona dell'app (`@mipmap/app_icon`) sul blu notte. Verificato con un'esportazione Gradle: il tema unito è il nostro e `:launcher:processReleaseResources` riesce.
+- **Validatore**: nuovo controllo `AppIcon` (ogni slot con il suo file alla misura giusta, nessun angolo bianco, primo piano nella zona sicura, icona del Play Store 512x512 opaca sotto 1 MB, splash e logo di Unity spenti).
+- **Test**: 4 nuovi (`HintMoveTests`: per Idraulico, Traffic jam e Pino livelli della Storia risolti con la lampadina più volte hanno mosse ≥ minimo e al massimo 2 stelle, anche dopo un Ricomincia con pezzi fissati; "Mosse finite" con l'ultima mossa della lampadina) + 3 adattati alla nuova regola.
+
+**Risultati**
+- Compilazione: 0 errori, 0 warning. Test: 65/65 verdi. Validatore: OK (15 controlli, 0 errori, 0 warning).
+- Anteprime: 516 schermate, nessun problema misurato (nessuna schermata cambia layout; la lampadina delle anteprime ora fa salire il contatore). Esportazione Gradle + `:launcher:processReleaseResources`: riuscite.
+
+**Da provare a mano sul telefono**
+- Icona nel launcher (forme diverse: cerchio, squircle), icona tonda dei launcher vecchi, avvio senza logo di Unity, splash di Android 12+ con l'icona sul blu notte.
+- Lampadina nelle tre storie: il contatore sale (Idraulico di 1–3), "Ricomincia" dell'Idraulico con pezzi fissati, Pino bloccato che torna indietro.
+
+**Problemi aperti / prossimi passi**
+- L'Editor era aperto: le Player Settings in memoria possono sovrascrivere `ProjectSettings.asset` se salvate; dopo il pull riaprire il progetto (o rilanciare *Setup > Apply Project Settings*).

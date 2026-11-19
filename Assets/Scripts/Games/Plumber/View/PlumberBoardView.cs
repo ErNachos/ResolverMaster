@@ -317,7 +317,7 @@ namespace ResolverMaster.Games.Plumber.View
             RaiseChanged();
         }
 
-        /// <summary>ErNa-007: the hinted piece turns into place (animated, not a move) and gets the glowing outline.</summary>
+        /// <summary>ErNa-007: the hinted piece turns into place (animated; ErNa-011: it counts its turns) and gets the glowing outline.</summary>
         public override void ApplyHint()
         {
             if (_phase != Phase.Playing || !_puzzle.ApplyHint(out int cell, out int taps)) return;

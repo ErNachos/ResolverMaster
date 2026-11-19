@@ -131,7 +131,7 @@ namespace ResolverMaster.Tests
         }
 
         [Test]
-        public void Stuck_DetectedExactly_LightBulbUndoesOutOfIt_ThenMakesTheNextMove_NotCounted_TwoStars()
+        public void Stuck_DetectedExactly_LightBulbUndoesOutOfIt_ThenMakesTheNextMove_Counted_TwoStars()
         {
             // 3x3: rock (1,1), snow (2,1), igloo (0,2), rock (2,2); water on the border above (2,0) and right of (2,1)
             var p = Load("3x3:P../.#s/I.#:mmwmwmmmmmmm", 1);
@@ -150,11 +150,12 @@ namespace ResolverMaster.Tests
             Assert.AreEqual(Cell(p, 2, 0), Pos(p));
             Assert.IsFalse(p.IsStuck);
             Assert.AreEqual(1, p.MovesMade);
-            // then the next right move, which does not count
+            // then the next right move, which counts 1 (ErNa-011)
             Assert.AreEqual(PenguinHint.Moved, p.ApplyHint(out var hinted));
             Assert.AreEqual(Left, hinted.Dir);
-            Assert.AreEqual(1, p.MovesMade, "the light bulb's move does not count");
+            Assert.AreEqual(2, p.MovesMade, "the light bulb's move counts");
             Assert.IsTrue(p.Swipe(Down) && p.IsSolved);
+            Assert.AreEqual(3, p.MovesMade);
             Assert.IsTrue(p.HintUsed);
             Assert.AreEqual(2, StarRating.Compute(p.MovesMade, 1, new StarRules(), p.HintUsed), "at most 2 stars with the light bulb");
 

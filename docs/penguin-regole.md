@@ -23,7 +23,7 @@ Nome tecnico nel codice: `Penguin` (`Assets/Scripts/Games/Penguin/`). Il nome mo
 Dopo ogni mossa la tabella di tutti gli stati raggiungibili (`PenguinSpace`, calcolata una volta per livello) dice se c'è ancora una soluzione. Se non c'è: **Sei bloccato** (Storia: Annulla / Ricomincia; Challenge: Annulla / Termina, sconfitta subito se non restano annullamenti). Il pannello è del Core (`PuzzleBoard.IsStuck`).
 
 ## Lampadina (solo Storia)
-Dopo l'annuncio: se c'è una soluzione, freccia sui pinguini e la prossima mossa giusta (non conta); se si è bloccati, annulla fino all'ultimo stato con una soluzione. Al massimo 2 stelle.
+Dopo l'annuncio: se c'è una soluzione, freccia sui pinguini e la prossima mossa giusta (ErNa-011: conta 1 mossa, come quelle del giocatore); se si è bloccati, annulla fino all'ultimo stato con una soluzione, come gli annullamenti normali (il contatore scende). Al massimo 2 stelle.
 
 ## Risolutore e generatore
 - Ricerca in ampiezza su tutti gli stati (posizioni dei pinguini, pesci presi, blocchi, buchi riempiti, pinguini entrati, impacchettati in 64 bit), poi distanze esatte dalla fine all'indietro. Tetto `maxStates` in `PenguinConfig`.

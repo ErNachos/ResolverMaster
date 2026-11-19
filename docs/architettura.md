@@ -96,7 +96,7 @@ Release/Site, Release/PlayStore  materiale di pubblicazione
 - **Cosa resta in Pino (PG-001)**: regole (`PenguinLayout`, `PenguinSimulator`, `PenguinPuzzle`), risolutore (`PenguinSpace`), generatore, gradini, capitoli in `PenguinConfig`, grafica (`PenguinBoardView`, `PenguinArt`, `PenguinLook`/`PenguinMood`, `PenguinSprites`). Regole: `docs/penguin-regole.md`.
 - **Spostato/aggiunto nel Core con PG-001**: "Sei bloccato" (`PuzzleBoard.IsStuck`, `ChallengeRunState.StuckIsLost`, pannelli nella `GameScreen`), `PuzzleBoard.ShowsMessages`, `SwipeGesture` e `SwipeArea`, `SdfArt` (disegno dal codice, prima in Traffic jam), terreno `Snow` e sfondi `Icefield`/`Aurora`, temi Lago ghiacciato, Banchisa, Bufera, Disgelo, Ghiacciaio, Polo, Aurora.
 - **Spostato nel Core con TJ-001**: costruzione dei capitoli dai livelli (`StoryBook.Build`), finestra della griglia (`BoardFrame`),
-  mosse gratuite della lampadina (`PuzzleBase.ApplyFreeMove`), "Mosse finite" della Challenge (`PuzzleBoard.LosesWhenOutOfMoves`,
+  mosse della lampadina (`PuzzleBase.ApplyHintMove`; ErNa-011: contano come mosse, `CountHintMoves` per i pezzi fissati), "Mosse finite" della Challenge (`PuzzleBoard.LosesWhenOutOfMoves`,
   `ChallengeRunState.IsOutOfMoves`, pannello nella `GameScreen`), indice degli stati (`StateIndex`), temi Parcheggio, Mercato, Aeroporto,
   Incrocio, Ora di punta.
 - **Contratto gioco ↔ Core**:

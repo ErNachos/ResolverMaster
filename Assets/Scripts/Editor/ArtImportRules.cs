@@ -8,7 +8,8 @@ namespace ResolverMaster.Editor
     /// its size) and Assets/Art/UI/Generated are uncompressed sprites with mipmaps; the illustrations (Assets/Art/Plumber, Assets/Art/Cards,
     /// and the art folder of every future minigame listed in <see cref="IllustrationDirs"/>) are sprites with mipmaps (they are drawn from
     /// 512 px down to ~100 px) and high-quality compression, at most 1024 px. PG-002: the drawings in <see cref="CrispIllustrationDirs"/>
-    /// (Pino: a little blurry already) are imported like the Gemini UI art: mipmaps, no compression (clean outlines).
+    /// (Pino: a little blurry already) are imported like the Gemini UI art: mipmaps, no compression (clean outlines). ErNa-011: the app
+    /// icons (<see cref="AppIconSetup.Folder"/>) are plain textures, uncompressed, never resized.
     /// </summary>
     public sealed class ArtImportRules : AssetPostprocessor
     {
@@ -16,6 +17,7 @@ namespace ResolverMaster.Editor
         public static readonly string[] CrispIllustrationDirs = { "Assets/Art/Penguin/" };
 
         static bool IsIcon(string path) => path.StartsWith("Assets/Art/Icons/");
+        static bool IsAppIcon(string path) => path.StartsWith(AppIconSetup.Folder);
 
         static bool IsUiArt(string path)
         {
@@ -36,7 +38,8 @@ namespace ResolverMaster.Editor
         {
             var imp = (TextureImporter)assetImporter;
             if (!imp.importSettingsMissing) return;
-            if (IsIcon(assetPath)) ApplySpriteDefaults(imp);
+            if (IsAppIcon(assetPath)) ApplyAppIconDefaults(imp);
+            else if (IsIcon(assetPath)) ApplySpriteDefaults(imp);
             else if (IsUiArt(assetPath)) ApplyUiArtDefaults(imp);
             else if (IsIllustration(assetPath)) ApplyIllustrationDefaults(imp);
         }
@@ -55,6 +58,18 @@ namespace ResolverMaster.Editor
             imp.ReadTextureSettings(settings);
             settings.spriteMeshType = UnityEngine.SpriteMeshType.FullRect;
             imp.SetTextureSettings(settings);
+        }
+
+        /// <summary>ErNa-011: app icons (Player Settings): exact pixels, one file per density: no scaling, mipmaps or compression.</summary>
+        public static void ApplyAppIconDefaults(TextureImporter imp)
+        {
+            imp.textureType = TextureImporterType.Default;
+            imp.npotScale = TextureImporterNPOTScale.None;
+            imp.mipmapEnabled = false;
+            imp.alphaIsTransparency = true;
+            imp.wrapMode = UnityEngine.TextureWrapMode.Clamp;
+            imp.filterMode = UnityEngine.FilterMode.Bilinear;
+            imp.textureCompression = TextureImporterCompression.Uncompressed;
         }
 
         /// <summary>Gemini UI art: never scaled up, often drawn at half its size: mipmaps keep it smooth; no compression (sharp outlines).</summary>

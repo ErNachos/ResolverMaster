@@ -17,7 +17,7 @@ namespace ResolverMaster.Games.TrafficJam.View
     /// vehicles, barriers and the edge; on release they snap to the nearest cell (a release where the drag started is no move). A target car
     /// with a free way to its exit can be pulled out through it (a colored gate in the window frame): it drives out and fades. Every
     /// animation runs on the real elapsed time (same speed at 30 and 60 fps). The light bulb shows an arrow on the vehicle of the next
-    /// right move, then slides it (a free move). In the Challenge, at the maximum the vehicles do not move (a shake) and the Core shows
+    /// right move, then slides it (1 move, ErNa-011). In the Challenge, at the maximum the vehicles do not move (a shake) and the Core shows
     /// "Out of moves".
     /// </summary>
     public sealed class TrafficBoardView : PuzzleBoard
@@ -324,7 +324,7 @@ namespace ResolverMaster.Games.TrafficJam.View
             RaiseChanged();
         }
 
-        /// <summary>The light bulb (after the ad): an arrow on the vehicle of the next right move, then the vehicle slides there. Not a move.</summary>
+        /// <summary>The light bulb (after the ad): an arrow on the vehicle of the next right move, then the vehicle slides there (1 move, ErNa-011).</summary>
         public override void ApplyHint()
         {
             if (!CanHint || !_puzzle.ApplyHint(out var move)) return;

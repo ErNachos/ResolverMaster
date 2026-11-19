@@ -8,7 +8,7 @@ namespace ResolverMaster.Games.TrafficJam
     /// The Traffic jam rules on the Core puzzle contract (TJ-001). A move = one vehicle slid along its line by any number of cells, or a
     /// target car pushed out through its exit; a vehicle put back where it was is no move (refused). Solved = every target car is out.
     /// The light bulb (<see cref="ApplyHint"/>): from the distance table of the level (built once, the first time) the first move that
-    /// brings the position one move closer to the end; it is a free move (does not count, can be undone) and the level gives at most 2 stars.
+    /// brings the position one move closer to the end; it counts as 1 move (ErNa-011), can be undone, and the level gives at most 2 stars.
     /// </summary>
     public sealed class TrafficPuzzle : PuzzleBase<TrafficLevel, TrafficMove>
     {
@@ -20,8 +20,6 @@ namespace ResolverMaster.Games.TrafficJam
         /// <summary>The current position (packed, <see cref="TrafficLayout"/>).</summary>
         public ulong State { get; private set; }
         public override int MinMoves => Level?.minMoves ?? 0;
-        /// <summary>A hint was used since the level was loaded (at most 2 stars).</summary>
-        public bool HintUsed { get; private set; }
         /// <summary>Cap of the hint's distance table.</summary>
         public int MaxStates { get; set; } = TrafficSpace.DefaultMaxStates;
 
@@ -45,15 +43,8 @@ namespace ResolverMaster.Games.TrafficJam
             return Layout != null && !IsSolved && Space.TryNextMove(State, out move);
         }
 
-        /// <summary>Makes the hinted move (free: not counted). False when there is none.</summary>
-        public bool ApplyHint(out TrafficMove move)
-        {
-            if (!TryFindHint(out move) || !ApplyFreeMove(move)) return false;
-            HintUsed = true;
-            return true;
-        }
-
-        protected override void OnFreshLoad() => HintUsed = false;
+        /// <summary>Makes the hinted move (ErNa-011: it counts 1 move, like the player's). False when there is none.</summary>
+        public bool ApplyHint(out TrafficMove move) => TryFindHint(out move) && ApplyHintMove(move, 1);
 
         protected override void OnLoad(TrafficLevel level)
         {
