@@ -63,6 +63,9 @@ namespace ResolverMaster.Editor
             PlayerSettings.Android.keyaliasPass = "";
             ReleaseBuild.RestoreSigningNames("", "");
 
+            // ErNa-016: Unity audio on, global volume above 0
+            AudioProjectSettings.Apply(log);
+
             // ErNa-011: app icons (every Android slot), no Unity splash screen, Android 12+ splash colour
             AppIconSetup.Apply(log);
 

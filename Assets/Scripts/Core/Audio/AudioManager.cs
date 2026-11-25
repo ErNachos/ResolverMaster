@@ -27,6 +27,12 @@ namespace ResolverMaster.Core.Audio
         {
             var go = new GameObject("Audio");
             go.transform.SetParent(parent, false);
+            // ErNa-016: Unity mixes nothing without an AudioListener (the Main scene never had one: a phone build played the effects
+            // by chance, and went silent once the streamed music started). The listener lives with the sound, exactly one.
+            if (Object.FindAnyObjectByType<AudioListener>() == null) go.AddComponent<AudioListener>();
+            // ErNa-016: the sound never starts paused or at volume 0 (only an ad pauses it, AdOverlay gives it back)
+            AudioListener.pause = false;
+            if (AudioListener.volume <= 0f) AudioListener.volume = 1f;
             var m = go.AddComponent<AudioManager>();
             m._settings = settings;
             m._cfg = cfg != null ? cfg : ScriptableObject.CreateInstance<AudioConfig>();
@@ -51,7 +57,16 @@ namespace ResolverMaster.Core.Audio
         AudioClip Clip(string path)
         {
             if (_clips.TryGetValue(path, out var c)) return c;
-            c = Resources.Load<AudioClip>(path);
+            try
+            {
+                c = Resources.Load<AudioClip>(path);
+            }
+            catch (System.Exception e)
+            {
+                // ErNa-016: a piece that cannot be loaded is silence; the effects and the other pieces go on
+                Debug.LogError($"AudioManager: music '{path}' not loaded: {e.Message}");
+                c = null;
+            }
             _clips[path] = c;   // a missing file is remembered as null: silence, no error
             return c;
         }
@@ -77,10 +92,18 @@ namespace ResolverMaster.Core.Audio
             var clip = string.IsNullOrEmpty(key) ? null : Clip(AudioCatalog.MusicResources + key);
             // the new piece fades in on B while A fades out, then they swap
             (_musicA, _musicB) = (_musicB, _musicA);
-            _musicA.clip = clip;
             _musicA.volume = 0f;
-            if (clip != null) _musicA.Play();
-            else _musicA.Stop();
+            try
+            {
+                _musicA.clip = clip;
+                if (clip != null) _musicA.Play();
+                else _musicA.Stop();
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogError($"AudioManager: music '{key}' not played: {e.Message}");
+                _musicA.clip = null;
+            }
             _fade = 0f;
         }
 

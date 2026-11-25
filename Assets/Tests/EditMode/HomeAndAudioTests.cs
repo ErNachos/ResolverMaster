@@ -54,6 +54,40 @@ namespace ResolverMaster.Tests
         }
 
         [Test]
+        public void AudioManager_AtStartUp_NotPaused_OneListener_DefaultVolumesAboveZero_MissingMusicIsSilence()
+        {
+            // ErNa-016: whatever an earlier run left (an ad that paused the sound, volume 0), the start gives the sound back
+            AudioListener.pause = true;
+            AudioListener.volume = 0f;
+            var root = new GameObject("AudioTestRoot");
+            var cfg = ScriptableObject.CreateInstance<AudioConfig>();
+            try
+            {
+                var m = AudioManager.Create(root.transform, new SettingsBlock(), cfg);
+                Assert.IsFalse(AudioListener.pause, "the sound never starts paused");
+                Assert.Greater(AudioListener.volume, 0f);
+                Assert.AreEqual(1, Object.FindObjectsByType<AudioListener>(FindObjectsSortMode.None).Length, "exactly one listener");
+                Assert.AreSame(m, GameAudio.Player);
+                Assert.Greater(AudioVolumes.Music(new SettingsBlock(), cfg), 0f, "default settings: music on");
+                Assert.Greater(AudioVolumes.Effects(new SettingsBlock(), cfg), 0f, "default settings: effects on");
+                Assert.DoesNotThrow(() => GameAudio.PlayMusic("Music_NoSuchPiece"), "a missing piece is silence");
+                Assert.DoesNotThrow(() => GameAudio.Play("no_such_event"));
+
+                // a second manager (or a listener of the scene) never adds another listener
+                AudioManager.Create(root.transform, new SettingsBlock(), cfg);
+                Assert.AreEqual(1, Object.FindObjectsByType<AudioListener>(FindObjectsSortMode.None).Length, "never two listeners");
+            }
+            finally
+            {
+                GameAudio.Player = null;
+                Object.DestroyImmediate(root);
+                Object.DestroyImmediate(cfg);
+                AudioListener.volume = 1f;
+                AudioListener.pause = false;
+            }
+        }
+
+        [Test]
         public void Audio_EveryEventHasAFileOrIsSilentWithoutErrors_MusicOfEachScreen_VolumesFromTheSettings()
         {
             // an unknown event is silence, never an error

@@ -131,4 +131,23 @@ namespace ResolverMaster.Editor.Validation
             }
         }
     }
+
+    /// <summary>
+    /// ErNa-016: Project Settings > Audio: Disable Unity Audio off and global volume above 0 (<see cref="AudioProjectSettings"/>);
+    /// the Main scene has at most one AudioListener (the audio manager adds the only one when the scene has none).
+    /// </summary>
+    public sealed class AudioSettingsCheck : IValidationCheck
+    {
+        public const string MainScene = "Assets/Scenes/Main.unity";
+
+        public string Name => "AudioSettings";
+
+        public void Run(ValidationReport report)
+        {
+            foreach (var p in AudioProjectSettings.Problems()) report.Error(p);
+            if (!File.Exists(MainScene)) return;
+            int listeners = File.ReadAllLines(MainScene).Count(l => l.StartsWith("--- !u!81 "));   // 81 = AudioListener
+            if (listeners > 1) report.Error($"{MainScene}: {listeners} AudioListeners (exactly one plays the sound)");
+        }
+    }
 }

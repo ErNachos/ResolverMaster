@@ -574,3 +574,26 @@ Home e Idraulico sono più corti di 90 s già in origine: il loop prende quasi t
 
 **Problemi aperti / prossimi passi**
 - Pino: il loop si ferma a 2:10 (gli ultimi ~11 s prima della coda non danno una giunzione buona). Unity ricodifica gli OGG (qualità 0,65) nel build: il peso nell'APK è diverso da quello dei file.
+
+## Update ErNa-016 — Ripristino audio (2026-11-25)
+
+**Fatto**
+- **Problema**: l'APK 1.0.0 (3) di test (ErNa-015) non suona nulla, né musica né effetti; l'APK 1.0.0 (2) (ErNa-014) suonava gli effetti.
+- **Verifiche** (tutti i punti del prompt):
+  1. `ProjectSettings/AudioManager.asset`: *Disable Unity Audio* spento, volume 1, sample rate automatico, DSP buffer 1024; invariato da `9d2fc8b`. Le modifiche locali non committate dei ProjectSettings sono solo il version code (3) e lo scoped registry di OpenUPM: niente audio. Nei due APK il blocco AudioManager compilato in `globalgamemanagers` è identico byte per byte (volume 1, audio non disattivato).
+  2. *Apply Project Settings* non toccava l'audio (né lo disattivava).
+  3. Gestore audio: **nella scena `Main` e nel codice non c'è mai stato un `AudioListener`** (dall'ErNa-001). Unity senza ascoltatore non garantisce alcun suono (alcuni build per telefono suonano lo stesso per un bug noto di Unity): con l'ErNa-014 nessuna musica esisteva (`Resources.Load` dava null) e gli effetti suonavano per caso; l'ErNa-015 è il primo build che fa partire davvero una musica in streaming. Nessuna eccezione possibile nel caricamento; `AudioListener.pause` lo tocca solo `AdOverlay` durante un annuncio.
+  4. Salvataggio: `sound`, `music`, `vibration` predefiniti a `true`, chiavi invariate; volumi di `AudioConfig` 0,5 e 1.
+  5. Annunci e consenso: nulla mette in pausa l'audio all'avvio, dopo il modulo UMP o se l'inizializzazione fallisce (solo `RewardedAdController.Show` → `AdStarted`, sempre chiuso da `Finish` o dal watchdog).
+  6. Import: nell'APK le 4 musiche ci sono (FSB5 Vorbis, streaming, stereo, 44,1 kHz, `.resource` non compressi) e gli effetti sono invariati.
+- **Causa**: `AudioListener` mancante (comportamento di Unity non definito, diventato silenzio quando parte la musica in streaming). Non è riproducibile qui (nessun telefono collegato): da confermare sull'APK nuovo.
+- **Correzione** (Core, `AudioManager.Create`): aggiunge l'unico `AudioListener` se la scena non ne ha, `AudioListener.pause = false`, `AudioListener.volume` > 0. Caricamento e avvio di una musica dentro `try/catch`: errore nel log, quella musica è silenzio, effetti e altre musiche continuano.
+- *Apply Project Settings*: imposta sempre *Disable Unity Audio* spento e volume globale > 0 (`AudioProjectSettings`).
+- **Validatore**: nuovo controllo `AudioSettings` (`AudioSettingsCheck`: Unity audio acceso, volume > 0, al massimo un `AudioListener` nella scena). **Test**: 1 nuovo (`AudioManager_AtStartUp_NotPaused_OneListener_…`: dopo pausa e volume 0 lasciati da prima, l'avvio toglie la pausa, crea un solo ascoltatore, volumi predefiniti > 0, musica mancante = silenzio).
+
+**Risultati**
+- Compilazione: 0 errori, 0 warning. Test: 75/75 verdi. Validatore: OK (20 controlli, 0 errori, 0 warning).
+- Nessun build (lo fa l'utente), version code invariato.
+
+**Da provare a mano sul telefono**
+- Nuovo APK di test: musica della Home all'avvio, effetti, passaggio ai giochi, ripresa dopo un annuncio e dal background.
