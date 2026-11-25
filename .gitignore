@@ -39,3 +39,6 @@ unity_*.log
 keystore.properties
 # local Unity tooling cache
 .utmp/
+# original music (large WAVs from Suno, ErNa-015): only the loops made by Tools/Audio/make_music_loops.py go in git
+ArtSource/Music/
+ArtSource/Audio/Music/

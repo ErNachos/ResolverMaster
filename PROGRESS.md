@@ -545,3 +545,32 @@
 
 **Da provare a mano**
 - Caricare l'AAB 1.0.0 (2) su Play Console e controllare in *Esplora app bundle* che i dispositivi supportati includano tablet e Chromebook/PC.
+
+## Update ErNa-015 — Musiche in loop e volumi (2026-11-25)
+
+**Fatto**
+- **Nota**: l'Editor di Unity era aperto sul progetto: import, test e validatore in batchmode sulla copia `Logs/BatchCopy/`; nel progetto riportati i `.meta` nuovi (Assets identici dopo un `diff`).
+- **A — Loop**: `Tools/Audio/make_music_loops.py` (numpy, scipy, ffmpeg/libvorbis; deterministico, stessi byte a ogni esecuzione) legge i 4 WAV Suno di `ArtSource/Music/` (48 kHz stereo; riconosciuti dal nome, mai modificati), li porta a 44,1 kHz, toglie silenzio e coda, stima tempo e battute, sceglie il loop più lungo con giunzione buona (inizio e fine sullo stesso tempo della battuta, numero intero di battute, fine allineata al campione con l'inizio), incrocio di dissolvenza di 120 ms che termina sul punto di loop, −18 LUFS per tutti, Ogg Vorbis q6 in `Assets/Resources/Audio/Music/`. Controllo del file decodificato: lunghezza esatta, nessun salto alla giunzione, loudness (verificata anche con `ffmpeg ebur128`: −17,9 LUFS per tutti).
+- **B — Repository**: `ArtSource/Music/` e `ArtSource/Audio/Music/` in `.gitignore` (i WAV non erano tracciati). In git solo gli OGG e lo script.
+- **C — Unity**: `AudioImportRules`: musica Streaming, Vorbis 0,65, Preload Audio Data spento, stereo. *Importa suoni* non copia più da ArtSource: reimporta le 4 musiche e segnala quelle mancanti. Elenco in `AudioCatalog.MusicKeys`; collegamento invariato (`UiScreen.MusicGame` → `AudioCatalog.MusicFor` → Resources, loop e dissolvenza di 1 s dell'`AudioManager`).
+- **D — Volumi**: `AudioConfig.musicVolume` 0,6 → **0,5** (`AudioConfig.DefaultMusicVolume`); effetti 1,0. Misurata come gli effetti (K-weighting attraverso il passa-alto da telefono), la musica è ≈ −23,7 dB a volume 1 e gli effetti −19 dB: a 0,5 la musica sta ≈ 10,7 dB sotto gli effetti. Ripresa dopo un annuncio: due livelli indipendenti (`AudioListener.pause` di `AdOverlay` e `OnApplicationPause` dell'`AudioManager`), riletti e corretti così come sono; nessuna modifica.
+- **Validatore**: nuovo controllo `Music` (`MusicCheck`). **Test**: 1 nuovo (`Music_EveryScreenHasItsOwnPiece_…`) + 1 adattato (volume della musica).
+
+**Musiche**
+| Brano | Originale | Loop (taglio) | Durata loop | Tempo | Battute | OGG |
+|---|---|---|---|---|---|---|
+| Music_Home ← `Home.wav` | 1:09,08 | 0:02,45 → 1:07,70 | 1:05,25 | ≈ 103 BPM | 28 | 1375 KB |
+| Music_Plumber ← `plumber.wav` | 1:17,96 | 0:05,07 → 1:15,52 | 1:10,45 | ≈ 109 BPM | 32 | 1614 KB |
+| Music_TrafficJam ← `TJ.wav` | 3:08,40 | 0:07,29 → 3:05,48 | 2:58,19 | ≈ 85 BPM | 63 | 3740 KB |
+| Music_Penguin ← `Pino.wav` | 2:23,76 | 0:04,32 → 2:10,72 | 2:06,40 | ≈ 93 BPM | 49 | 2822 KB |
+
+Home e Idraulico sono più corti di 90 s già in origine: il loop prende quasi tutto il brano. In ogni brano la giunzione cambia meno di molti cambi di battuta normali del brano stesso (percentile 27–75 %).
+
+**Risultati**
+- Compilazione: 0 errori, 0 warning. Test: 74/74 verdi. Validatore: OK (19 controlli, 0 errori, 0 warning). Prova al contrario: senza `Music_Home.ogg` il validatore segnala l'errore.
+
+**Da provare a mano sul telefono**
+- Giunzione di ogni loop (nessun clic né salto, ritmo che non inciampa), passaggio Home ↔ giochi, equilibrio musica/effetti, musica che riparte dopo un annuncio e dopo aver messo l'app in background.
+
+**Problemi aperti / prossimi passi**
+- Pino: il loop si ferma a 2:10 (gli ultimi ~11 s prima della coda non danno una giunzione buona). Unity ricodifica gli OGG (qualità 0,65) nel build: il peso nell'APK è diverso da quello dei file.

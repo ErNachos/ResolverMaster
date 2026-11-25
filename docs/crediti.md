@@ -23,4 +23,4 @@ Riferimento di stile previsto in `ArtSource/Reference/` (non ancora presente).
 
 Generati dal progetto, nessuna licenza esterna: cornice delle schede della Home e pillole (`UiKitGenerator`, `Assets/Art/UI/Generated/`), tubi, acqua, ombre e gocce dell'Idraulico (`PipeSprites`, `WaterGraphic`), terreni e sfondi dei temi (`ThemeArt`), shader dei pulsanti disattivati (`Assets/Art/Shaders/UiDesaturate.shader`).
 
-Audio: effetti sonori generati dal nostro codice (`Tools/Audio/make_sfx.py`, ErNa-012), nessun asset di terze parti. Musiche: nessuna per ora.
+Audio: effetti sonori generati dal nostro codice (`Tools/Audio/make_sfx.py`, ErNa-012), nessun asset di terze parti. Musiche (ErNa-015): 4 brani generati con **Suno** dall'utente (piano Pro, uso commerciale consentito); originali WAV in `ArtSource/Music/` (Home, plumber, TJ, Pino; fuori da git, mai modificati) → loop `Assets/Resources/Audio/Music/Music_*.ogg` con `Tools/Audio/make_music_loops.py`.

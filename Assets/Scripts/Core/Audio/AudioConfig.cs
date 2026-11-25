@@ -8,8 +8,13 @@ namespace ResolverMaster.Core.Audio
     {
         public const string ResourcesPath = "ResolverMaster/AudioConfig";
 
-        /// <summary>Music lower than the effects.</summary>
-        [Range(0f, 1f)] public float musicVolume = 0.6f;
+        /// <summary>
+        /// ErNa-015: music about 11 dB under the effects (taps, wins and errors stay clear): the loops are at -18 LUFS, about -24 dB
+        /// through a phone speaker, the effects at -19 dB (Tools/Audio/make_music_loops.py prints the value for its loops).
+        /// </summary>
+        public const float DefaultMusicVolume = 0.5f;
+
+        [Range(0f, 1f)] public float musicVolume = DefaultMusicVolume;
         [Range(0f, 1f)] public float effectsVolume = 1f;
         /// <summary>Fade between two pieces of music (seconds).</summary>
         public float musicFade = 1f;

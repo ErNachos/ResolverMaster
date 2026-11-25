@@ -1,6 +1,7 @@
 using System.Linq;
 using NUnit.Framework;
 using ResolverMaster.Core.Audio;
+using ResolverMaster.Core.Games;
 using ResolverMaster.Core.Save;
 using ResolverMaster.Core.UI;
 using UnityEngine;
@@ -33,6 +34,26 @@ namespace ResolverMaster.Tests
         }
 
         [Test]
+        public void Music_EveryScreenHasItsOwnPiece_AllInTheList_MusicUnderTheEffects()
+        {
+            // the Home (and the screens of no game) and every registered game, its Story and its Challenge alike
+            var games = GameRegistry.Discover().Games.Select(g => g.Id).ToList();
+            CollectionAssert.IsSupersetOf(games, new[] { "plumber", "trafficjam", "penguin" });
+            Assert.AreEqual(AudioCatalog.MusicHome, AudioCatalog.MusicFor(""));
+            var pieces = games.Select(AudioCatalog.MusicFor).ToList();
+            CollectionAssert.AllItemsAreUnique(pieces, "each game has its own music");
+            CollectionAssert.DoesNotContain(pieces, AudioCatalog.MusicHome, "no game plays the Home music");
+            CollectionAssert.AreEquivalent(AudioCatalog.MusicKeys, pieces.Prepend(AudioCatalog.MusicHome).ToList(),
+                "every piece of the list is played by a screen, and only those");
+
+            // ErNa-015: the music about 10-12 dB under the effects (loops -18 LUFS, about -24 dB on a phone; effects -19 dB)
+            var cfg = ScriptableObject.CreateInstance<AudioConfig>();
+            float db = 20f * Mathf.Log10(cfg.musicVolume / cfg.effectsVolume);
+            Assert.That(db, Is.InRange(-7.5f, -4.5f), "music volume against the effects");
+            Object.DestroyImmediate(cfg);
+        }
+
+        [Test]
         public void Audio_EveryEventHasAFileOrIsSilentWithoutErrors_MusicOfEachScreen_VolumesFromTheSettings()
         {
             // an unknown event is silence, never an error
@@ -50,7 +71,7 @@ namespace ResolverMaster.Tests
             // volumes from the saved settings: music lower than the effects, each switched off on its own
             var cfg = ScriptableObject.CreateInstance<AudioConfig>();
             var s = new SettingsBlock();
-            Assert.AreEqual(0.6f, AudioVolumes.Music(s, cfg), 1e-4);
+            Assert.AreEqual(AudioConfig.DefaultMusicVolume, AudioVolumes.Music(s, cfg), 1e-4);
             Assert.AreEqual(1f, AudioVolumes.Effects(s, cfg), 1e-4);
             s.music = false;
             Assert.AreEqual(0f, AudioVolumes.Music(s, cfg));

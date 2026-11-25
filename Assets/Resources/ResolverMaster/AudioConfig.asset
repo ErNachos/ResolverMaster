@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 29f1774b1c974ecf807e96618eaf931b, type: 3}
   m_Name: AudioConfig
   m_EditorClassIdentifier: 
-  musicVolume: 0.6
+  musicVolume: 0.5
   effectsVolume: 1
   musicFade: 1
   effectVoices: 10
